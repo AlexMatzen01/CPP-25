@@ -5,9 +5,9 @@
 #include <iostream>
 
 int main() {
-    std::cout << "Size of char:   " << sizeof(char) << " byte(s)\n";
-    std::cout << "Size of int:    " << sizeof(int) << " byte(s)\n";
-    std::cout << "Size of float:  " << sizeof(float) << " byte(s)\n";
-    std::cout << "Size of double: " << sizeof(double) << " byte(s)\n";
+    std::cout << "A char data type uses " << sizeof(char) << " byte(s) of memory.\n";
+    std::cout << "An int data type uses " << sizeof(int) << " byte(s) of memory.\n";
+    std::cout << "A float data type uses " << sizeof(float) << " byte(s) of memory.\n";
+    std::cout << "A double data type uses " << sizeof(double) << " byte(s) of memory.\n";
     return 0;
 }
