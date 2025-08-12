@@ -4,6 +4,28 @@
 
 #include <iostream>
 #include <iomanip>
+#include <cmath>
+
+void printSales(double sales, double prediction) {
+    double salesInMillions = sales / 1000000;
+    double predictionInMillions = prediction / 1000000;
+
+    // Determine decimal places for sales
+    int salesDecimals = 0;
+    if (std::fmod(salesInMillions, 1.0) != 0.0) {
+        salesDecimals = (std::fmod(salesInMillions * 10, 1.0) == 0.0) ? 1 : 3;
+    }
+
+    // Determine decimal places for prediction
+    int predDecimals = 0;
+    if (std::fmod(predictionInMillions, 1.0) != 0.0) {
+        predDecimals = (std::fmod(predictionInMillions * 10, 1.0) == 0.0) ? 1 : 3;
+    }
+
+    std::cout << "If total sales are " << std::fixed << std::setprecision(salesDecimals) << salesInMillions
+              << " million the Midwest division is estimated to generate $"
+              << std::fixed << std::setprecision(predDecimals) << predictionInMillions << " million.\n";
+}
 
 int main() {
     const double MIDWEST_SHARE = 0.58;
@@ -11,8 +33,9 @@ int main() {
     double companySales2 = 10000000.0;
     double midwest1 = MIDWEST_SHARE * companySales1;
     double midwest2 = MIDWEST_SHARE * companySales2;
-    std::cout << std::fixed << std::setprecision(2);
-    std::cout << "Company sales: $" << companySales1 << "\tMidwest prediction: $" << midwest1 << '\n';
-    std::cout << "Company sales: $" << companySales2 << "\tMidwest prediction: $" << midwest2 << '\n';
+
+    printSales(companySales1, midwest1);
+    printSales(companySales2, midwest2);
+
     return 0;
 }
