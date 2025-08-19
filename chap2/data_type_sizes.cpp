@@ -9,5 +9,6 @@ int main() {
     std::cout << "An int data type uses " << sizeof(int) << " byte(s) of memory.\n";
     std::cout << "A float data type uses " << sizeof(float) << " byte(s) of memory.\n";
     std::cout << "A double data type uses " << sizeof(double) << " byte(s) of memory.\n";
+    
     return 0;
 }
