@@ -19,13 +19,13 @@ int main() {
         std::cout << std::fixed << std::setprecision(2) << price << '\n';
 
         std::cout << "State Tax:  $";
-        std::cout << std::fixed << std::setprecision(1) << stateTax << '\n';
+        std::cout << std::fixed << std::setprecision(2) << stateTax << '\n';
 
         std::cout << "County Tax: $";
-        std::cout << std::fixed << std::setprecision(1) << countyTax << '\n';
+        std::cout << std::fixed << std::setprecision(2) << countyTax << '\n';
 
         std::cout << "Total:      $";
-        std::cout << std::fixed << std::setprecision(1) << total << '\n';
+        std::cout << std::fixed << std::setprecision(2) << total << '\n';
 
         std::cout << std::endl;
     }
