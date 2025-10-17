@@ -1,6 +1,6 @@
 // chapter6_menu.cpp
 // Menu runner for Chapter 6 exercises (Exercise 103 + exercises 11,15,16,24)
-// Presents a menu (1-5 where 5 = Quit) and calls functions for each exercise.
+// Shows a menu (1-5 where 5 = Quit) and calls functions for each exercise.
 
 #include <iostream>
 #include <iomanip>
@@ -110,7 +110,7 @@ void exercise11_lowestDrop() {
 }
 
 // -------------------- Exercise 15: Overloaded Hospital --------------------
-// Two overloaded functions calculate total charges
+// Two functions calculate total charges
 
 double calculateCharges(int days, double dailyRate, double meds, double services) {
     // inpatient
