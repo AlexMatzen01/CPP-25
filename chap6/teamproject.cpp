@@ -1,300 +1,159 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <algorithm>
 
 using namespace std;
 
-// Function prototypes
-int getTotalDays();
-void getTravelTimes(int& departureHour, int& departureMinute, 
-                   int& arrivalHour, int& arrivalMinute);
-double getAirfare();
-double getCarRental();
-double getPrivateVehicleExpense();
-double getParkingFees(int days);
-double getTaxiFees(int days);
-double getRegistrationFees();
-double getHotelExpenses(int days);
-double getMealExpenses(int days, int departureHour, int departureMinute,
-                      int arrivalHour, int arrivalMinute);
-bool isValidTime(int hour, int minute);
-
-int main() {
-    // Variables for storing expenses
-    int totalDays;
-    int departureHour, departureMinute, arrivalHour, arrivalMinute;
-    double totalExpenses = 0.0;
-    double allowableExpenses = 0.0;
-    
-    // Get trip information
-    cout << "Business Trip Expense Calculator\n\n";
-    
-    totalDays = getTotalDays();
-    getTravelTimes(departureHour, departureMinute, arrivalHour, arrivalMinute);
-    
-    // Calculate all expenses
-    double airfare = getAirfare();
-    double carRental = getCarRental();
-    double vehicleExpense = getPrivateVehicleExpense();
-    double parkingFees = getParkingFees(totalDays);
-    double taxiFees = getTaxiFees(totalDays);
-    double registrationFees = getRegistrationFees();
-    double hotelExpenses = getHotelExpenses(totalDays);
-    double mealExpenses = getMealExpenses(totalDays, departureHour, departureMinute,
-                                        arrivalHour, arrivalMinute);
-    
-    // Calculate totals
-    totalExpenses = airfare + carRental + vehicleExpense + parkingFees +
-                    taxiFees + registrationFees + hotelExpenses + mealExpenses;
-    
-    // Calculate allowable amounts
-    double allowableParking = min(6.0 * totalDays, parkingFees);
-    double allowableTaxi = min(10.0 * totalDays, taxiFees);
-    double allowableHotel = min(90.0 * (totalDays - 1), hotelExpenses);
-    
-    allowableExpenses = airfare + carRental + vehicleExpense + allowableParking +
-                       allowableTaxi + registrationFees + allowableHotel + mealExpenses;
-    
-    // Display results
-    cout << fixed << setprecision(2);
-    cout << "\nExpense Report:\n";
-    cout << "----------------------------------------\n";
-    cout << "Total Expenses:         $" << totalExpenses << endl;
-    cout << "Allowable Expenses:     $" << allowableExpenses << endl;
-    
-    if (totalExpenses > allowableExpenses) {
-        cout << "Amount to be reimbursed: $" << totalExpenses - allowableExpenses << endl;
-    } else {
-        cout << "Amount saved:           $" << allowableExpenses - totalExpenses << endl;
+bool parseHHMM(const string &s, int &hour, int &minute) {
+    size_t pos = s.find_first_of(".:,");
+    if (pos == string::npos) return false;
+    string h = s.substr(0, pos);
+    string m = s.substr(pos + 1);
+    try {
+        hour = stoi(h);
+        if (m.size() == 0) return false;
+        if (m.size() > 2) m = m.substr(0, 2);
+        if (m.size() == 1) m = string("0") + m;
+        minute = stoi(m);
+    } catch (...) {
+        return false;
     }
-    
-    return 0;
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return false;
+    return true;
 }
 
 int getTotalDays() {
     int days;
     do {
-        cout << "Enter the total number of days spent on the trip: ";
+        cout << "How many days were spent on the trip? ";
         cin >> days;
-        if (days < 1)
-            cout << "Please enter a valid number of days (must be at least 1).\n";
+        if (days < 1) cout << "Please enter a valid number of days (at least 1).\n";
     } while (days < 1);
     return days;
 }
 
-void getTravelTimes(int& departureHour, int& departureMinute,
-                   int& arrivalHour, int& arrivalMinute) {
+void getTravelTimes(int &depH, int &depM, int &arrH, int &arrM) {
+    string s;
+    bool ok = false;
     do {
-        cout << "Enter departure time (24-hour format, HH MM): ";
-        cin >> departureHour >> departureMinute;
-        if (!isValidTime(departureHour, departureMinute))
-            cout << "Please enter a valid time.\n";
-    } while (!isValidTime(departureHour, departureMinute));
-    
+        cout << "Enter the departure time (HH.MM): ";
+        cin >> s;
+        ok = parseHHMM(s, depH, depM);
+        if (!ok) cout << "Please enter time in HH.MM format (24-hour).\n";
+    } while (!ok);
+
+    ok = false;
     do {
-        cout << "Enter arrival time (24-hour format, HH MM): ";
-        cin >> arrivalHour >> arrivalMinute;
-        if (!isValidTime(arrivalHour, arrivalMinute))
-            cout << "Please enter a valid time.\n";
-    } while (!isValidTime(arrivalHour, arrivalMinute));
+        cout << "Enter the return time (HH.MM): ";
+        cin >> s;
+        ok = parseHHMM(s, arrH, arrM);
+        if (!ok) cout << "Please enter time in HH.MM format (24-hour).\n";
+    } while (!ok);
 }
 
-double getAirfare() {
-    double amount;
+double getNonNegativeAmount(const string &prompt) {
+    double a;
     do {
-        cout << "Enter round-trip airfare (0 if none): $";
-        cin >> amount;
-        if (amount < 0)
-            cout << "Please enter a valid amount (must be non-negative).\n";
-    } while (amount < 0);
-    return amount;
+        cout << prompt;
+        cin >> a;
+        if (a < 0) cout << "Please enter a non-negative amount.\n";
+    } while (a < 0);
+    return a;
 }
 
-double getCarRental() {
-    double amount;
+int main() {
+    cout << fixed << setprecision(2);
+    int days = getTotalDays();
+
+    int depH=0, depM=0, arrH=0, arrM=0;
+    getTravelTimes(depH, depM, arrH, arrM);
+
+    double airfare = getNonNegativeAmount("Enter the amount of airfare: ");
+    double carRental = getNonNegativeAmount("Enter the amount of car rental fees: ");
+    double privateMiles;
     do {
-        cout << "Enter car rental fees (0 if none): $";
-        cin >> amount;
-        if (amount < 0)
-            cout << "Please enter a valid amount (must be non-negative).\n";
-    } while (amount < 0);
-    return amount;
-}
+        cout << "Enter the miles driven by a private vehicle: ";
+        cin >> privateMiles;
+        if (privateMiles < 0) cout << "Please enter a non-negative number.\n";
+    } while (privateMiles < 0);
+    double privateVehicle = privateMiles * 0.27;
 
-double getPrivateVehicleExpense() {
-    double miles;
-    do {
-        cout << "Enter miles driven if private vehicle was used (0 if none): ";
-        cin >> miles;
-        if (miles < 0)
-            cout << "Please enter a valid number of miles (must be non-negative).\n";
-    } while (miles < 0);
-    return miles * 0.27;
-}
+    double parking = getNonNegativeAmount("Enter the amount of parking fees: ");
+    double taxi = getNonNegativeAmount("Enter the amount of taxi fees: ");
+    double registration = getNonNegativeAmount("Enter the amount of registration fees: ");
+    double nightly = getNonNegativeAmount("Enter the nightly hotel rate: ");
 
-double getParkingFees(int days) {
-    double totalFees = 0;
-    for (int i = 1; i <= days; i++) {
-        double fee;
-        do {
-            cout << "Enter parking fees for day " << i << " (0 if none): $";
-            cin >> fee;
-            if (fee < 0)
-                cout << "Please enter a valid amount (must be non-negative).\n";
-        } while (fee < 0);
-        totalFees += fee;
-    }
-    return totalFees;
-}
+    double hotelExpenses = 0.0;
+    if (days > 1) hotelExpenses = nightly * (days - 1);
 
-double getTaxiFees(int days) {
-    double totalFees = 0;
-    for (int i = 1; i <= days; i++) {
-        double fee;
-        do {
-            cout << "Enter taxi fees for day " << i << " (0 if none): $";
-            cin >> fee;
-            if (fee < 0)
-                cout << "Please enter a valid amount (must be non-negative).\n";
-        } while (fee < 0);
-        totalFees += fee;
-    }
-    return totalFees;
-}
-
-double getRegistrationFees() {
-    double amount;
-    do {
-        cout << "Enter conference/seminar registration fees (0 if none): $";
-        cin >> amount;
-        if (amount < 0)
-            cout << "Please enter a valid amount (must be non-negative).\n";
-    } while (amount < 0);
-    return amount;
-}
-
-double getHotelExpenses(int days) {
-    double totalExpenses = 0;
-    for (int i = 1; i < days; i++) {  // One less than total days
-        double expense;
-        do {
-            cout << "Enter hotel expense for night " << i << ": $";
-            cin >> expense;
-            if (expense < 0)
-                cout << "Please enter a valid amount (must be non-negative).\n";
-        } while (expense < 0);
-        totalExpenses += expense;
-    }
-    return totalExpenses;
-}
-
-double getMealExpenses(int days, int departureHour, int departureMinute,
-                      int arrivalHour, int arrivalMinute) {
-    double totalMealExpenses = 0;
     const double MAX_BREAKFAST = 9.0;
     const double MAX_LUNCH = 12.0;
     const double MAX_DINNER = 16.0;
-    
-    // First day meals
-    if (departureHour < 7 || (departureHour == 7 && departureMinute == 0)) {
-        double breakfast;
-        do {
-            cout << "Enter breakfast expense for first day: $";
-            cin >> breakfast;
-            if (breakfast < 0)
-                cout << "Please enter a valid amount (must be non-negative).\n";
-        } while (breakfast < 0);
-        totalMealExpenses += min(breakfast, MAX_BREAKFAST);
+
+    double mealsTotal = 0.0;       // actual meal amounts (employee paid)
+    double allowedMealsTotal = 0.0; // company-allowed meal amounts (capped)
+
+    // Day 1
+    cout << "Day 1:\n";
+    if (depH < 7 || (depH == 7 && depM == 0)) {
+        double b = getNonNegativeAmount("Enter the amount spent for breakfast: ");
+        mealsTotal += b;
+        allowedMealsTotal += min(b, MAX_BREAKFAST);
     }
-    
-    if (departureHour < 12) {
-        double lunch;
-        do {
-            cout << "Enter lunch expense for first day: $";
-            cin >> lunch;
-            if (lunch < 0)
-                cout << "Please enter a valid amount (must be non-negative).\n";
-        } while (lunch < 0);
-        totalMealExpenses += min(lunch, MAX_LUNCH);
+    if (depH < 12) {
+        double l = getNonNegativeAmount("Enter the amount spent for lunch: ");
+        mealsTotal += l;
+        allowedMealsTotal += min(l, MAX_LUNCH);
     }
-    
-    if (departureHour < 18) {
-        double dinner;
-        do {
-            cout << "Enter dinner expense for first day: $";
-            cin >> dinner;
-            if (dinner < 0)
-                cout << "Please enter a valid amount (must be non-negative).\n";
-        } while (dinner < 0);
-        totalMealExpenses += min(dinner, MAX_DINNER);
+    if (depH < 18) {
+        double d = getNonNegativeAmount("Enter the amount spent for dinner: ");
+        mealsTotal += d;
+        allowedMealsTotal += min(d, MAX_DINNER);
     }
-    
-    // Middle days (full days)
-    for (int i = 2; i < days; i++) {
-        double breakfast, lunch, dinner;
-        
-        do {
-            cout << "Enter breakfast expense for day " << i << ": $";
-            cin >> breakfast;
-            if (breakfast < 0)
-                cout << "Please enter a valid amount (must be non-negative).\n";
-        } while (breakfast < 0);
-        totalMealExpenses += min(breakfast, MAX_BREAKFAST);
-        
-        do {
-            cout << "Enter lunch expense for day " << i << ": $";
-            cin >> lunch;
-            if (lunch < 0)
-                cout << "Please enter a valid amount (must be non-negative).\n";
-        } while (lunch < 0);
-        totalMealExpenses += min(lunch, MAX_LUNCH);
-        
-        do {
-            cout << "Enter dinner expense for day " << i << ": $";
-            cin >> dinner;
-            if (dinner < 0)
-                cout << "Please enter a valid amount (must be non-negative).\n";
-        } while (dinner < 0);
-        totalMealExpenses += min(dinner, MAX_DINNER);
+
+    // Middle days
+    for (int day = 2; day <= days - 1; ++day) {
+        cout << "Day " << day << ":\n";
+        double b = getNonNegativeAmount("Enter the amount spent for breakfast: ");
+        mealsTotal += b; allowedMealsTotal += min(b, MAX_BREAKFAST);
+        double l = getNonNegativeAmount("Enter the amount spent for lunch: ");
+        mealsTotal += l; allowedMealsTotal += min(l, MAX_LUNCH);
+        double d = getNonNegativeAmount("Enter the amount spent for dinner: ");
+        mealsTotal += d; allowedMealsTotal += min(d, MAX_DINNER);
     }
-    
-    // Last day meals
-    if (arrivalHour > 8 || (arrivalHour == 8 && arrivalMinute > 0)) {
-        double breakfast;
-        do {
-            cout << "Enter breakfast expense for last day: $";
-            cin >> breakfast;
-            if (breakfast < 0)
-                cout << "Please enter a valid amount (must be non-negative).\n";
-        } while (breakfast < 0);
-        totalMealExpenses += min(breakfast, MAX_BREAKFAST);
+
+    // Last day
+    if (days > 1) {
+        cout << "Day " << days << ":\n";
+        bool anyMeal = false;
+        if (arrH > 8 || (arrH == 8 && arrM > 0)) {
+            double b = getNonNegativeAmount("Enter the amount spent for breakfast: ");
+            mealsTotal += b; allowedMealsTotal += min(b, MAX_BREAKFAST); anyMeal = true;
+        }
+        if (arrH > 13 || (arrH == 13 && arrM > 0)) {
+            double l = getNonNegativeAmount("Enter the amount spent for lunch: ");
+            mealsTotal += l; allowedMealsTotal += min(l, MAX_LUNCH); anyMeal = true;
+        }
+        if (arrH > 19 || (arrH == 19 && arrM > 0)) {
+            double d = getNonNegativeAmount("Enter the amount spent for dinner: ");
+            mealsTotal += d; allowedMealsTotal += min(d, MAX_DINNER); anyMeal = true;
+        }
+        if (!anyMeal) cout << "No meals allowed due to return before 8:00 a.m." << "\n";
     }
-    
-    if (arrivalHour > 13 || (arrivalHour == 13 && arrivalMinute > 0)) {
-        double lunch;
-        do {
-            cout << "Enter lunch expense for last day: $";
-            cin >> lunch;
-            if (lunch < 0)
-                cout << "Please enter a valid amount (must be non-negative).\n";
-        } while (lunch < 0);
-        totalMealExpenses += min(lunch, MAX_LUNCH);
-    }
-    
-    if (arrivalHour > 19 || (arrivalHour == 19 && arrivalMinute > 0)) {
-        double dinner;
-        do {
-            cout << "Enter dinner expense for last day: $";
-            cin >> dinner;
-            if (dinner < 0)
-                cout << "Please enter a valid amount (must be non-negative).\n";
-        } while (dinner < 0);
-        totalMealExpenses += min(dinner, MAX_DINNER);
-    }
-    
-    return totalMealExpenses;
+
+    double totalExpenses = airfare + carRental + privateVehicle + parking + taxi + registration + hotelExpenses + mealsTotal;
+    double allowableParking = min(6.0 * days, parking);
+    double allowableTaxi = min(10.0 * days, taxi);
+    double allowableHotel = min(90.0 * (days - 1), hotelExpenses);
+
+    double allowable = airfare + carRental + privateVehicle + allowableParking + allowableTaxi + registration + allowableHotel + allowedMealsTotal;
+
+    cout << "\nTotal expenses: $" << totalExpenses << "\n\n";
+    cout << "Allowable expenses: $" << allowable << "\n";
+    if (totalExpenses > allowable) cout << "Amount to be reimbursed: $" << totalExpenses - allowable << "\n";
+    else cout << "Amount to be reimbursed: $0.00\n";
+
+    return 0;
 }
 
-bool isValidTime(int hour, int minute) {
-    return (hour >= 0 && hour < 24 && minute >= 0 && minute < 60);
-}
