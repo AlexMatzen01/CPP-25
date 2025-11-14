@@ -25,7 +25,3 @@ g++ -std=c++17 ex102_menu.cpp DisplayMenu.cpp -o menu
 ```bash
 ./menu
 ```
-
-Notes:
-- Data files are provided under `chap7/data_files/` as small samples so the programs run. Replace them with the full files if you have them.
-- Each source starts with a short design-brief comment block per assignment requirements.
