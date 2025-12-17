@@ -1,0 +1,13 @@
+4 3
+Alice Johnson
+95 92 98
+95
+Bob Smith
+85 88 82
+85
+Carol Davis
+78 81 75
+78
+David Wilson
+90 87 93
+90

@@ -115,6 +115,15 @@ The data file (`student_data.txt`) uses the following format:
 ...
 ```
 
+### Sample Data File
+
+A sample data file (`sample_data.txt`) is included with 4 students and 3 assignments each. To use it:
+```bash
+cp sample_data.txt student_data.txt
+./student_grades
+# Choose option 4 to load data
+```
+
 ## Example Output
 
 ```
