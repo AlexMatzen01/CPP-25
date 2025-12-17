@@ -1,5 +1,24 @@
 # Adventure Quest Engine - ENHANCED EDITION v2.0
 
+## 🏆 HOW TO WIN THE GAME
+
+**Your Mission:** Navigate through the procedurally-generated dungeon, fight enemies, collect loot, level up, and ultimately **defeat the Shadow Lord** in the exit chamber to save the realm!
+
+### Quick Start Guide:
+1. **Create your character** - Choose from Warrior, Mage, Rogue, or Paladin
+2. **Explore the dungeon** - Use `n/s/e/w` to move, `map` to see the layout
+3. **Fight enemies** - Win battles to gain XP and level up
+4. **Collect loot** - Use `search` in rooms, pick up items, equip better gear
+5. **Find the EXIT** - Marked with `X` on the map (top-right area)
+6. **Defeat the Shadow Lord** - The final boss awaits in the exit chamber!
+
+**Tips:** 
+- Type `help` anytime for commands
+- Save your potions for the final boss!
+- Check `quests` to track your objectives
+
+---
+
 ## 🎮 MASSIVE OVERHAUL - Complete Game Transformation!
 
 A **revolutionary** C++ text-based dungeon crawler RPG featuring next-generation gameplay systems, deep progression mechanics, and immersive world-building. This isn't just an update—it's a complete reimagining of the adventure RPG experience!

@@ -16,6 +16,7 @@
 #include <sstream>
 #include <algorithm>
 #include <ctime>
+#include <cmath>
 
 namespace AQE {
 
@@ -137,8 +138,177 @@ void GameEngine::startNewGame() {
     // Initialize game
     initializeGame();
     
+    // Show epic story introduction
+    showStoryIntro();
+    
+    // Give starter quest
+    giveStarterQuests();
+    
     std::cout << "\nYour adventure begins...\n";
     waitForEnter();
+}
+
+void GameEngine::showStoryIntro() {
+    clearScreen();
+    displayDivider(80, '=');
+    std::cout << centerString("THE SHADOW LORD'S DUNGEON", 80) << std::endl;
+    displayDivider(80, '=');
+    std::cout << "\n";
+    
+    std::cout << Color::BRIGHT_CYAN;
+    std::cout << wrapText("Long ago, the Shadow Lord was sealed within this ancient dungeon "
+                         "by the legendary heroes of old. But the seals are weakening, and "
+                         "dark creatures now roam these halls once more.", 78) << "\n\n";
+    std::cout << Color::RESET;
+    
+    std::cout << wrapText("You, " + m_gameState.player.name + ", have been chosen by the "
+                         "Council of Light to venture into the depths, defeat the Shadow Lord, "
+                         "and restore peace to the realm.", 78) << "\n\n";
+    
+    std::cout << Color::YELLOW;
+    std::cout << "YOUR MISSION:\n";
+    std::cout << Color::RESET;
+    std::cout << "  1. Navigate through the dungeon, fighting monsters and solving puzzles\n";
+    std::cout << "  2. Grow stronger by collecting loot and gaining experience\n";
+    std::cout << "  3. Find the EXIT chamber where the Shadow Lord awaits\n";
+    std::cout << "  4. Defeat the Shadow Lord to complete your quest!\n\n";
+    
+    std::cout << Color::GREEN;
+    std::cout << "TIPS FOR SUCCESS:\n";
+    std::cout << Color::RESET;
+    std::cout << "  - Type 'help' at any time to see available commands\n";
+    std::cout << "  - Search rooms for hidden treasures\n";
+    std::cout << "  - Use potions wisely - save some for the final battle!\n";
+    std::cout << "  - Explore thoroughly to level up before facing the boss\n";
+    std::cout << "  - Check your 'map' to see the dungeon layout\n\n";
+    
+    displayDivider(80, '-');
+    std::cout << Color::BRIGHT_WHITE << "\nMay the light guide your path, brave hero!\n" << Color::RESET;
+    waitForEnter();
+}
+
+void GameEngine::giveStarterQuests() {
+    // Create and assign starter quests
+    Quest mainQuest;
+    mainQuest.id = 1;
+    mainQuest.name = "Defeat the Shadow Lord";
+    mainQuest.description = "Navigate through the dungeon, reach the exit chamber, and defeat the Shadow Lord to save the realm!";
+    mainQuest.completionText = "You have vanquished the Shadow Lord! The realm is saved!";
+    mainQuest.isMainQuest = true;
+    mainQuest.requiresBoss = true;
+    mainQuest.goldReward = 500;
+    mainQuest.experienceReward = 1000;
+    mainQuest.status = QuestStatus::IN_PROGRESS;
+    m_gameState.player.activeQuests.push_back(mainQuest);
+    
+    Quest killQuest;
+    killQuest.id = 2;
+    killQuest.name = "Monster Slayer";
+    killQuest.description = "Defeat 5 enemies to prove your combat prowess.";
+    killQuest.completionText = "You've proven yourself a capable warrior!";
+    killQuest.targetEnemyCount = 5;
+    killQuest.goldReward = 75;
+    killQuest.experienceReward = 150;
+    killQuest.status = QuestStatus::IN_PROGRESS;
+    m_gameState.player.activeQuests.push_back(killQuest);
+    
+    Quest exploreQuest;
+    exploreQuest.id = 3;
+    exploreQuest.name = "Explorer";
+    exploreQuest.description = "Explore 10 different rooms in the dungeon.";
+    exploreQuest.completionText = "Your exploration has revealed many secrets!";
+    exploreQuest.targetEnemyCount = 10;  // Using for room count
+    exploreQuest.goldReward = 50;
+    exploreQuest.experienceReward = 100;
+    exploreQuest.status = QuestStatus::IN_PROGRESS;
+    m_gameState.player.activeQuests.push_back(exploreQuest);
+    
+    // Give starting items
+    addStarterItems();
+    
+    clearScreen();
+    std::cout << "\n" << Color::GREEN << "*** QUESTS RECEIVED! ***" << Color::RESET << "\n\n";
+    std::cout << "Main Quest: " << Color::YELLOW << mainQuest.name << Color::RESET << "\n";
+    std::cout << "  " << mainQuest.description << "\n\n";
+    std::cout << "Side Quest: " << Color::CYAN << killQuest.name << Color::RESET << "\n";
+    std::cout << "  " << killQuest.description << "\n\n";
+    std::cout << "Side Quest: " << Color::CYAN << exploreQuest.name << Color::RESET << "\n";
+    std::cout << "  " << exploreQuest.description << "\n\n";
+    
+    std::cout << Color::GREEN << "You've also received some starting supplies!" << Color::RESET << "\n";
+    waitForEnter();
+}
+
+void GameEngine::addStarterItems() {
+    // Add health potions
+    Item healthPotion;
+    healthPotion.id = 1001;
+    healthPotion.name = "Health Potion";
+    healthPotion.description = "A red potion that restores 40 HP.";
+    healthPotion.type = ItemType::CONSUMABLE;
+    healthPotion.rarity = ItemRarity::COMMON;
+    healthPotion.healAmount = 40;
+    healthPotion.quantity = 5;
+    healthPotion.value = 25;
+    healthPotion.isUsable = true;
+    healthPotion.isStackable = true;
+    m_gameState.player.inventory.push_back(healthPotion);
+    
+    // Add a starter weapon based on class
+    Item weapon;
+    weapon.id = 2001;
+    weapon.type = ItemType::WEAPON;
+    weapon.rarity = ItemRarity::UNCOMMON;
+    weapon.quantity = 1;
+    weapon.isUsable = false;
+    weapon.isStackable = false;
+    
+    switch (m_gameState.player.charClass) {
+        case CharacterClass::WARRIOR:
+            weapon.name = "Steel Longsword";
+            weapon.description = "A sturdy blade forged for battle.";
+            weapon.attackBonus = 8;
+            weapon.value = 100;
+            break;
+        case CharacterClass::MAGE:
+            weapon.name = "Enchanted Staff";
+            weapon.description = "A staff humming with magical energy.";
+            weapon.attackBonus = 5;
+            weapon.critBonus = 10;
+            weapon.value = 120;
+            break;
+        case CharacterClass::ROGUE:
+            weapon.name = "Shadow Daggers";
+            weapon.description = "Twin daggers perfect for swift strikes.";
+            weapon.attackBonus = 6;
+            weapon.critBonus = 15;
+            weapon.speedBonus = 3;
+            weapon.value = 110;
+            break;
+        case CharacterClass::PALADIN:
+            weapon.name = "Blessed Warhammer";
+            weapon.description = "A holy weapon that smites evil.";
+            weapon.attackBonus = 7;
+            weapon.defenseBonus = 3;
+            weapon.value = 130;
+            break;
+    }
+    
+    m_gameState.player.inventory.push_back(weapon);
+    
+    // Add starting armor
+    Item armor;
+    armor.id = 3001;
+    armor.name = "Adventurer's Armor";
+    armor.description = "Basic protective gear for dungeon delving.";
+    armor.type = ItemType::ARMOR;
+    armor.rarity = ItemRarity::COMMON;
+    armor.defenseBonus = 5;
+    armor.quantity = 1;
+    armor.value = 75;
+    armor.isUsable = false;
+    armor.isStackable = false;
+    m_gameState.player.inventory.push_back(armor);
 }
 
 void GameEngine::gameLoop() {
@@ -649,10 +819,33 @@ bool GameEngine::movePlayer(char direction) {
     // Move player
     m_gameState.player.currentRoomId = newRoomId;
     
-    // Check if this is the exit
+    // Check if this is the exit - trigger FINAL BOSS FIGHT!
     if (newRoomId == m_mapGenerator.getExitRoomId()) {
-        std::cout << "\nYou have found the exit!\n";
-        m_gameState.player.hasWon = true;
+        clearScreen();
+        displayDivider(80, '=');
+        std::cout << Color::BRIGHT_RED << centerString("THE SHADOW LORD'S CHAMBER", 80) << Color::RESET << std::endl;
+        displayDivider(80, '=');
+        std::cout << "\n";
+        
+        std::cout << Color::YELLOW;
+        std::cout << wrapText("The air grows cold and heavy as you enter the final chamber. "
+                             "Dark energy swirls around a massive throne, and upon it sits the "
+                             "Shadow Lord himself - a towering figure cloaked in darkness, "
+                             "eyes burning with ancient malice.", 78) << "\n\n";
+        std::cout << Color::RESET;
+        
+        std::cout << Color::RED << "\"So, a new fool dares to challenge me? Very well... "
+                  << "LET US END THIS!\"" << Color::RESET << "\n\n";
+        
+        waitForEnter();
+        
+        // Trigger the final boss battle!
+        if (triggerFinalBoss()) {
+            showVictoryCelebration();
+            m_gameState.player.hasWon = true;
+        } else {
+            // Player died - game over handled in combat
+        }
     }
     
     return true;
@@ -868,29 +1061,50 @@ void GameEngine::openMap() {
 void GameEngine::showHelp() {
     clearScreen();
     displayDivider(80, '=');
-    std::cout << centerString("HELP - COMMANDS", 80) << std::endl;
+    std::cout << centerString("HELP - ADVENTURE GUIDE", 80) << std::endl;
     displayDivider(80, '=');
     std::cout << "\n";
-    std::cout << "Movement:\n";
+    
+    std::cout << Color::YELLOW << "YOUR OBJECTIVE:" << Color::RESET << "\n";
+    std::cout << "  Navigate to the EXIT room and defeat the Shadow Lord to win!\n";
+    std::cout << "  The exit is marked with 'X' on the map.\n\n";
+    
+    std::cout << Color::GREEN << "MOVEMENT COMMANDS:" << Color::RESET << "\n";
     std::cout << "  n, north     - Move north\n";
     std::cout << "  s, south     - Move south\n";
     std::cout << "  e, east      - Move east\n";
     std::cout << "  w, west      - Move west\n\n";
-    std::cout << "Actions:\n";
-    std::cout << "  look         - Examine the room\n";
-    std::cout << "  search       - Search for hidden items\n";
-    std::cout << "  interact     - Interact with room objects\n";
-    std::cout << "  pickup [#]   - Pick up an item\n\n";
-    std::cout << "Menus:\n";
-    std::cout << "  inventory    - Open inventory\n";
-    std::cout << "  status       - View character stats\n";
-    std::cout << "  quests       - View quest log\n";
-    std::cout << "  map          - View dungeon map\n";
-    std::cout << "  menu         - Open game menu\n";
-    std::cout << "  help         - Show this help\n\n";
-    std::cout << "Other:\n";
-    std::cout << "  save         - Save game\n";
-    std::cout << "  quit         - Quit game\n";
+    
+    std::cout << Color::CYAN << "ACTION COMMANDS:" << Color::RESET << "\n";
+    std::cout << "  look         - Examine the current room in detail\n";
+    std::cout << "  search       - Search for hidden items and secrets\n";
+    std::cout << "  interact     - Interact with objects in the room\n";
+    std::cout << "  pickup [#]   - Pick up a specific item by number\n\n";
+    
+    std::cout << Color::BRIGHT_WHITE << "MENU COMMANDS:" << Color::RESET << "\n";
+    std::cout << "  inventory    - Open your inventory (equip items, use potions)\n";
+    std::cout << "  status       - View your character stats and equipment\n";
+    std::cout << "  quests       - View your active and completed quests\n";
+    std::cout << "  map          - View the dungeon map (E=Entrance, X=Exit)\n";
+    std::cout << "  menu         - Open the game menu\n";
+    std::cout << "  help         - Show this help guide\n\n";
+    
+    std::cout << Color::YELLOW << "GAME COMMANDS:" << Color::RESET << "\n";
+    std::cout << "  save         - Save your game progress\n";
+    std::cout << "  quit         - Exit the game\n\n";
+    
+    std::cout << Color::BRIGHT_GREEN << "COMBAT TIPS:" << Color::RESET << "\n";
+    std::cout << "  - Use potions during battle by selecting 'Use Item'\n";
+    std::cout << "  - Skills deal more damage but cost mana\n";
+    std::cout << "  - You can try to flee if a battle is too hard\n";
+    std::cout << "  - Bosses are harder to escape from!\n\n";
+    
+    std::cout << Color::BRIGHT_YELLOW << "ROOM TYPES:" << Color::RESET << "\n";
+    std::cout << "  E = Entrance (start)    X = Exit (final boss!)\n";
+    std::cout << "  B = Boss Room           T = Treasure Room\n";
+    std::cout << "  ! = Trap Room           ? = Puzzle Room\n";
+    std::cout << "  S = Secret Room         R = Rest/Safe Room\n";
+    std::cout << "  . = Normal Room\n";
     
     displayDivider(80, '-');
     waitForEnter();
@@ -1339,7 +1553,119 @@ void GameEngine::updateStatusEffects() {
 }
 
 void GameEngine::checkQuestProgress() {
-    // Would implement quest progress checking
+    // Quest ID constants for maintainability
+    constexpr int MAIN_QUEST_ID = 1;            // Defeat the Shadow Lord
+    constexpr int MONSTER_SLAYER_QUEST_ID = 2;  // Kill enemy count quest
+    constexpr int EXPLORER_QUEST_ID = 3;        // Room exploration quest
+    
+    (void)MAIN_QUEST_ID;  // Main quest tracked separately via boss defeat
+    
+    // Check kill quest progress
+    for (auto& quest : m_gameState.player.activeQuests) {
+        if (quest.status != QuestStatus::IN_PROGRESS) continue;
+        
+        // Monster Slayer quest - track kills
+        if (quest.id == MONSTER_SLAYER_QUEST_ID && quest.targetEnemyCount > 0) {
+            quest.currentEnemyCount = m_gameState.player.totalKills;
+            if (quest.currentEnemyCount >= quest.targetEnemyCount && 
+                quest.status == QuestStatus::IN_PROGRESS) {
+                quest.status = QuestStatus::COMPLETED;
+                m_gameState.player.gold += quest.goldReward;
+                m_gameState.player.experience += quest.experienceReward;
+                
+                std::cout << "\n" << Color::GREEN << "*** QUEST COMPLETE: " << quest.name << " ***" << Color::RESET << "\n";
+                std::cout << "Rewards: " << quest.goldReward << " gold, " << quest.experienceReward << " XP!\n";
+                waitForEnter();
+            }
+        }
+        
+        // Explorer quest - track rooms visited
+        if (quest.id == EXPLORER_QUEST_ID && quest.targetEnemyCount > 0) {
+            quest.currentEnemyCount = static_cast<int>(m_gameState.player.visitedRooms.size());
+            if (quest.currentEnemyCount >= quest.targetEnemyCount && 
+                quest.status == QuestStatus::IN_PROGRESS) {
+                quest.status = QuestStatus::COMPLETED;
+                m_gameState.player.gold += quest.goldReward;
+                m_gameState.player.experience += quest.experienceReward;
+                
+                std::cout << "\n" << Color::GREEN << "*** QUEST COMPLETE: " << quest.name << " ***" << Color::RESET << "\n";
+                std::cout << "Rewards: " << quest.goldReward << " gold, " << quest.experienceReward << " XP!\n";
+                waitForEnter();
+            }
+        }
+    }
+    
+    // Check for level up
+    checkLevelUp();
+}
+
+void GameEngine::checkLevelUp() {
+    while (m_gameState.player.experience >= m_gameState.player.experienceToLevel) {
+        m_gameState.player.experience -= m_gameState.player.experienceToLevel;
+        m_gameState.player.level++;
+        
+        // Increase experience needed for next level
+        m_gameState.player.experienceToLevel = static_cast<int>(
+            BASE_XP_TO_LEVEL * std::pow(XP_MULTIPLIER_PER_LEVEL, m_gameState.player.level - 1));
+        
+        // Stat increases based on class
+        int hpGain = 10;
+        int manaGain = 5;
+        int atkGain = 2;
+        int defGain = 1;
+        
+        switch (m_gameState.player.charClass) {
+            case CharacterClass::WARRIOR:
+                hpGain = 15;
+                atkGain = 3;
+                defGain = 2;
+                break;
+            case CharacterClass::MAGE:
+                manaGain = 15;
+                m_gameState.player.stats.magicPower += 3;
+                break;
+            case CharacterClass::ROGUE:
+                m_gameState.player.stats.critChance += 2;
+                m_gameState.player.stats.speed += 2;
+                break;
+            case CharacterClass::PALADIN:
+                hpGain = 12;
+                manaGain = 8;
+                defGain = 2;
+                break;
+        }
+        
+        m_gameState.player.stats.maxHP += hpGain;
+        m_gameState.player.stats.currentHP += hpGain;
+        m_gameState.player.stats.maxMana += manaGain;
+        m_gameState.player.stats.currentMana += manaGain;
+        m_gameState.player.stats.attack += atkGain;
+        m_gameState.player.stats.defense += defGain;
+        
+        // Show level up message
+        clearScreen();
+        std::cout << Color::BRIGHT_YELLOW;
+        std::cout << R"(
+    ╔═══════════════════════════════════════╗
+    ║          LEVEL UP!                    ║
+    ╚═══════════════════════════════════════╝
+        )" << "\n";
+        std::cout << Color::RESET;
+        
+        std::cout << "  Congratulations! You are now level " << m_gameState.player.level << "!\n\n";
+        std::cout << "  Stat Increases:\n";
+        std::cout << "    Max HP: +" << hpGain << " (Now: " << m_gameState.player.stats.maxHP << ")\n";
+        std::cout << "    Max Mana: +" << manaGain << " (Now: " << m_gameState.player.stats.maxMana << ")\n";
+        std::cout << "    Attack: +" << atkGain << " (Now: " << m_gameState.player.stats.attack << ")\n";
+        std::cout << "    Defense: +" << defGain << " (Now: " << m_gameState.player.stats.defense << ")\n";
+        std::cout << "\n  Your health and mana have been restored!\n\n";
+        
+        // Restore some health on level up
+        m_gameState.player.stats.currentHP = m_gameState.player.stats.maxHP;
+        m_gameState.player.stats.currentMana = m_gameState.player.stats.maxMana;
+        
+        waitForEnter();
+    }
 }
 
 Room& GameEngine::getCurrentRoom() {
@@ -1361,6 +1687,191 @@ const Room& GameEngine::getCurrentRoom() const {
     }
     
     return m_gameState.dungeon[0];
+}
+
+bool GameEngine::triggerFinalBoss() {
+    // Create the Shadow Lord - an epic final boss!
+    Enemy shadowLord;
+    shadowLord.id = 9999;
+    shadowLord.name = "The Shadow Lord";
+    shadowLord.description = "The ancient evil that has terrorized the realm for centuries.";
+    shadowLord.dialogue = "Your soul will join my collection of fallen heroes!";
+    shadowLord.isBoss = true;
+    
+    // Scale boss stats based on player level for a fair but challenging fight
+    int playerLevel = m_gameState.player.level;
+    int baseMult = std::max(1, playerLevel);
+    
+    shadowLord.stats.maxHP = 150 + (baseMult * 30);
+    shadowLord.stats.currentHP = shadowLord.stats.maxHP;
+    shadowLord.stats.attack = 15 + (baseMult * 3);
+    shadowLord.stats.defense = 10 + (baseMult * 2);
+    shadowLord.stats.critChance = 15;
+    shadowLord.stats.dodgeChance = 10;
+    shadowLord.stats.speed = 12 + playerLevel;
+    shadowLord.stats.magicPower = 20 + (baseMult * 2);
+    shadowLord.stats.magicResist = 15 + baseMult;
+    
+    shadowLord.experienceReward = 500 + (playerLevel * 100);
+    shadowLord.goldReward = 300 + (playerLevel * 50);
+    
+    // Add boss abilities
+    EnemyAbility shadowBolt;
+    shadowBolt.name = "Shadow Bolt";
+    shadowBolt.description = "Launches a bolt of pure darkness";
+    shadowBolt.damage = 25 + (playerLevel * 5);
+    shadowBolt.cooldown = 3;
+    shadowBolt.currentCooldown = 0;
+    shadowBolt.triggerChance = 0.4f;
+    shadowLord.abilities.push_back(shadowBolt);
+    
+    EnemyAbility darkHeal;
+    darkHeal.name = "Dark Regeneration";
+    darkHeal.description = "Absorbs dark energy to heal";
+    darkHeal.heals = true;
+    darkHeal.healAmount = 30 + (playerLevel * 5);
+    darkHeal.cooldown = 5;
+    darkHeal.currentCooldown = 2;
+    darkHeal.triggerChance = 0.3f;
+    shadowLord.abilities.push_back(darkHeal);
+    
+    // Show boss intro with ASCII art
+    clearScreen();
+    std::cout << Color::BRIGHT_RED;
+    std::cout << R"(
+                          ___
+                      .-'`   `'-.
+                     /           \
+                    |  .-------.  |
+                    | |  X   X  | |
+                    |  `._____.'  |
+                     \   | | |   /
+                      \  |===|  /
+                       `._____.`
+                        /|   |\
+                       / |   | \
+                      /  |   |  \
+                         |   |
+                        /|   |\
+                       / |   | \
+                      /__|   |__\
+    )" << "\n";
+    std::cout << Color::RESET;
+    
+    displayDivider(60, '=');
+    std::cout << Color::RED << centerString("THE SHADOW LORD", 60) << Color::RESET << "\n";
+    displayDivider(60, '=');
+    std::cout << "\n";
+    std::cout << "HP: " << shadowLord.stats.currentHP << "/" << shadowLord.stats.maxHP << "\n";
+    std::cout << "ATK: " << shadowLord.stats.attack << " | DEF: " << shadowLord.stats.defense << "\n";
+    std::cout << "\n" << Color::YELLOW << "This is the FINAL BATTLE! Prepare yourself!" << Color::RESET << "\n\n";
+    waitForEnter();
+    
+    // Start the epic boss battle!
+    std::vector<Enemy> bossBattle = { shadowLord };
+    CombatResult result = m_combatSystem.startCombat(bossBattle);
+    
+    if (result.playerDied) {
+        m_gameState.player.isAlive = false;
+        return false;
+    }
+    
+    if (result.playerWon) {
+        m_gameState.player.experience += result.experienceGained;
+        m_gameState.player.gold += result.goldGained;
+        m_gameState.player.bossesDefeated++;
+        m_gameState.player.totalKills++;
+        
+        // Give legendary loot!
+        Item legendaryWeapon;
+        legendaryWeapon.id = 99001;
+        legendaryWeapon.name = "Shadow Lord's Blade";
+        legendaryWeapon.description = "The dark blade of the fallen Shadow Lord, now purified by your victory.";
+        legendaryWeapon.type = ItemType::WEAPON;
+        legendaryWeapon.rarity = ItemRarity::LEGENDARY;
+        legendaryWeapon.attackBonus = 25;
+        legendaryWeapon.critBonus = 15;
+        legendaryWeapon.speedBonus = 5;
+        legendaryWeapon.value = 5000;
+        legendaryWeapon.quantity = 1;
+        m_gameState.player.inventory.push_back(legendaryWeapon);
+        
+        clearScreen();
+        std::cout << "\n" << Color::BRIGHT_GREEN << "*** LEGENDARY ITEM OBTAINED! ***" << Color::RESET << "\n";
+        std::cout << Color::YELLOW << legendaryWeapon.name << Color::RESET << "\n";
+        std::cout << legendaryWeapon.description << "\n\n";
+        waitForEnter();
+        
+        return true;
+    }
+    
+    return false;
+}
+
+void GameEngine::showVictoryCelebration() {
+    clearScreen();
+    
+    // Epic victory ASCII art
+    std::cout << Color::BRIGHT_YELLOW;
+    std::cout << R"(
+    ██╗   ██╗██╗ ██████╗████████╗ ██████╗ ██████╗ ██╗   ██╗██╗
+    ██║   ██║██║██╔════╝╚══██╔══╝██╔═══██╗██╔══██╗╚██╗ ██╔╝██║
+    ██║   ██║██║██║        ██║   ██║   ██║██████╔╝ ╚████╔╝ ██║
+    ╚██╗ ██╔╝██║██║        ██║   ██║   ██║██╔══██╗  ╚██╔╝  ╚═╝
+     ╚████╔╝ ██║╚██████╗   ██║   ╚██████╔╝██║  ██║   ██║   ██╗
+      ╚═══╝  ╚═╝ ╚═════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝
+    )" << "\n";
+    std::cout << Color::RESET;
+    
+    displayDivider(80, '=');
+    std::cout << Color::BRIGHT_GREEN << centerString("CONGRATULATIONS, CHAMPION!", 80) << Color::RESET << std::endl;
+    displayDivider(80, '=');
+    std::cout << "\n";
+    
+    std::cout << Color::CYAN;
+    std::cout << wrapText("With a final, mighty blow, the Shadow Lord falls! The dark energy "
+                         "that had plagued the realm for centuries dissipates into nothing. "
+                         "The dungeon begins to shake as the ancient evil's power fades away.", 78) << "\n\n";
+    std::cout << Color::RESET;
+    
+    std::cout << wrapText("You, " + m_gameState.player.name + " the " + 
+                         getClassName(m_gameState.player.charClass) + 
+                         ", have saved the realm! Songs will be sung of your bravery for "
+                         "generations to come. The Council of Light welcomes you as a true hero.", 78) << "\n\n";
+    
+    std::cout << Color::YELLOW;
+    displayDivider(60, '*');
+    std::cout << centerString("YOUR HEROIC JOURNEY", 60) << "\n";
+    displayDivider(60, '*');
+    std::cout << Color::RESET;
+    
+    std::cout << "\n";
+    std::cout << "  " << Color::BRIGHT_WHITE << "Level Achieved:" << Color::RESET << " " << m_gameState.player.level << "\n";
+    std::cout << "  " << Color::BRIGHT_WHITE << "Enemies Defeated:" << Color::RESET << " " << m_gameState.player.totalKills << "\n";
+    std::cout << "  " << Color::BRIGHT_WHITE << "Bosses Slain:" << Color::RESET << " " << m_gameState.player.bossesDefeated << "\n";
+    std::cout << "  " << Color::BRIGHT_WHITE << "Rooms Explored:" << Color::RESET << " " << m_gameState.player.visitedRooms.size() << "\n";
+    std::cout << "  " << Color::BRIGHT_WHITE << "Puzzles Solved:" << Color::RESET << " " << m_gameState.player.puzzlesSolved << "\n";
+    std::cout << "  " << Color::BRIGHT_WHITE << "Secrets Found:" << Color::RESET << " " << m_gameState.player.secretsFound << "\n";
+    std::cout << "  " << Color::BRIGHT_WHITE << "Gold Collected:" << Color::RESET << " " << m_gameState.player.gold << "\n";
+    std::cout << "  " << Color::BRIGHT_WHITE << "Total Turns:" << Color::RESET << " " << m_gameState.player.totalTurns << "\n";
+    std::cout << "\n";
+    
+    // Calculate a score
+    int score = (m_gameState.player.level * 100) + 
+                (m_gameState.player.totalKills * 10) + 
+                (m_gameState.player.bossesDefeated * 500) +
+                (m_gameState.player.secretsFound * 50) +
+                (m_gameState.player.puzzlesSolved * 75) +
+                m_gameState.player.gold +
+                (500 - std::min(500, m_gameState.player.totalTurns));  // Speed bonus
+    
+    std::cout << Color::BRIGHT_YELLOW << "  FINAL SCORE: " << score << " POINTS!" << Color::RESET << "\n\n";
+    
+    displayDivider(80, '=');
+    std::cout << Color::GREEN << "\nThank you for playing Adventure Quest Engine!" << Color::RESET << "\n";
+    std::cout << "Created with love using C++\n\n";
+    
+    waitForEnter();
 }
 
 }  // namespace AQE
