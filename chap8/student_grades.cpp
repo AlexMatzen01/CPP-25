@@ -442,10 +442,10 @@ void merge(int left, int mid, int right) {
     int n1 = mid - left + 1;
     int n2 = right - mid;
     
-    // Create temporary arrays
-    string tempNames1[n1], tempNames2[n2];
-    double tempAvgs1[n1], tempAvgs2[n2];
-    double tempGrades1[n1][MAX_ASSIGNMENTS], tempGrades2[n2][MAX_ASSIGNMENTS];
+    // Create temporary arrays (fixed-size for portability)
+    string tempNames1[MAX_STUDENTS], tempNames2[MAX_STUDENTS];
+    double tempAvgs1[MAX_STUDENTS], tempAvgs2[MAX_STUDENTS];
+    double tempGrades1[MAX_STUDENTS][MAX_ASSIGNMENTS], tempGrades2[MAX_STUDENTS][MAX_ASSIGNMENTS];
     
     // Copy data to temp arrays
     for (int i = 0; i < n1; ++i) {
