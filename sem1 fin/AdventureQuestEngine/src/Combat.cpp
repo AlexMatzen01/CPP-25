@@ -47,17 +47,17 @@ namespace {
     const std::string BAR_LIGHT = "░";
     const std::string BAR_EMPTY = "·";
     
-    // Combat icons
-    const std::string ICON_SWORD = "⚔";
-    const std::string ICON_SHIELD = "🛡";
-    const std::string ICON_HEART = "♥";
-    const std::string ICON_MANA = "◆";
-    const std::string ICON_SKULL = "☠";
-    const std::string ICON_STAR = "★";
-    const std::string ICON_ARROW = "➤";
-    const std::string ICON_LIGHTNING = "⚡";
-    const std::string ICON_FIRE = "🔥";
-    const std::string ICON_MAGIC = "✦";
+    // Combat icons - ASCII compatible for wider terminal support
+    const std::string ICON_SWORD = "[ATK]";
+    const std::string ICON_SHIELD = "[DEF]";
+    const std::string ICON_HEART = "[HP]";
+    const std::string ICON_MANA = "[MP]";
+    const std::string ICON_SKULL = "[X]";
+    const std::string ICON_STAR = "*";
+    const std::string ICON_ARROW = ">";
+    const std::string ICON_LIGHTNING = "[!]";
+    const std::string ICON_FIRE = "[F]";
+    const std::string ICON_MAGIC = "[M]";
     
     // Combat width constant
     const int COMBAT_WIDTH = 70;
@@ -79,16 +79,16 @@ namespace {
     
     std::string getIntentIcon(EnemyIntent intent) {
         switch (intent) {
-            case EnemyIntent::ATTACK_LIGHT: return "⚔ ";
+            case EnemyIntent::ATTACK_LIGHT: return "⚔";
             case EnemyIntent::ATTACK_HEAVY: return "💥";
-            case EnemyIntent::DEFEND: return "🛡 ";
+            case EnemyIntent::DEFEND: return "🛡";
             case EnemyIntent::DEBUFF: return "💀";
             case EnemyIntent::BUFF: return "✨";
             case EnemyIntent::HEAL: return "💚";
             case EnemyIntent::CONTROL: return "🌀";
             case EnemyIntent::SUMMON: return "👥";
             case EnemyIntent::CHARGE: return "⚡";
-            default: return "❓";
+            default: return "?";
         }
     }
     
@@ -217,11 +217,11 @@ namespace {
     void showAttackAnimation(const std::string& attackerName, bool isPlayer, bool isCrit) {
         if (isCrit) {
             std::cout << "\n";
-            std::cout << Color::BRIGHT_YELLOW << "    ★ ★ ★ CRITICAL HIT ★ ★ ★" << Color::RESET << "\n";
+            std::cout << Color::BRIGHT_YELLOW << "    * * * CRITICAL HIT * * *" << Color::RESET << "\n";
             std::cout << Color::BRIGHT_RED;
             std::cout << "         \\  |  /\n";
             std::cout << "          \\ | /\n";
-            std::cout << "       ----☆----\n";
+            std::cout << "       ----*----\n";
             std::cout << "          / | \\\n";
             std::cout << "         /  |  \\\n";
             std::cout << Color::RESET;
@@ -242,7 +242,7 @@ namespace {
     void showDamageEffect(int damage, bool isCrit, bool isPlayerDamaged) {
         std::string color = isPlayerDamaged ? Color::BRIGHT_RED : Color::BRIGHT_GREEN;
         if (isCrit) {
-            std::cout << color << "         -" << damage << "! ★" << Color::RESET << "\n";
+            std::cout << color << "         -" << damage << "! *" << Color::RESET << "\n";
         } else {
             std::cout << color << "         -" << damage << Color::RESET << "\n";
         }
@@ -259,7 +259,7 @@ namespace {
     // Show healing effect
     void showHealEffect(int amount) {
         std::cout << Color::BRIGHT_GREEN;
-        std::cout << "       ✦ +" << amount << " HP ✦\n";
+        std::cout << "       + +" << amount << " HP +\n";
         std::cout << Color::RESET;
     }
 
@@ -338,7 +338,7 @@ CombatResult CombatSystem::startCombat(std::vector<Enemy>& enemies) {
         std::stringstream enemyLine;
         enemyLine << "  " << (i + 1) << ". ";
         if (enemies[i].isBoss) {
-            enemyLine << "★ " << enemies[i].name << " ★ [BOSS]";
+            enemyLine << "* " << enemies[i].name << " * [BOSS]";
             drawCombatText(enemyLine.str(), Color::BRIGHT_MAGENTA);
         } else {
             enemyLine << enemies[i].name;
@@ -390,7 +390,7 @@ CombatResult CombatSystem::startCombat(std::vector<Enemy>& enemies) {
         std::cout << "\n";
         drawCombatTop();
         drawCombatEmpty();
-        drawCombatTitle("★ ★ ★  VICTORY  ★ ★ ★", Color::BRIGHT_YELLOW);
+        drawCombatTitle("* * *  VICTORY  * * *", Color::BRIGHT_YELLOW);
         drawCombatEmpty();
         drawCombatLine('=');
         drawCombatEmpty();
@@ -399,7 +399,7 @@ CombatResult CombatSystem::startCombat(std::vector<Enemy>& enemies) {
         
         // Display rewards with icons
         std::stringstream xpLine;
-        xpLine << "  ✦ Experience: +" << result.experienceGained << " XP";
+        xpLine << "  + Experience: +" << result.experienceGained << " XP";
         drawCombatText(xpLine.str(), Color::BRIGHT_CYAN);
         
         std::stringstream goldLine;
@@ -435,7 +435,7 @@ CombatResult CombatSystem::startCombat(std::vector<Enemy>& enemies) {
         std::cout << "\n";
         drawCombatTop();
         drawCombatEmpty();
-        drawCombatTitle("☠  DEFEAT  ☠", Color::BRIGHT_RED);
+        drawCombatTitle("DEFEAT", Color::BRIGHT_RED);
         drawCombatEmpty();
         drawCombatLine('=');
         drawCombatEmpty();
@@ -583,7 +583,7 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies) {
                         displayMessage(result.message);
                         
                         if (enemies[targetIdx].stats.currentHP <= 0) {
-                            std::cout << Color::BRIGHT_YELLOW << "\n    ☠ " << enemies[targetIdx].name << " " 
+                            std::cout << Color::BRIGHT_YELLOW << "\n    [X] " << enemies[targetIdx].name << " " 
                                       << randomElement(DEATH_TEXT) << Color::RESET << "\n";
                         }
                         break;
@@ -594,7 +594,7 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies) {
                             // Ideally we'd loop back, but for now we just lose turn
                         } else {
                             std::cout << "\n";
-                            std::cout << Color::BRIGHT_BLUE << "  ✦ Available Skills:" << Color::RESET << "\n";
+                            std::cout << Color::BRIGHT_BLUE << "  > Available Skills:" << Color::RESET << "\n";
                             for (size_t i = 0; i < playerRef.skills.size(); ++i) {
                                 const Skill& skill = playerRef.skills[i];
                                 bool canUse = (playerRef.stats.currentMana >= skill.manaCost && skill.currentCooldown <= 0);
@@ -619,7 +619,7 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies) {
                                 if (result.healingDone > 0) {
                                     showHealEffect(result.healingDone);
                                 } else if (result.damageDealt > 0) {
-                                    std::cout << Color::BRIGHT_BLUE << "    ✦ SKILL ACTIVATED ✦" << Color::RESET << "\n";
+                                    std::cout << Color::BRIGHT_BLUE << "    * SKILL ACTIVATED *" << Color::RESET << "\n";
                                     showDamageEffect(result.damageDealt, false, false);
                                 }
                                 displayMessage(result.message);
@@ -633,7 +633,7 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies) {
                             std::cout << Color::RED << "  No usable items!" << Color::RESET << "\n";
                         } else {
                             std::cout << "\n";
-                            std::cout << Color::BRIGHT_GREEN << "  ♦ Usable Items:" << Color::RESET << "\n";
+                            std::cout << Color::BRIGHT_GREEN << "  > Usable Items:" << Color::RESET << "\n";
                             for (size_t i = 0; i < combatItems.size(); ++i) {
                                 const Item& item = playerRef.inventory[combatItems[i]];
                                 std::cout << Color::WHITE << "    " << (i + 1) << ". " << item.name;
@@ -654,7 +654,7 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies) {
                         break;
                     }
                     case 4: {  // Flee
-                        std::cout << Color::YELLOW << "\n    ↺ Attempting to flee..." << Color::RESET << "\n";
+                        std::cout << Color::YELLOW << "\n    <- Attempting to flee..." << Color::RESET << "\n";
                         delay(500);
                         if (attemptFlee(enemies)) {
                             combatEnded = true;
@@ -676,14 +676,27 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies) {
                     continue;
                 }
                 
-                // Enhanced enemy turn header
+                // Enhanced enemy turn header - constant width box
+                const int ENEMY_BOX_WIDTH = 40;
+                std::string turnText = toUpper(enemy.name) + "'S TURN";
+                int textLen = static_cast<int>(turnText.length());
+                int leftPad = (ENEMY_BOX_WIDTH - 4 - textLen) / 2;
+                int rightPad = ENEMY_BOX_WIDTH - 4 - textLen - leftPad;
+                
                 std::cout << "\n";
-                std::cout << Color::RED << "  ╔══════════════════════════════════════╗" << Color::RESET << "\n";
-                std::cout << Color::RED << "  ║  " << Color::BRIGHT_RED << "☠ " << toUpper(enemy.name) << "'S TURN ☠";
-                int nameLen = static_cast<int>(enemy.name.length()) + 20;
-                for (int p = 0; p < 36 - nameLen; ++p) std::cout << " ";
-                std::cout << Color::RED << "║" << Color::RESET << "\n";
-                std::cout << Color::RED << "  ╚══════════════════════════════════════╝" << Color::RESET << "\n";
+                std::cout << Color::RED << "  ";
+                for (int i = 0; i < ENEMY_BOX_WIDTH; ++i) std::cout << "=";
+                std::cout << Color::RESET << "\n";
+                
+                std::cout << Color::RED << "  | " << Color::BRIGHT_RED;
+                for (int i = 0; i < leftPad; ++i) std::cout << " ";
+                std::cout << turnText;
+                for (int i = 0; i < rightPad; ++i) std::cout << " ";
+                std::cout << Color::RED << " |" << Color::RESET << "\n";
+                
+                std::cout << Color::RED << "  ";
+                for (int i = 0; i < ENEMY_BOX_WIDTH; ++i) std::cout << "=";
+                std::cout << Color::RESET << "\n";
                 delay(300);
                 
                 // Check if enemy uses ability or intent dictates action
@@ -691,7 +704,7 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies) {
                 if (enemy.nextIntent == EnemyIntent::HEAL || shouldEnemyUseAbility(enemy)) {
                     AbilityResult result = useEnemyAbility(enemy);
                     if (result.healingDone > 0) {
-                        std::cout << Color::GREEN << "    💚 " << enemy.name << " heals!" << Color::RESET << "\n";
+                        std::cout << Color::GREEN << "    + " << enemy.name << " heals!" << Color::RESET << "\n";
                         showHealEffect(result.healingDone);
                     }
                     displayMessage(result.message);
@@ -757,37 +770,33 @@ void CombatSystem::displayCombatStatus(const std::vector<Enemy>& enemies) const 
     
     // Enhanced combat status display
     drawCombatTop();
-    drawCombatTitle("⚔  COMBAT STATUS  ⚔", Color::BRIGHT_WHITE);
+    drawCombatTitle("COMBAT STATUS", Color::BRIGHT_WHITE);
     drawCombatLine('=');
     
     // Player section header
     drawCombatEmpty();
     std::stringstream playerHeader;
-    playerHeader << "♦ " << playerRef.name << " (" << classToString(playerRef.charClass) << ") ♦";
+    playerHeader << playerRef.name << " (" << classToString(playerRef.charClass) << ")";
     drawCombatText(playerHeader.str(), Color::BRIGHT_GREEN);
     drawCombatEmpty();
     
-    // Player HP Bar with visual
+    // Player HP Bar with visual - using drawCombatText for consistent formatting
     std::stringstream hpLine;
     hpLine << "  HP: " << drawEnhancedHealthBar(playerRef.stats.currentHP, playerRef.stats.maxHP, 25, true)
            << " " << playerRef.stats.currentHP << "/" << playerRef.stats.maxHP;
-    std::cout << Color::CYAN << BOX_VERTICAL << Color::RESET << " " << hpLine.str();
-    for (int i = 0; i < 5; ++i) std::cout << " ";
-    std::cout << Color::CYAN << BOX_VERTICAL << Color::RESET << "\n";
+    drawCombatText(hpLine.str(), Color::WHITE);
     
     // Player MP Bar with visual
     std::stringstream mpLine;
     mpLine << "  MP: " << drawManaBar(playerRef.stats.currentMana, playerRef.stats.maxMana, 25)
            << " " << playerRef.stats.currentMana << "/" << playerRef.stats.maxMana;
-    std::cout << Color::CYAN << BOX_VERTICAL << Color::RESET << " " << mpLine.str();
-    for (int i = 0; i < 5; ++i) std::cout << " ";
-    std::cout << Color::CYAN << BOX_VERTICAL << Color::RESET << "\n";
+    drawCombatText(mpLine.str(), Color::WHITE);
     
-    // Player stats line
+    // Player stats line - using ASCII-compatible symbols
     CombatStats pStats = getEffectivePlayerStats();
     std::stringstream statsLine;
-    statsLine << "  ⚔ ATK:" << pStats.attack << " 🛡 DEF:" << pStats.defense
-              << " ★ CRIT:" << pStats.critChance << "% ⚡ SPD:" << pStats.speed;
+    statsLine << "  ATK:" << pStats.attack << " DEF:" << pStats.defense
+              << " CRIT:" << pStats.critChance << "% SPD:" << pStats.speed;
     drawCombatText(statsLine.str(), Color::WHITE);
     
     // Show active effects with better formatting
@@ -795,20 +804,15 @@ void CombatSystem::displayCombatStatus(const std::vector<Enemy>& enemies) const 
         std::stringstream effectsLine;
         effectsLine << "  Effects: ";
         for (const StatusEffect& e : playerRef.activeEffects) {
-            if (e.isDebuff) {
-                effectsLine << Color::RED << "[" << e.name << ":" << e.turnsRemaining << "] " << Color::RESET;
-            } else {
-                effectsLine << Color::CYAN << "[" << e.name << ":" << e.turnsRemaining << "] " << Color::RESET;
-            }
+            effectsLine << "[" << e.name << ":" << e.turnsRemaining << "] ";
         }
-        std::cout << Color::CYAN << BOX_VERTICAL << Color::RESET << " " << effectsLine.str();
-        std::cout << Color::CYAN << BOX_VERTICAL << Color::RESET << "\n";
+        drawCombatText(effectsLine.str(), Color::YELLOW);
     }
     
     drawCombatLine('=');
     
     // Enemy section header
-    drawCombatText("☠  ENEMIES  ☠", Color::BRIGHT_RED);
+    drawCombatText("ENEMIES", Color::BRIGHT_RED);
     drawCombatEmpty();
     
     for (size_t i = 0; i < enemies.size(); ++i) {
@@ -818,20 +822,18 @@ void CombatSystem::displayCombatStatus(const std::vector<Enemy>& enemies) const 
         std::stringstream enemyName;
         enemyName << "  " << (i + 1) << ". ";
         if (enemy.isBoss) {
-            enemyName << "★ " << enemy.name << " ★ [BOSS]";
+            enemyName << "* " << enemy.name << " * [BOSS]";
             drawCombatText(enemyName.str(), Color::BRIGHT_MAGENTA);
         } else {
             enemyName << enemy.name;
             drawCombatText(enemyName.str(), Color::BRIGHT_RED);
         }
         
-        // Enemy HP bar
+        // Enemy HP bar - using consistent drawCombatText
         std::stringstream enemyHP;
         enemyHP << "     HP: " << drawEnhancedHealthBar(enemy.stats.currentHP, enemy.stats.maxHP, 20, false)
                 << " " << enemy.stats.currentHP << "/" << enemy.stats.maxHP;
-        std::cout << Color::CYAN << BOX_VERTICAL << Color::RESET << " " << enemyHP.str();
-        for (int p = 0; p < 8; ++p) std::cout << " ";
-        std::cout << Color::CYAN << BOX_VERTICAL << Color::RESET << "\n";
+        drawCombatText(enemyHP.str(), Color::WHITE);
         
         // Enemy intent with icon and color
         std::stringstream intentLine;
@@ -843,11 +845,7 @@ void CombatSystem::displayCombatStatus(const std::vector<Enemy>& enemies) const 
             std::stringstream effectsLine;
             effectsLine << "     Effects: ";
             for (const StatusEffect& e : enemy.activeEffects) {
-                if (e.isDebuff) {
-                    effectsLine << "[" << e.name << ":" << e.turnsRemaining << "] ";
-                } else {
-                    effectsLine << "[" << e.name << ":" << e.turnsRemaining << "] ";
-                }
+                effectsLine << "[" << e.name << ":" << e.turnsRemaining << "] ";
             }
             drawCombatText(effectsLine.str(), Color::YELLOW);
         }
@@ -878,19 +876,19 @@ int CombatSystem::getPlayerAction() const {
     
     // Action options with icons
     std::cout << Color::CYAN << THIN_VERTICAL << Color::RESET;
-    std::cout << Color::BRIGHT_RED << "  1. ⚔  Attack              " << Color::RESET << "           ";
+    std::cout << Color::BRIGHT_RED << "  1. [ATK] Attack              " << Color::RESET << "        ";
     std::cout << Color::CYAN << THIN_VERTICAL << Color::RESET << "\n";
     
     std::cout << Color::CYAN << THIN_VERTICAL << Color::RESET;
-    std::cout << Color::BRIGHT_BLUE << "  2. ✦  Skills              " << Color::RESET << "           ";
+    std::cout << Color::BRIGHT_BLUE << "  2. [SKL] Skills              " << Color::RESET << "        ";
     std::cout << Color::CYAN << THIN_VERTICAL << Color::RESET << "\n";
     
     std::cout << Color::CYAN << THIN_VERTICAL << Color::RESET;
-    std::cout << Color::BRIGHT_GREEN << "  3. ♦  Use Item            " << Color::RESET << "           ";
+    std::cout << Color::BRIGHT_GREEN << "  3. [ITM] Use Item            " << Color::RESET << "        ";
     std::cout << Color::CYAN << THIN_VERTICAL << Color::RESET << "\n";
     
     std::cout << Color::CYAN << THIN_VERTICAL << Color::RESET;
-    std::cout << Color::BRIGHT_YELLOW << "  4. ↺  Attempt to Flee     " << Color::RESET << "           ";
+    std::cout << Color::BRIGHT_YELLOW << "  4. [RUN] Attempt to Flee     " << Color::RESET << "        ";
     std::cout << Color::CYAN << THIN_VERTICAL << Color::RESET << "\n";
     
     std::cout << Color::CYAN << THIN_BOTTOM_LEFT;
@@ -902,7 +900,7 @@ int CombatSystem::getPlayerAction() const {
 
 int CombatSystem::selectTarget(const std::vector<Enemy>& enemies) const {
     std::cout << "\n";
-    std::cout << Color::YELLOW << "  ➤ Select Target:" << Color::RESET << "\n";
+    std::cout << Color::YELLOW << "  > Select Target:" << Color::RESET << "\n";
     for (size_t i = 0; i < enemies.size(); ++i) {
         std::cout << Color::RED << "    " << (i + 1) << ". " << enemies[i].name << Color::RESET
                   << Color::WHITE << " (HP: " << enemies[i].stats.currentHP << "/"
@@ -1395,7 +1393,7 @@ bool CombatSystem::useItemInCombat(int itemIndex) {
         if (playerRef.stats.currentHP > playerRef.stats.maxHP) {
             playerRef.stats.currentHP = playerRef.stats.maxHP;
         }
-        std::cout << Color::BRIGHT_GREEN << "  ♦ You use " << item.name << " and restore " 
+        std::cout << Color::BRIGHT_GREEN << "  > You use " << item.name << " and restore " 
                   << healed << " HP!" << Color::RESET << "\n";
         log("Used " + item.name + ", healed " + std::to_string(healed) + " HP.");
     }
