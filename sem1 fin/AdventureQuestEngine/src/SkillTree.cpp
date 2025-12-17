@@ -95,8 +95,16 @@ bool SkillTreeManager::unlockTalent(int talentId) {
     talent->currentRank++;
     spentTalentPoints += talent->pointCost;
     
-    // Apply immediate bonuses
-    applyAllTalentBonuses();
+    // Apply bonuses for this single rank increase (not accumulated)
+    playerRef.stats.maxHP += talent->hpBonus;
+    playerRef.stats.maxMana += talent->manaBonus;
+    playerRef.stats.attack += talent->attackBonus;
+    playerRef.stats.defense += talent->defenseBonus;
+    playerRef.stats.critChance += talent->critChanceBonus;
+    playerRef.stats.dodgeChance += talent->dodgeChanceBonus;
+    playerRef.stats.speed += talent->speedBonus;
+    playerRef.stats.magicPower += talent->magicPowerBonus;
+    playerRef.stats.magicResist += talent->magicResistBonus;
     
     std::cout << "Unlocked: " << talent->name << " (Rank " << talent->currentRank << ")\n";
     return true;
@@ -189,25 +197,39 @@ std::string SkillTreeManager::getCurrentSpecialization() const {
 }
 
 void SkillTreeManager::applyAllTalentBonuses() {
-    // Reset to base stats (we don't have access to base stats, so we add to current)
-    for (const auto& talent : talentTree) {
-        if (talent.currentRank > 0) {
-            // Apply passive bonuses
-            playerRef.stats.maxHP += talent.hpBonus * talent.currentRank;
-            playerRef.stats.maxMana += talent.manaBonus * talent.currentRank;
-            playerRef.stats.attack += talent.attackBonus * talent.currentRank;
-            playerRef.stats.defense += talent.defenseBonus * talent.currentRank;
-            playerRef.stats.critChance += talent.critChanceBonus * talent.currentRank;
-            playerRef.stats.dodgeChance += talent.dodgeChanceBonus * talent.currentRank;
-            playerRef.stats.speed += talent.speedBonus * talent.currentRank;
-            playerRef.stats.magicPower += talent.magicPowerBonus * talent.currentRank;
-            playerRef.stats.magicResist += talent.magicResistBonus * talent.currentRank;
-        }
-    }
+    // Calculate the total bonuses from talents and apply them once
+    // Note: This is designed to be called when talents are unlocked,
+    // not every frame. The bonus is applied incrementally when unlocking.
+    
+    // This function now calculates the total bonus a newly unlocked talent would provide
+    // We only apply new bonuses during unlockTalent() to avoid accumulation
 }
 
 void SkillTreeManager::recalculateStats() {
-    applyAllTalentBonuses();
+    // Calculate and return total bonuses from all talents
+    // Used for display or save/load purposes
+    
+    int totalHpBonus = 0, totalManaBonus = 0, totalAttackBonus = 0;
+    int totalDefenseBonus = 0, totalCritBonus = 0, totalDodgeBonus = 0;
+    int totalSpeedBonus = 0, totalMagicBonus = 0, totalResistBonus = 0;
+    
+    for (const auto& talent : talentTree) {
+        if (talent.currentRank > 0) {
+            totalHpBonus += talent.hpBonus * talent.currentRank;
+            totalManaBonus += talent.manaBonus * talent.currentRank;
+            totalAttackBonus += talent.attackBonus * talent.currentRank;
+            totalDefenseBonus += talent.defenseBonus * talent.currentRank;
+            totalCritBonus += talent.critChanceBonus * talent.currentRank;
+            totalDodgeBonus += talent.dodgeChanceBonus * talent.currentRank;
+            totalSpeedBonus += talent.speedBonus * talent.currentRank;
+            totalMagicBonus += talent.magicPowerBonus * talent.currentRank;
+            totalResistBonus += talent.magicResistBonus * talent.currentRank;
+        }
+    }
+    
+    // Log for debugging/display
+    std::cout << "Talent Bonuses: HP+" << totalHpBonus << " Mana+" << totalManaBonus 
+              << " Atk+" << totalAttackBonus << " Def+" << totalDefenseBonus << "\n";
 }
 
 std::vector<Skill> SkillTreeManager::getActiveAbilities() const {

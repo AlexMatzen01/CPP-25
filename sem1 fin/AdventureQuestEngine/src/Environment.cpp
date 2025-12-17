@@ -33,6 +33,10 @@ BiomeType EnvironmentManager::getCurrentBiome() const {
 
 void EnvironmentManager::generateBiomeDistribution() {
     // Assign biomes to rooms in the dungeon
+    if (gameStateRef.dungeon.empty()) {
+        return;  // No rooms to assign biomes to
+    }
+    
     int roomCount = static_cast<int>(gameStateRef.dungeon.size());
     
     for (int i = 0; i < roomCount; ++i) {

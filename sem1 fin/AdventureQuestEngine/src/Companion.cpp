@@ -256,6 +256,9 @@ void CompanionManager::updateMood(int companionId) {
 }
 
 void CompanionManager::checkLoyaltyEvents() {
+    // Collect IDs to dismiss first to avoid iterator invalidation
+    std::vector<int> toRemove;
+    
     for (int id : recruitedCompanionIds) {
         Companion* comp = findCompanion(id);
         if (comp == nullptr) continue;
@@ -265,9 +268,14 @@ void CompanionManager::checkLoyaltyEvents() {
             int leaveChance = rand() % 100;
             if (leaveChance < 10) {  // 10% chance to leave when angry
                 std::cout << comp->name << " has left your party due to low loyalty!\n";
-                dismissCompanion(id);
+                toRemove.push_back(id);
             }
         }
+    }
+    
+    // Now safely dismiss companions
+    for (int id : toRemove) {
+        dismissCompanion(id);
     }
 }
 
