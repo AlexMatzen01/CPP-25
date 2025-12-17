@@ -1,0 +1,3 @@
+/home/runner/work/CPP-25/CPP-25/sem1 fin/AdventureQuestEngine/_codeql_build_dir/CMakeFiles/AdventureQuestEngine.dir
+/home/runner/work/CPP-25/CPP-25/sem1 fin/AdventureQuestEngine/_codeql_build_dir/CMakeFiles/edit_cache.dir
+/home/runner/work/CPP-25/CPP-25/sem1 fin/AdventureQuestEngine/_codeql_build_dir/CMakeFiles/rebuild_cache.dir
