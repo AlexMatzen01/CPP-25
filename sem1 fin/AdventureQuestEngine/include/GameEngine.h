@@ -413,6 +413,11 @@ private:
     void checkQuestProgress();
     
     /**
+     * @brief Checks and handles player level ups
+     */
+    void checkLevelUp();
+    
+    /**
      * @brief Gets current room reference
      * @return Reference to current room
      */
@@ -423,6 +428,32 @@ private:
      * @return Const reference to current room
      */
     const Room& getCurrentRoom() const;
+    
+    /**
+     * @brief Shows the story introduction
+     */
+    void showStoryIntro();
+    
+    /**
+     * @brief Gives starter quests to the player
+     */
+    void giveStarterQuests();
+    
+    /**
+     * @brief Adds starter items to player inventory
+     */
+    void addStarterItems();
+    
+    /**
+     * @brief Triggers the final boss fight
+     * @return True if player wins
+     */
+    bool triggerFinalBoss();
+    
+    /**
+     * @brief Shows the victory celebration sequence
+     */
+    void showVictoryCelebration();
 };
 
 }  // namespace AQE
