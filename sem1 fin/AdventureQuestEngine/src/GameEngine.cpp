@@ -1553,12 +1553,19 @@ void GameEngine::updateStatusEffects() {
 }
 
 void GameEngine::checkQuestProgress() {
+    // Quest ID constants for maintainability
+    constexpr int MAIN_QUEST_ID = 1;            // Defeat the Shadow Lord
+    constexpr int MONSTER_SLAYER_QUEST_ID = 2;  // Kill enemy count quest
+    constexpr int EXPLORER_QUEST_ID = 3;        // Room exploration quest
+    
+    (void)MAIN_QUEST_ID;  // Main quest tracked separately via boss defeat
+    
     // Check kill quest progress
     for (auto& quest : m_gameState.player.activeQuests) {
         if (quest.status != QuestStatus::IN_PROGRESS) continue;
         
-        // Monster Slayer quest (id 2) - track kills
-        if (quest.id == 2 && quest.targetEnemyCount > 0) {
+        // Monster Slayer quest - track kills
+        if (quest.id == MONSTER_SLAYER_QUEST_ID && quest.targetEnemyCount > 0) {
             quest.currentEnemyCount = m_gameState.player.totalKills;
             if (quest.currentEnemyCount >= quest.targetEnemyCount && 
                 quest.status == QuestStatus::IN_PROGRESS) {
@@ -1572,8 +1579,8 @@ void GameEngine::checkQuestProgress() {
             }
         }
         
-        // Explorer quest (id 3) - track rooms
-        if (quest.id == 3 && quest.targetEnemyCount > 0) {
+        // Explorer quest - track rooms visited
+        if (quest.id == EXPLORER_QUEST_ID && quest.targetEnemyCount > 0) {
             quest.currentEnemyCount = static_cast<int>(m_gameState.player.visitedRooms.size());
             if (quest.currentEnemyCount >= quest.targetEnemyCount && 
                 quest.status == QuestStatus::IN_PROGRESS) {
