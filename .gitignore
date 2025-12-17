@@ -397,4 +397,12 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.imly
 
+# C++ compiled executables
+chap*/student_grades
+chap*/*.exe
+chap*/*.out
+
+# Student data files
+chap*/student_data.txt
+
 
