@@ -262,20 +262,20 @@ void GameEngine::addStarterItems() {
         case CharacterClass::WARRIOR:
             weapon.name = "Steel Longsword";
             weapon.description = "A sturdy blade forged for battle.";
-            weapon.attackBonus = 13;
+            weapon.attackBonus = 22;
             weapon.value = 100;
             break;
         case CharacterClass::MAGE:
             weapon.name = "Enchanted Staff";
             weapon.description = "A staff humming with magical energy.";
             weapon.attackBonus = 13;
-            weapon.critBonus = 10;
+            weapon.critBonus = 18;
             weapon.value = 120;
             break;
         case CharacterClass::ROGUE:
             weapon.name = "Shadow Daggers";
             weapon.description = "Twin daggers perfect for swift strikes.";
-            weapon.attackBonus = 6;
+            weapon.attackBonus = 9;
             weapon.critBonus = 15;
             weapon.speedBonus = 4;
             weapon.value = 110;
@@ -283,8 +283,8 @@ void GameEngine::addStarterItems() {
         case CharacterClass::PALADIN:
             weapon.name = "Blessed Warhammer";
             weapon.description = "A holy weapon that smites evil.";
-            weapon.attackBonus = 10;
-            weapon.defenseBonus = 7;
+            weapon.attackBonus = 17;
+            weapon.defenseBonus = 14;
             weapon.value = 170;
             break;
     }
@@ -557,7 +557,7 @@ void GameEngine::applyClassStats(CharacterClass charClass) {
             skill.description = "Smite the enemy with holy light.";
             skill.manaCost = 15;
             skill.cooldown = 3;
-            skill.damageMultiplier = 1.5f;
+            skill.damageMultiplier = 3.5f;
             skill.isMagical = true;
             m_gameState.player.skills.push_back(skill);
             
@@ -566,7 +566,7 @@ void GameEngine::applyClassStats(CharacterClass charClass) {
             skill.description = "Restore health.";
             skill.manaCost = 20;
             skill.cooldown = 4;
-            skill.damageMultiplier = 2.0f; // Heals 2x Magic Power
+            skill.damageMultiplier = 4.0f; // Heals 2x Magic Power
             skill.isHeal = true;
             skill.isMagical = true;
             m_gameState.player.skills.push_back(skill);

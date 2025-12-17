@@ -898,6 +898,17 @@ std::vector<Item> createDefaultItems() {
     legendSword.critBonus = 10;
     legendSword.value = 500;
     items.push_back(legendSword);
+
+    Item frostmourne;
+    frostmourne.id = 14;
+    frostmourne.name = "Frostmourne";
+    frostmourne.description = "A cursed blade that steals the souls of its victims.";
+    frostmourne.type = ItemType::WEAPON;
+    frostmourne.rarity = ItemRarity::LEGENDARY;
+    frostmourne.attackBonus = 25;
+    frostmourne.critBonus = 20;
+    frostmourne.value = 1000;
+    items.push_back(frostmourne);
     
     // Armor
     Item leather;
@@ -931,6 +942,17 @@ std::vector<Item> createDefaultItems() {
     plate.speedBonus = -3;
     plate.value = 200;
     items.push_back(plate);
+
+    Item demonsteel;
+    demonsteel.id = 23;
+    demonsteel.name = "Demonsteel Armor";
+    demonsteel.description = "Armor forged in the bowels of Hell, offering divine defense.";
+    demonsteel.type = ItemType::ARMOR;
+    demonsteel.rarity = ItemRarity::LEGENDARY;
+    demonsteel.defenseBonus = 20;
+    demonsteel.speedBonus = -2;
+    demonsteel.value = 800;
+    items.push_back(demonsteel);
     
     // Accessories
     Item ring;
@@ -1137,12 +1159,12 @@ std::vector<Enemy> createDefaultEnemies() {
     lich.name = "The Lich King";
     lich.description = "An undead sorcerer of immense power.";
     lich.dialogue = "Death is only the beginning!";
-    lich.stats.maxHP = 200;
-    lich.stats.currentHP = 200;
-    lich.stats.attack = 20;
-    lich.stats.defense = 10;
-    lich.stats.critChance = 25;
-    lich.stats.dodgeChance = 15;
+    lich.stats.maxHP = 150;
+    lich.stats.currentHP = 150;
+    lich.stats.attack = 10;
+    lich.stats.defense = 7;
+    lich.stats.critChance = 5;
+    lich.stats.dodgeChance = 0; 
     lich.stats.speed = 10;
     lich.experienceReward = 400;
     lich.goldReward = 150;

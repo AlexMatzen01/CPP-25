@@ -527,14 +527,16 @@ void CombatSystem::rollEnemyIntents(std::vector<Enemy>& enemies) {
             continue;
         }
 
-        // Healing intent if low
+        // Healing intent if low (very rare — only 5% chance)
         if (enemy.stats.currentHP < enemy.stats.maxHP / 3) {
             bool hasHeal = std::any_of(enemy.abilities.begin(), enemy.abilities.end(),
                 [](const EnemyAbility& a) { return a.heals; });
             if (hasHeal) {
-                enemy.nextIntent = EnemyIntent::HEAL;
-                enemy.intentStrength = 1;
-                continue;
+                if (randomChance(5)) {
+                    enemy.nextIntent = EnemyIntent::HEAL;
+                    enemy.intentStrength = 1;
+                    continue;
+                }
             }
         }
 
@@ -549,7 +551,19 @@ void CombatSystem::rollEnemyIntents(std::vector<Enemy>& enemies) {
 
         if (readyAbility) {
             if (readyAbility->heals) {
-                enemy.nextIntent = EnemyIntent::HEAL;
+                // Healing abilities are rare: 5% chance to use heal intent
+                if (randomChance(5)) {
+                    enemy.nextIntent = EnemyIntent::HEAL;
+                    enemy.intentStrength = readyAbility->damage;
+                    continue;
+                } else {
+                    // If not healing, choose a fallback intent based on ability damage
+                    if (readyAbility->damage > enemy.stats.attack * 1.2f) {
+                        enemy.nextIntent = EnemyIntent::ATTACK_HEAVY;
+                    } else {
+                        enemy.nextIntent = EnemyIntent::DEBUFF;
+                    }
+                }
             } else if (readyAbility->damage > enemy.stats.attack * 1.2f) {
                 enemy.nextIntent = EnemyIntent::ATTACK_HEAVY;
             } else {
