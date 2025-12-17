@@ -2,7 +2,7 @@
 //! Author: Alexander Matzen
 //! Licensed under the MIT license
 
-// Combat system implementation
+// Combat system implementation - Enhanced UI Version
 
 #include "../include/Combat.h"
 #include "../include/Utils.h"
@@ -11,10 +11,57 @@
 #include <algorithm>
 #include <sstream>
 #include <cmath>
+#include <iomanip>
 
 namespace AQE {
 
+// ============================================================================
+// ENHANCED COMBAT UI CONSTANTS AND HELPERS
+// ============================================================================
+
 namespace {
+    // Box drawing characters for enhanced UI
+    const std::string BOX_TOP_LEFT = "╔";
+    const std::string BOX_TOP_RIGHT = "╗";
+    const std::string BOX_BOTTOM_LEFT = "╚";
+    const std::string BOX_BOTTOM_RIGHT = "╝";
+    const std::string BOX_HORIZONTAL = "═";
+    const std::string BOX_VERTICAL = "║";
+    const std::string BOX_T_RIGHT = "╠";
+    const std::string BOX_T_LEFT = "╣";
+    const std::string BOX_T_DOWN = "╦";
+    const std::string BOX_T_UP = "╩";
+    const std::string BOX_CROSS = "╬";
+    
+    // Single line box characters
+    const std::string THIN_TOP_LEFT = "┌";
+    const std::string THIN_TOP_RIGHT = "┐";
+    const std::string THIN_BOTTOM_LEFT = "└";
+    const std::string THIN_BOTTOM_RIGHT = "┘";
+    const std::string THIN_HORIZONTAL = "─";
+    const std::string THIN_VERTICAL = "│";
+    
+    // Progress bar characters
+    const std::string BAR_FULL = "█";
+    const std::string BAR_PARTIAL = "▓";
+    const std::string BAR_LIGHT = "░";
+    const std::string BAR_EMPTY = "·";
+    
+    // Combat icons - ASCII compatible for wider terminal support
+    const std::string ICON_SWORD = "[ATK]";
+    const std::string ICON_SHIELD = "[DEF]";
+    const std::string ICON_HEART = "[HP]";
+    const std::string ICON_MANA = "[MP]";
+    const std::string ICON_SKULL = "[X]";
+    const std::string ICON_STAR = "*";
+    const std::string ICON_ARROW = ">";
+    const std::string ICON_LIGHTNING = "[!]";
+    const std::string ICON_FIRE = "[F]";
+    const std::string ICON_MAGIC = "[M]";
+    
+    // Combat width constant
+    const int COMBAT_WIDTH = 70;
+
     std::string intentToString(EnemyIntent intent) {
         switch (intent) {
             case EnemyIntent::ATTACK_LIGHT: return "Light Attack";
@@ -28,6 +75,192 @@ namespace {
             case EnemyIntent::CHARGE: return "Charge";
             default: return "Unknown";
         }
+    }
+    
+    std::string getIntentIcon(EnemyIntent intent) {
+        switch (intent) {
+            case EnemyIntent::ATTACK_LIGHT: return "⚔";
+            case EnemyIntent::ATTACK_HEAVY: return "💥";
+            case EnemyIntent::DEFEND: return "🛡";
+            case EnemyIntent::DEBUFF: return "💀";
+            case EnemyIntent::BUFF: return "✨";
+            case EnemyIntent::HEAL: return "💚";
+            case EnemyIntent::CONTROL: return "🌀";
+            case EnemyIntent::SUMMON: return "👥";
+            case EnemyIntent::CHARGE: return "⚡";
+            default: return "?";
+        }
+    }
+    
+    std::string getIntentColor(EnemyIntent intent) {
+        switch (intent) {
+            case EnemyIntent::ATTACK_LIGHT: return Color::YELLOW;
+            case EnemyIntent::ATTACK_HEAVY: return Color::BRIGHT_RED;
+            case EnemyIntent::DEFEND: return Color::CYAN;
+            case EnemyIntent::DEBUFF: return Color::MAGENTA;
+            case EnemyIntent::BUFF: return Color::GREEN;
+            case EnemyIntent::HEAL: return Color::BRIGHT_GREEN;
+            case EnemyIntent::CONTROL: return Color::BLUE;
+            case EnemyIntent::SUMMON: return Color::BRIGHT_MAGENTA;
+            case EnemyIntent::CHARGE: return Color::BRIGHT_YELLOW;
+            default: return Color::WHITE;
+        }
+    }
+    
+    // Draw enhanced health bar with gradient colors
+    std::string drawEnhancedHealthBar(int current, int max, int width, bool isPlayer = true) {
+        std::stringstream ss;
+        float ratio = static_cast<float>(current) / static_cast<float>(max);
+        if (ratio < 0) ratio = 0;
+        if (ratio > 1) ratio = 1;
+        
+        int filled = static_cast<int>(ratio * width);
+        
+        // Determine color based on health percentage
+        std::string barColor;
+        if (ratio > 0.6f) {
+            barColor = isPlayer ? Color::BRIGHT_GREEN : Color::BRIGHT_RED;
+        } else if (ratio > 0.3f) {
+            barColor = Color::YELLOW;
+        } else {
+            barColor = Color::RED;
+        }
+        
+        ss << barColor;
+        for (int i = 0; i < width; ++i) {
+            if (i < filled) {
+                ss << BAR_FULL;
+            } else {
+                ss << BAR_EMPTY;
+            }
+        }
+        ss << Color::RESET;
+        
+        return ss.str();
+    }
+    
+    // Draw mana bar
+    std::string drawManaBar(int current, int max, int width) {
+        std::stringstream ss;
+        float ratio = static_cast<float>(current) / static_cast<float>(max);
+        if (ratio < 0) ratio = 0;
+        if (ratio > 1) ratio = 1;
+        
+        int filled = static_cast<int>(ratio * width);
+        
+        ss << Color::BRIGHT_BLUE;
+        for (int i = 0; i < width; ++i) {
+            if (i < filled) {
+                ss << BAR_FULL;
+            } else {
+                ss << BAR_EMPTY;
+            }
+        }
+        ss << Color::RESET;
+        
+        return ss.str();
+    }
+    
+    // Draw a horizontal line with box characters
+    void drawCombatLine(char type = '-') {
+        if (type == '=') {
+            std::cout << BOX_T_RIGHT;
+            for (int i = 0; i < COMBAT_WIDTH - 2; ++i) std::cout << BOX_HORIZONTAL;
+            std::cout << BOX_T_LEFT << "\n";
+        } else {
+            std::cout << BOX_VERTICAL << " ";
+            for (int i = 0; i < COMBAT_WIDTH - 4; ++i) std::cout << THIN_HORIZONTAL;
+            std::cout << " " << BOX_VERTICAL << "\n";
+        }
+    }
+    
+    // Draw top border
+    void drawCombatTop() {
+        std::cout << Color::CYAN << BOX_TOP_LEFT;
+        for (int i = 0; i < COMBAT_WIDTH - 2; ++i) std::cout << BOX_HORIZONTAL;
+        std::cout << BOX_TOP_RIGHT << Color::RESET << "\n";
+    }
+    
+    // Draw bottom border
+    void drawCombatBottom() {
+        std::cout << Color::CYAN << BOX_BOTTOM_LEFT;
+        for (int i = 0; i < COMBAT_WIDTH - 2; ++i) std::cout << BOX_HORIZONTAL;
+        std::cout << BOX_BOTTOM_RIGHT << Color::RESET << "\n";
+    }
+    
+    // Draw a centered title in the combat box
+    void drawCombatTitle(const std::string& title, const std::string& color = Color::BRIGHT_WHITE) {
+        int padding = (COMBAT_WIDTH - 2 - static_cast<int>(title.length())) / 2;
+        std::cout << Color::CYAN << BOX_VERTICAL << Color::RESET;
+        for (int i = 0; i < padding; ++i) std::cout << " ";
+        std::cout << color << title << Color::RESET;
+        int remaining = COMBAT_WIDTH - 2 - padding - static_cast<int>(title.length());
+        for (int i = 0; i < remaining; ++i) std::cout << " ";
+        std::cout << Color::CYAN << BOX_VERTICAL << Color::RESET << "\n";
+    }
+    
+    // Draw a text line in the combat box
+    void drawCombatText(const std::string& text, const std::string& color = Color::WHITE) {
+        std::cout << Color::CYAN << BOX_VERTICAL << Color::RESET << " ";
+        std::cout << color << std::left << std::setw(COMBAT_WIDTH - 4) << text << Color::RESET;
+        std::cout << " " << Color::CYAN << BOX_VERTICAL << Color::RESET << "\n";
+    }
+    
+    // Draw empty line in combat box
+    void drawCombatEmpty() {
+        std::cout << Color::CYAN << BOX_VERTICAL << Color::RESET;
+        for (int i = 0; i < COMBAT_WIDTH - 2; ++i) std::cout << " ";
+        std::cout << Color::CYAN << BOX_VERTICAL << Color::RESET << "\n";
+    }
+    
+    // ASCII art for attack animations
+    void showAttackAnimation(const std::string& attackerName, bool isPlayer, bool isCrit) {
+        if (isCrit) {
+            std::cout << "\n";
+            std::cout << Color::BRIGHT_YELLOW << "    * * * CRITICAL HIT * * *" << Color::RESET << "\n";
+            std::cout << Color::BRIGHT_RED;
+            std::cout << "         \\  |  /\n";
+            std::cout << "          \\ | /\n";
+            std::cout << "       ----*----\n";
+            std::cout << "          / | \\\n";
+            std::cout << "         /  |  \\\n";
+            std::cout << Color::RESET;
+        } else if (isPlayer) {
+            std::cout << Color::BRIGHT_GREEN << "    " << attackerName << " attacks!" << Color::RESET << "\n";
+            std::cout << Color::WHITE;
+            std::cout << "       ───━━━━══►\n";
+            std::cout << Color::RESET;
+        } else {
+            std::cout << Color::BRIGHT_RED << "    " << attackerName << " attacks!" << Color::RESET << "\n";
+            std::cout << Color::RED;
+            std::cout << "       ◄══━━━━───\n";
+            std::cout << Color::RESET;
+        }
+    }
+    
+    // Show damage number effect
+    void showDamageEffect(int damage, bool isCrit, bool isPlayerDamaged) {
+        std::string color = isPlayerDamaged ? Color::BRIGHT_RED : Color::BRIGHT_GREEN;
+        if (isCrit) {
+            std::cout << color << "         -" << damage << "! *" << Color::RESET << "\n";
+        } else {
+            std::cout << color << "         -" << damage << Color::RESET << "\n";
+        }
+    }
+    
+    // Show dodge effect
+    void showDodgeEffect(const std::string& dodgerName) {
+        std::cout << Color::BRIGHT_CYAN << "    " << dodgerName << " dodges gracefully!" << Color::RESET << "\n";
+        std::cout << Color::CYAN;
+        std::cout << "         ~ MISS ~\n";
+        std::cout << Color::RESET;
+    }
+    
+    // Show healing effect
+    void showHealEffect(int amount) {
+        std::cout << Color::BRIGHT_GREEN;
+        std::cout << "       + +" << amount << " HP +\n";
+        std::cout << Color::RESET;
     }
 
     int computeVulnerablePercent(const std::vector<StatusEffect>& effects) {
@@ -84,23 +317,42 @@ CombatResult CombatSystem::startCombat(std::vector<Enemy>& enemies) {
         return result;
     }
     
-    // Display combat start
+    // Display enhanced combat start screen
     clearScreen();
     std::cout << "\n";
-    displaySeparator(60, '=');
-    printColor(centerString("!!! COMBAT INITIATED !!!", 60), Color::BRIGHT_RED);
-    displaySeparator(60, '=');
     
-    // List enemies
-    std::cout << "\nYou face:\n";
+    // Epic combat initiation banner
+    drawCombatTop();
+    drawCombatEmpty();
+    drawCombatTitle("⚔  COMBAT INITIATED  ⚔", Color::BRIGHT_RED);
+    drawCombatEmpty();
+    drawCombatLine('=');
+    drawCombatEmpty();
+    
+    // List enemies with enhanced formatting
+    std::string enemyHeader = "You face " + std::to_string(enemies.size()) + " opponent" + (enemies.size() > 1 ? "s:" : ":");
+    drawCombatText(enemyHeader, Color::WHITE);
+    drawCombatEmpty();
+    
     for (size_t i = 0; i < enemies.size(); ++i) {
-        std::cout << "  " << (i + 1) << ". " << colorize(enemies[i].name, Color::RED);
-        if (enemies[i].isBoss) std::cout << colorize(" [BOSS]", Color::BRIGHT_MAGENTA);
-        std::cout << "\n";
+        std::stringstream enemyLine;
+        enemyLine << "  " << (i + 1) << ". ";
+        if (enemies[i].isBoss) {
+            enemyLine << "* " << enemies[i].name << " * [BOSS]";
+            drawCombatText(enemyLine.str(), Color::BRIGHT_MAGENTA);
+        } else {
+            enemyLine << enemies[i].name;
+            drawCombatText(enemyLine.str(), Color::BRIGHT_RED);
+        }
+        
         if (!enemies[i].dialogue.empty()) {
-            std::cout << "     \"" << colorize(enemies[i].dialogue, Color::YELLOW) << "\"\n";
+            std::string dialogue = "     \"" + enemies[i].dialogue + "\"";
+            drawCombatText(dialogue, Color::YELLOW);
         }
     }
+    
+    drawCombatEmpty();
+    drawCombatBottom();
     
     log("Combat started against " + std::to_string(enemies.size()) + " enemies.");
     pause("\nPress Enter to begin combat...");
@@ -133,31 +385,79 @@ CombatResult CombatSystem::startCombat(std::vector<Enemy>& enemies) {
             playerRef.inventory.push_back(item);
         }
         
-        // Display victory
+        // Display enhanced victory screen
+        clearScreen();
         std::cout << "\n";
-        displaySeparator(60, '=');
-        std::cout << VICTORY_ART;
-        displaySeparator(60, '=');
-        std::cout << "\nVictory! You have defeated your enemies!\n";
-        std::cout << "Experience gained: " << result.experienceGained << "\n";
-        std::cout << "Gold gained: " << result.goldGained << "\n";
+        drawCombatTop();
+        drawCombatEmpty();
+        drawCombatTitle("* * *  VICTORY  * * *", Color::BRIGHT_YELLOW);
+        drawCombatEmpty();
+        drawCombatLine('=');
+        drawCombatEmpty();
+        drawCombatText("You have defeated your enemies!", Color::BRIGHT_GREEN);
+        drawCombatEmpty();
+        
+        // Display rewards with icons
+        std::stringstream xpLine;
+        xpLine << "  + Experience: +" << result.experienceGained << " XP";
+        drawCombatText(xpLine.str(), Color::BRIGHT_CYAN);
+        
+        std::stringstream goldLine;
+        goldLine << "  $ Gold: +" << result.goldGained << " gold";
+        drawCombatText(goldLine.str(), Color::BRIGHT_YELLOW);
         
         if (!result.loot.empty()) {
-            std::cout << "Items found:\n";
+            drawCombatEmpty();
+            drawCombatText("  Items Found:", Color::WHITE);
             for (const Item& item : result.loot) {
-                std::cout << "  - " << item.name << " [" 
-                          << rarityToString(item.rarity) << "]\n";
+                std::stringstream lootLine;
+                lootLine << "    • " << item.name;
+                
+                // Color based on rarity
+                std::string rarityColor;
+                switch (item.rarity) {
+                    case ItemRarity::LEGENDARY: rarityColor = Color::BRIGHT_YELLOW; break;
+                    case ItemRarity::EPIC: rarityColor = Color::BRIGHT_MAGENTA; break;
+                    case ItemRarity::RARE: rarityColor = Color::BRIGHT_BLUE; break;
+                    case ItemRarity::UNCOMMON: rarityColor = Color::BRIGHT_GREEN; break;
+                    default: rarityColor = Color::WHITE; break;
+                }
+                lootLine << " [" << rarityToString(item.rarity) << "]";
+                drawCombatText(lootLine.str(), rarityColor);
             }
         }
+        
+        drawCombatEmpty();
+        drawCombatBottom();
     } else if (!playerRef.isAlive) {
-        // Player died
+        // Enhanced death screen
+        clearScreen();
         std::cout << "\n";
-        std::cout << GAME_OVER_ART;
-        std::cout << "\nYou have been defeated...\n";
+        drawCombatTop();
+        drawCombatEmpty();
+        drawCombatTitle("DEFEAT", Color::BRIGHT_RED);
+        drawCombatEmpty();
+        drawCombatLine('=');
+        drawCombatEmpty();
+        drawCombatText("You have been defeated...", Color::RED);
+        drawCombatText("Your adventure ends here.", Color::WHITE);
+        drawCombatEmpty();
+        drawCombatBottom();
         log("Player died in combat.");
     } else {
-        // Player fled
-        std::cout << "\nYou escaped from combat!\n";
+        // Enhanced escape screen
+        clearScreen();
+        std::cout << "\n";
+        drawCombatTop();
+        drawCombatEmpty();
+        drawCombatTitle("~ ESCAPED ~", Color::BRIGHT_CYAN);
+        drawCombatEmpty();
+        drawCombatLine('=');
+        drawCombatEmpty();
+        drawCombatText("You managed to escape from combat!", Color::CYAN);
+        drawCombatText("Live to fight another day...", Color::WHITE);
+        drawCombatEmpty();
+        drawCombatBottom();
         log("Player fled from combat.");
     }
     
@@ -266,39 +566,47 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies) {
                     if(skill.currentCooldown > 0) skill.currentCooldown--;
                 }
 
-                std::cout << "\n--- YOUR TURN ---\n";
                 int action = getPlayerAction();
                 
                 switch (action) {
                     case 1: {  // Attack
                         int targetIdx = (enemies.size() == 1) ? 0 : selectTarget(enemies);
                         AttackResult result = playerAttack(enemies[targetIdx]);
+                        
+                        // Enhanced attack display
+                        if (result.dodged) {
+                            showDodgeEffect(enemies[targetIdx].name);
+                        } else {
+                            showAttackAnimation(playerRef.name, true, result.critical);
+                            showDamageEffect(result.damageDealt, result.critical, false);
+                        }
                         displayMessage(result.message);
                         
                         if (enemies[targetIdx].stats.currentHP <= 0) {
-                            displayMessage(enemies[targetIdx].name + " " + 
-                                         randomElement(DEATH_TEXT));
+                            std::cout << Color::BRIGHT_YELLOW << "\n    [X] " << enemies[targetIdx].name << " " 
+                                      << randomElement(DEATH_TEXT) << Color::RESET << "\n";
                         }
                         break;
                     }
                     case 2: {  // Skills
                         if (playerRef.skills.empty()) {
-                            std::cout << "You have no skills learned!\n";
+                            std::cout << Color::RED << "  You have no skills learned!" << Color::RESET << "\n";
                             // Ideally we'd loop back, but for now we just lose turn
                         } else {
-                            std::cout << "\nAvailable Skills:\n";
+                            std::cout << "\n";
+                            std::cout << Color::BRIGHT_BLUE << "  > Available Skills:" << Color::RESET << "\n";
                             for (size_t i = 0; i < playerRef.skills.size(); ++i) {
                                 const Skill& skill = playerRef.skills[i];
-                                std::string color = (playerRef.stats.currentMana >= skill.manaCost && skill.currentCooldown <= 0) 
-                                                    ? Color::BRIGHT_WHITE : Color::RED;
-                                std::cout << "  " << (i + 1) << ". " << colorize(skill.name, color)
+                                bool canUse = (playerRef.stats.currentMana >= skill.manaCost && skill.currentCooldown <= 0);
+                                std::string color = canUse ? Color::BRIGHT_WHITE : Color::RED;
+                                std::cout << "    " << color << (i + 1) << ". " << skill.name
                                           << " (MP: " << skill.manaCost << ")";
                                 if (skill.currentCooldown > 0) std::cout << " [CD: " << skill.currentCooldown << "]";
-                                std::cout << "\n";
+                                std::cout << Color::RESET << "\n";
                             }
-                            std::cout << "  0. Cancel\n";
+                            std::cout << Color::YELLOW << "    0. Cancel" << Color::RESET << "\n";
                             
-                            int skillChoice = getValidatedInt("Choose skill: ", 0, static_cast<int>(playerRef.skills.size()));
+                            int skillChoice = getValidatedInt("  Choose skill: ", 0, static_cast<int>(playerRef.skills.size()));
                             
                             if (skillChoice > 0) {
                                 int targetIdx = 0;
@@ -306,6 +614,14 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies) {
                                     targetIdx = (enemies.size() == 1) ? 0 : selectTarget(enemies);
                                 }
                                 AbilityResult result = usePlayerAbility(skillChoice - 1, &enemies[targetIdx]);
+                                
+                                // Show skill animation effect
+                                if (result.healingDone > 0) {
+                                    showHealEffect(result.healingDone);
+                                } else if (result.damageDealt > 0) {
+                                    std::cout << Color::BRIGHT_BLUE << "    * SKILL ACTIVATED *" << Color::RESET << "\n";
+                                    showDamageEffect(result.damageDealt, false, false);
+                                }
                                 displayMessage(result.message);
                             }
                         }
@@ -314,28 +630,32 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies) {
                     case 3: {  // Use item
                         auto combatItems = getCombatItemIndices(playerRef);
                         if (combatItems.empty()) {
-                            std::cout << "No usable items!\n";
+                            std::cout << Color::RED << "  No usable items!" << Color::RESET << "\n";
                         } else {
-                            std::cout << "\nUsable items:\n";
+                            std::cout << "\n";
+                            std::cout << Color::BRIGHT_GREEN << "  > Usable Items:" << Color::RESET << "\n";
                             for (size_t i = 0; i < combatItems.size(); ++i) {
                                 const Item& item = playerRef.inventory[combatItems[i]];
-                                std::cout << "  " << (i + 1) << ". " << item.name;
+                                std::cout << Color::WHITE << "    " << (i + 1) << ". " << item.name;
                                 if (item.healAmount > 0) {
-                                    std::cout << " (Heals " << item.healAmount << " HP)";
+                                    std::cout << Color::GREEN << " (Heals " << item.healAmount << " HP)" << Color::RESET;
                                 }
-                                std::cout << "\n";
+                                std::cout << Color::RESET << "\n";
                             }
-                            std::cout << "  0. Cancel\n";
+                            std::cout << Color::YELLOW << "    0. Cancel" << Color::RESET << "\n";
                             
-                            int choice = getValidatedInt("Choose item: ", 0, 
+                            int choice = getValidatedInt("  Choose item: ", 0, 
                                 static_cast<int>(combatItems.size()));
                             if (choice > 0) {
                                 useItemInCombat(combatItems[choice - 1]);
+                                showHealEffect(playerRef.inventory[combatItems[choice - 1]].healAmount);
                             }
                         }
                         break;
                     }
                     case 4: {  // Flee
+                        std::cout << Color::YELLOW << "\n    <- Attempting to flee..." << Color::RESET << "\n";
+                        delay(500);
                         if (attemptFlee(enemies)) {
                             combatEnded = true;
                             return false;
@@ -351,17 +671,42 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies) {
                 if (enemy.stats.currentHP <= 0) continue;  // Skip dead enemies
 
                 if (hasStun(enemy.activeEffects)) {
-                    displayMessage(enemy.name + " is stunned and loses the turn!");
+                    std::cout << Color::CYAN << "\n    🌀 " << enemy.name << " is stunned and loses the turn!" << Color::RESET << "\n";
+                    delay(500);
                     continue;
                 }
                 
-                std::cout << "\n--- " << toUpper(enemy.name) << "'S TURN ---\n";
+                // Enhanced enemy turn header - constant width box
+                const int ENEMY_BOX_WIDTH = 40;
+                std::string turnText = toUpper(enemy.name) + "'S TURN";
+                int textLen = static_cast<int>(turnText.length());
+                int leftPad = (ENEMY_BOX_WIDTH - 4 - textLen) / 2;
+                int rightPad = ENEMY_BOX_WIDTH - 4 - textLen - leftPad;
+                
+                std::cout << "\n";
+                std::cout << Color::RED << "  ";
+                for (int i = 0; i < ENEMY_BOX_WIDTH; ++i) std::cout << "=";
+                std::cout << Color::RESET << "\n";
+                
+                std::cout << Color::RED << "  | " << Color::BRIGHT_RED;
+                for (int i = 0; i < leftPad; ++i) std::cout << " ";
+                std::cout << turnText;
+                for (int i = 0; i < rightPad; ++i) std::cout << " ";
+                std::cout << Color::RED << " |" << Color::RESET << "\n";
+                
+                std::cout << Color::RED << "  ";
+                for (int i = 0; i < ENEMY_BOX_WIDTH; ++i) std::cout << "=";
+                std::cout << Color::RESET << "\n";
                 delay(300);
                 
                 // Check if enemy uses ability or intent dictates action
                 bool acted = false;
                 if (enemy.nextIntent == EnemyIntent::HEAL || shouldEnemyUseAbility(enemy)) {
                     AbilityResult result = useEnemyAbility(enemy);
+                    if (result.healingDone > 0) {
+                        std::cout << Color::GREEN << "    + " << enemy.name << " heals!" << Color::RESET << "\n";
+                        showHealEffect(result.healingDone);
+                    }
                     displayMessage(result.message);
                     acted = result.used;
                 }
@@ -373,10 +718,19 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies) {
                         guard.shieldAmount = enemy.stats.defense / 2 + 5;
                         guard.isDebuff = false;
                         enemy.activeEffects.push_back(guard);
-                        displayMessage(enemy.name + " braces for impact, raising a guard!");
+                        std::cout << Color::CYAN << "    🛡 " << enemy.name << " braces for impact, raising a guard!" << Color::RESET << "\n";
+                        delay(500);
                     } else {
                         // Normal attack (heavy charge simply benefits from higher damage roll)
                         AttackResult result = enemyAttack(enemy);
+                        
+                        // Enhanced enemy attack display
+                        if (result.dodged) {
+                            showDodgeEffect(playerRef.name);
+                        } else {
+                            showAttackAnimation(enemy.name, false, result.critical);
+                            showDamageEffect(result.damageDealt, result.critical, true);
+                        }
                         displayMessage(result.message);
                         
                         // Check if player died
@@ -413,81 +767,147 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies) {
 void CombatSystem::displayCombatStatus(const std::vector<Enemy>& enemies) const {
     clearScreen();
     std::cout << "\n";
-    displaySeparator(60, '-');
-    printColor(centerString("COMBAT STATUS", 60), Color::BRIGHT_WHITE);
-    displaySeparator(60, '-');
     
-    // Player status
-    std::cout << "\n" << colorize(playerRef.name, Color::BRIGHT_GREEN) 
-              << " (" << classToString(playerRef.charClass) << ")\n";
+    // Enhanced combat status display
+    drawCombatTop();
+    drawCombatTitle("COMBAT STATUS", Color::BRIGHT_WHITE);
+    drawCombatLine('=');
     
-    // HP Bar
-    std::cout << "HP: ";
-    displayProgressBar(playerRef.stats.currentHP, playerRef.stats.maxHP, 25, "");
-    std::cout << " " << playerRef.stats.currentHP << "/" << playerRef.stats.maxHP << "\n";
+    // Player section header
+    drawCombatEmpty();
+    std::stringstream playerHeader;
+    playerHeader << playerRef.name << " (" << classToString(playerRef.charClass) << ")";
+    drawCombatText(playerHeader.str(), Color::BRIGHT_GREEN);
+    drawCombatEmpty();
     
-    // Mana Bar
-    std::cout << "MP: ";
-    displayProgressBar(playerRef.stats.currentMana, playerRef.stats.maxMana, 25, "");
-    std::cout << " " << playerRef.stats.currentMana << "/" << playerRef.stats.maxMana << "\n";
+    // Player HP Bar with visual - using drawCombatText for consistent formatting
+    std::stringstream hpLine;
+    hpLine << "  HP: " << drawEnhancedHealthBar(playerRef.stats.currentHP, playerRef.stats.maxHP, 25, true)
+           << " " << playerRef.stats.currentHP << "/" << playerRef.stats.maxHP;
+    drawCombatText(hpLine.str(), Color::WHITE);
     
+    // Player MP Bar with visual
+    std::stringstream mpLine;
+    mpLine << "  MP: " << drawManaBar(playerRef.stats.currentMana, playerRef.stats.maxMana, 25)
+           << " " << playerRef.stats.currentMana << "/" << playerRef.stats.maxMana;
+    drawCombatText(mpLine.str(), Color::WHITE);
+    
+    // Player stats line - using ASCII-compatible symbols
     CombatStats pStats = getEffectivePlayerStats();
-    std::cout << "ATK: " << pStats.attack << " | DEF: " << pStats.defense
-              << " | CRIT: " << pStats.critChance << "% | SPD: " << pStats.speed << "\n";
+    std::stringstream statsLine;
+    statsLine << "  ATK:" << pStats.attack << " DEF:" << pStats.defense
+              << " CRIT:" << pStats.critChance << "% SPD:" << pStats.speed;
+    drawCombatText(statsLine.str(), Color::WHITE);
     
-    // Show active effects
+    // Show active effects with better formatting
     if (!playerRef.activeEffects.empty()) {
-        std::cout << "Effects: ";
+        std::stringstream effectsLine;
+        effectsLine << "  Effects: ";
         for (const StatusEffect& e : playerRef.activeEffects) {
-            std::string color = e.isDebuff ? Color::RED : Color::CYAN;
-            std::cout << colorize(e.name, color) << "(" << e.turnsRemaining << ") ";
+            effectsLine << "[" << e.name << ":" << e.turnsRemaining << "] ";
         }
-        std::cout << "\n";
+        drawCombatText(effectsLine.str(), Color::YELLOW);
     }
     
-    // Enemy status
-    std::cout << "\n--- " << colorize("ENEMIES", Color::RED) << " ---\n";
+    drawCombatLine('=');
+    
+    // Enemy section header
+    drawCombatText("ENEMIES", Color::BRIGHT_RED);
+    drawCombatEmpty();
+    
     for (size_t i = 0; i < enemies.size(); ++i) {
         const Enemy& enemy = enemies[i];
-        std::cout << "\n" << (i + 1) << ". " << colorize(enemy.name, Color::RED);
-        if (enemy.isBoss) std::cout << colorize(" [BOSS]", Color::BRIGHT_MAGENTA);
-        std::cout << "\n";
-        displayProgressBar(enemy.stats.currentHP, enemy.stats.maxHP, 25, "HP");
-
-        std::cout << "Intent: " << intentToString(enemy.nextIntent) << "\n";
+        
+        // Enemy name
+        std::stringstream enemyName;
+        enemyName << "  " << (i + 1) << ". ";
+        if (enemy.isBoss) {
+            enemyName << "* " << enemy.name << " * [BOSS]";
+            drawCombatText(enemyName.str(), Color::BRIGHT_MAGENTA);
+        } else {
+            enemyName << enemy.name;
+            drawCombatText(enemyName.str(), Color::BRIGHT_RED);
+        }
+        
+        // Enemy HP bar - using consistent drawCombatText
+        std::stringstream enemyHP;
+        enemyHP << "     HP: " << drawEnhancedHealthBar(enemy.stats.currentHP, enemy.stats.maxHP, 20, false)
+                << " " << enemy.stats.currentHP << "/" << enemy.stats.maxHP;
+        drawCombatText(enemyHP.str(), Color::WHITE);
+        
+        // Enemy intent with icon and color
+        std::stringstream intentLine;
+        intentLine << "     Intent: " << getIntentIcon(enemy.nextIntent) << " " << intentToString(enemy.nextIntent);
+        drawCombatText(intentLine.str(), getIntentColor(enemy.nextIntent));
+        
+        // Enemy effects
         if (!enemy.activeEffects.empty()) {
-            std::cout << "Effects: ";
+            std::stringstream effectsLine;
+            effectsLine << "     Effects: ";
             for (const StatusEffect& e : enemy.activeEffects) {
-                std::string color = e.isDebuff ? Color::RED : Color::CYAN;
-                std::cout << colorize(e.name, color) << "(" << e.turnsRemaining << ") ";
+                effectsLine << "[" << e.name << ":" << e.turnsRemaining << "] ";
             }
-            std::cout << "\n";
+            drawCombatText(effectsLine.str(), Color::YELLOW);
+        }
+        
+        if (i < enemies.size() - 1) {
+            drawCombatEmpty();
         }
     }
     
-    displaySeparator(60, '-');
+    drawCombatEmpty();
+    drawCombatBottom();
 }
 
 int CombatSystem::getPlayerAction() const {
-    std::vector<std::string> options = {
-        "Attack",
-        "Skills",
-        "Use Item",
-        "Attempt to Flee"
-    };
+    // Enhanced action menu with icons
+    std::cout << "\n";
+    std::cout << Color::CYAN << THIN_TOP_LEFT;
+    for (int i = 0; i < 40; ++i) std::cout << THIN_HORIZONTAL;
+    std::cout << THIN_TOP_RIGHT << Color::RESET << "\n";
     
-    return displayMenu("Choose your action", options);
+    std::cout << Color::CYAN << THIN_VERTICAL << Color::RESET;
+    std::cout << Color::BRIGHT_WHITE << "      ➤ YOUR TURN - Choose Action      " << Color::RESET;
+    std::cout << Color::CYAN << THIN_VERTICAL << Color::RESET << "\n";
+    
+    std::cout << Color::CYAN << THIN_VERTICAL;
+    for (int i = 0; i < 40; ++i) std::cout << THIN_HORIZONTAL;
+    std::cout << THIN_VERTICAL << Color::RESET << "\n";
+    
+    // Action options with icons
+    std::cout << Color::CYAN << THIN_VERTICAL << Color::RESET;
+    std::cout << Color::BRIGHT_RED << "  1. [ATK] Attack              " << Color::RESET << "        ";
+    std::cout << Color::CYAN << THIN_VERTICAL << Color::RESET << "\n";
+    
+    std::cout << Color::CYAN << THIN_VERTICAL << Color::RESET;
+    std::cout << Color::BRIGHT_BLUE << "  2. [SKL] Skills              " << Color::RESET << "        ";
+    std::cout << Color::CYAN << THIN_VERTICAL << Color::RESET << "\n";
+    
+    std::cout << Color::CYAN << THIN_VERTICAL << Color::RESET;
+    std::cout << Color::BRIGHT_GREEN << "  3. [ITM] Use Item            " << Color::RESET << "        ";
+    std::cout << Color::CYAN << THIN_VERTICAL << Color::RESET << "\n";
+    
+    std::cout << Color::CYAN << THIN_VERTICAL << Color::RESET;
+    std::cout << Color::BRIGHT_YELLOW << "  4. [RUN] Attempt to Flee     " << Color::RESET << "        ";
+    std::cout << Color::CYAN << THIN_VERTICAL << Color::RESET << "\n";
+    
+    std::cout << Color::CYAN << THIN_BOTTOM_LEFT;
+    for (int i = 0; i < 40; ++i) std::cout << THIN_HORIZONTAL;
+    std::cout << THIN_BOTTOM_RIGHT << Color::RESET << "\n";
+    
+    return getValidatedInt("\n  Enter choice (1-4): ", 1, 4);
 }
 
 int CombatSystem::selectTarget(const std::vector<Enemy>& enemies) const {
-    std::cout << "\nSelect target:\n";
+    std::cout << "\n";
+    std::cout << Color::YELLOW << "  > Select Target:" << Color::RESET << "\n";
     for (size_t i = 0; i < enemies.size(); ++i) {
-        std::cout << "  " << (i + 1) << ". " << enemies[i].name 
-                  << " (HP: " << enemies[i].stats.currentHP << "/"
-                  << enemies[i].stats.maxHP << ")\n";
+        std::cout << Color::RED << "    " << (i + 1) << ". " << enemies[i].name << Color::RESET
+                  << Color::WHITE << " (HP: " << enemies[i].stats.currentHP << "/"
+                  << enemies[i].stats.maxHP << ")" << Color::RESET << "\n";
     }
     
-    return getValidatedInt("Target: ", 1, static_cast<int>(enemies.size())) - 1;
+    return getValidatedInt("  Target: ", 1, static_cast<int>(enemies.size())) - 1;
 }
 
 std::vector<std::pair<bool, int>> CombatSystem::determineTurnOrder(
@@ -942,10 +1362,13 @@ bool CombatSystem::attemptFlee(const std::vector<Enemy>& enemies) {
     }
     
     if (randomChance(fleeChance)) {
+        std::cout << Color::BRIGHT_GREEN << "    ✓ You escaped successfully!" << Color::RESET << "\n";
         log("Player fled successfully.");
+        delay(500);
         return true;
     } else {
-        displayMessage("You failed to escape!");
+        std::cout << Color::BRIGHT_RED << "    ✗ You failed to escape!" << Color::RESET << "\n";
+        delay(500);
         log("Player failed to flee.");
         return false;
     }
@@ -959,7 +1382,7 @@ bool CombatSystem::useItemInCombat(int itemIndex) {
     Item& item = playerRef.inventory[itemIndex];
     
     if (!item.isUsable || item.type != ItemType::CONSUMABLE) {
-        std::cout << "You can't use that in combat!\n";
+        std::cout << Color::RED << "  You can't use that in combat!" << Color::RESET << "\n";
         return false;
     }
     
@@ -970,7 +1393,8 @@ bool CombatSystem::useItemInCombat(int itemIndex) {
         if (playerRef.stats.currentHP > playerRef.stats.maxHP) {
             playerRef.stats.currentHP = playerRef.stats.maxHP;
         }
-        std::cout << "You use " << item.name << " and restore " << healed << " HP!\n";
+        std::cout << Color::BRIGHT_GREEN << "  > You use " << item.name << " and restore " 
+                  << healed << " HP!" << Color::RESET << "\n";
         log("Used " + item.name + ", healed " + std::to_string(healed) + " HP.");
     }
     
@@ -987,7 +1411,7 @@ bool CombatSystem::useItemInCombat(int itemIndex) {
         buff.isDebuff = false;
         applyStatusToPlayer(buff);
         
-        std::cout << "You gain a temporary buff!\n";
+        std::cout << Color::CYAN << "  ✨ You gain a temporary buff!" << Color::RESET << "\n";
     }
     
     // Consume item
