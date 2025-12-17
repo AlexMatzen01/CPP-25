@@ -1,13 +1,8 @@
-/*******************************************************************************
- * C++ Adventure Quest Engine
- * Constants.h - Game Constants and Configuration
- * 
- * This file contains all game constants, configuration values, and ASCII art
- * templates used throughout the engine.
- * 
- * Author: Adventure Quest Engine Team
- * Version: 1.0
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// Game constants and configuration
 
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
@@ -18,9 +13,9 @@
 
 namespace AQE {
 
-//==============================================================================
+// ---
 // GAME CONFIGURATION
-//==============================================================================
+// ---
 
 // ANSI Color Codes
 namespace Color {
@@ -97,9 +92,9 @@ constexpr float HARD_GOLD_MULT = 0.75f;
 constexpr int SPEEDRUN_TURN_LIMIT = 50;
 constexpr int COMPLETIONIST_QUEST_COUNT = 5;
 
-//==============================================================================
+// ---
 // DROP RATE TABLES (Percentages)
-//==============================================================================
+// ---
 
 constexpr int COMMON_DROP_RATE = 50;
 constexpr int UNCOMMON_DROP_RATE = 30;
@@ -107,9 +102,9 @@ constexpr int RARE_DROP_RATE = 15;
 constexpr int EPIC_DROP_RATE = 4;
 constexpr int LEGENDARY_DROP_RATE = 1;
 
-//==============================================================================
+// ---
 // CHARACTER CLASS BASE STATS
-//==============================================================================
+// ---
 
 // Warrior: High HP, High Attack, Medium Defense
 constexpr int WARRIOR_HP = 150;
@@ -151,9 +146,9 @@ constexpr int PALADIN_SPEED = 8;
 constexpr int PALADIN_MAGIC = 15;
 constexpr int PALADIN_MAGRES = 12;
 
-//==============================================================================
+// ---
 // ASCII ART TEMPLATES
-//==============================================================================
+// ---
 
 const std::string TITLE_ART = R"(
 ===============================================================================
@@ -301,9 +296,9 @@ const std::string TRAP_ART = R"(
     ^^^^
 )";
 
-//==============================================================================
+// ---
 // TEXT TEMPLATES
-//==============================================================================
+// ---
 
 const std::vector<std::string> ROOM_PREFIXES = {
     "Dark", "Dusty", "Ancient", "Forgotten", "Cursed", "Mystic",
@@ -354,9 +349,9 @@ const std::vector<std::string> DEATH_TEXT = {
     "is vanquished!"
 };
 
-//==============================================================================
+// ---
 // RIDDLES AND PUZZLES
-//==============================================================================
+// ---
 
 // Riddle struct is defined in Types.h
 
@@ -387,9 +382,9 @@ const std::vector<Riddle> RIDDLE_DATABASE = {
     {"What has one eye but cannot see?", "needle", "Used in sewing."}
 };
 
-//==============================================================================
+// ---
 // FILE PATHS
-//==============================================================================
+// ---
 
 const std::string DATA_FOLDER = "data/";
 const std::string ROOMS_FILE = "data/rooms.txt";

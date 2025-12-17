@@ -1,6 +1,8 @@
-/*******************************************************************************
- * Achievement.cpp - Full implementation for Achievement System
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// Achievement system implementation (partially implemented - some features scrapped)
 
 #include "../include/Achievement.h"
 #include <iostream>
@@ -10,9 +12,9 @@
 
 namespace AQE {
 
-//==============================================================================
+// ---
 // AchievementManager Implementation
-//==============================================================================
+// ---
 
 AchievementManager::AchievementManager() : totalPoints(0), spentPoints(0) {
     initializeAchievements();
@@ -560,9 +562,9 @@ PermanentPerk* AchievementManager::findPerk(const std::string& perkId) {
     return nullptr;
 }
 
-//==============================================================================
+// ---
 // StatisticsManager Implementation
-//==============================================================================
+// ---
 
 StatisticsManager::StatisticsManager() {
     // Stats are initialized to 0 by PlayerStatistics constructor

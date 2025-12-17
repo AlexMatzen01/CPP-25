@@ -1,6 +1,8 @@
-/*******************************************************************************
- * Companion.cpp - Full implementation for Companion System
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// Companion system implementation (partially implemented - many features scrapped)
 
 #include "../include/Companion.h"
 #include <iostream>
@@ -11,9 +13,9 @@
 
 namespace AQE {
 
-//==============================================================================
+// ---
 // CompanionManager Implementation
-//==============================================================================
+// ---
 
 CompanionManager::CompanionManager(Player& player) 
     : playerRef(player), activeCompanionId(-1), maxActiveCompanions(1) {
@@ -685,9 +687,9 @@ void CompanionManager::triggerLoyaltyDialogue(int companionId, bool isPositive) 
     }
 }
 
-//==============================================================================
+// ---
 // FactionManager Implementation
-//==============================================================================
+// ---
 
 FactionManager::FactionManager(Player& player) : playerRef(player) {
     initializeFactions();

@@ -1,16 +1,8 @@
-/*******************************************************************************
- * C++ Adventure Quest Engine - ENHANCED EDITION
- * SkillTree.h - Advanced Skill Tree and Talent System
- * 
- * This file implements a comprehensive skill tree system with:
- * - Class-specific talent trees (3 branches per class)
- * - Active and passive abilities
- * - Synergy bonuses
- * - Specialization paths
- * 
- * Author: Adventure Quest Engine Team
- * Version: 2.0 - MASSIVE OVERHAUL
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// Skill tree system (partially implemented - some features scrapped)
 
 #ifndef SKILLTREE_H
 #define SKILLTREE_H
@@ -22,9 +14,9 @@
 
 namespace AQE {
 
-//==============================================================================
+// ---
 // TALENT NODE SYSTEM
-//==============================================================================
+// ---
 
 enum class TalentType {
     PASSIVE,         // Always active bonus
@@ -95,9 +87,9 @@ struct TalentNode {
                    grantsCounterattack(false) {}
 };
 
-//==============================================================================
+// ---
 // SPECIALIZATION PATHS
-//==============================================================================
+// ---
 
 enum class WarriorSpec {
     BERSERKER,       // High damage, risky gameplay
@@ -123,9 +115,9 @@ enum class PaladinSpec {
     JUSTICAR         // Balanced offense/defense
 };
 
-//==============================================================================
+// ---
 // COMBO SYSTEM
-//==============================================================================
+// ---
 
 struct ComboChain {
     std::string name;
@@ -138,9 +130,9 @@ struct ComboChain {
     ComboChain() : currentStep(0), bonusDamage(0), damageMultiplier(1.0f) {}
 };
 
-//==============================================================================
+// ---
 // SKILL TREE MANAGER
-//==============================================================================
+// ---
 
 class SkillTreeManager {
 public:

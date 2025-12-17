@@ -1,6 +1,8 @@
-/*******************************************************************************
- * Crafting.cpp - Full implementation for Crafting System
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// Crafting system implementation (partially implemented - many features scrapped)
 
 #include "../include/Crafting.h"
 #include <iostream>
@@ -11,9 +13,9 @@
 
 namespace AQE {
 
-//==============================================================================
+// ---
 // CraftingSystem Implementation
-//==============================================================================
+// ---
 
 CraftingSystem::CraftingSystem(Player& player) : playerRef(player) {
     initializeMaterials();
@@ -627,9 +629,9 @@ float CraftingSystem::calculateSuccessChance(const Recipe& recipe) const {
     return chance;
 }
 
-//==============================================================================
+// ---
 // MerchantSystem Implementation
-//==============================================================================
+// ---
 
 MerchantSystem::MerchantSystem(Player& player) 
     : playerRef(player), reputationPoints(0), merchantTier(0) {

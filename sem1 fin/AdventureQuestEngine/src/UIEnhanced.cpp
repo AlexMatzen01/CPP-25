@@ -1,6 +1,8 @@
-/*******************************************************************************
- * UIEnhanced.cpp - Full implementation for Enhanced UI System
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// Enhanced UI system implementation (partially implemented - many features scrapped)
 
 #include "../include/UIEnhanced.h"
 #include <iostream>
@@ -16,9 +18,9 @@ namespace AQE {
 std::map<std::string, Animation> UIManager::animations;
 std::vector<LogEntry> UIManager::globalLog;
 
-//==============================================================================
+// ---
 // UIManager Implementation
-//==============================================================================
+// ---
 
 UIManager::UIManager() {
     initializeAnimations();
@@ -759,9 +761,9 @@ std::string UIManager::getBoxChar(const std::string& style, const std::string& p
     return "+";
 }
 
-//==============================================================================
+// ---
 // ASCIIArtLibrary Implementation
-//==============================================================================
+// ---
 
 std::string ASCIIArtLibrary::getWarriorEmblem() {
     return "    /\\\n   /  \\\n  |    |\n  | () |\n   \\  /\n    \\/\n";

@@ -1,13 +1,8 @@
-/*******************************************************************************
- * C++ Adventure Quest Engine
- * FileIO.cpp - File Input/Output Implementation
- * 
- * This file contains the implementation of file I/O operations including
- * loading game data, saving game logs, save/load game state, and leaderboards.
- * 
- * Author: Adventure Quest Engine Team
- * Version: 1.0
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// File I/O implementation
 
 #include "../include/FileIO.h"
 #include "../include/Utils.h"
@@ -30,17 +25,17 @@
 
 namespace AQE {
 
-//==============================================================================
+// ---
 // CONSTRUCTOR
-//==============================================================================
+// ---
 
 FileIO::FileIO(const std::string& dataFolder) : dataPath(dataFolder) {
     ensureDataDirectory();
 }
 
-//==============================================================================
+// ---
 // DATA LOADING
-//==============================================================================
+// ---
 
 bool FileIO::loadAllGameData(GameState& gameState) {
     bool success = true;
@@ -330,9 +325,9 @@ std::vector<Quest> FileIO::loadQuests(const std::string& filename) {
     return quests;
 }
 
-//==============================================================================
+// ---
 // GAME SAVING/LOADING
-//==============================================================================
+// ---
 
 bool FileIO::saveGame(const GameState& gameState, const std::string& filename) {
     std::ofstream file(filename);
@@ -530,9 +525,9 @@ std::vector<std::string> FileIO::listSaveFiles() const {
     return saveFiles;
 }
 
-//==============================================================================
+// ---
 // GAME LOG
-//==============================================================================
+// ---
 
 bool FileIO::saveGameLog(const Player& player, const std::string& filename,
                          EndingType ending) {
@@ -608,9 +603,9 @@ bool FileIO::appendToLog(const std::string& message, const std::string& filename
     return true;
 }
 
-//==============================================================================
+// ---
 // LEADERBOARD
-//==============================================================================
+// ---
 
 std::vector<LeaderboardEntry> FileIO::loadLeaderboard(const std::string& filename) {
     std::vector<LeaderboardEntry> entries;
@@ -780,9 +775,9 @@ void FileIO::sortLeaderboardByTurns(std::vector<LeaderboardEntry>& entries) {
     }
 }
 
-//==============================================================================
+// ---
 // PRIVATE METHODS
-//==============================================================================
+// ---
 
 bool FileIO::ensureDataDirectory() {
     // Try to create directory
@@ -816,9 +811,9 @@ std::string FileIO::getCurrentDateTime() const {
     return ss.str();
 }
 
-//==============================================================================
+// ---
 // DEFAULT DATA CREATION
-//==============================================================================
+// ---
 
 std::vector<Item> createDefaultItems() {
     std::vector<Item> items;

@@ -1,4 +1,4 @@
-# Install script for directory: /mnt/c/Users/mintt/Documents/c++/CPP-25/sem1 fin/AdventureQuestEngine
+# Install script for directory: /workspaces/CPP-25/sem1 fin/AdventureQuestEngine
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/mnt/c/Users/mintt/Documents/c++/CPP-25/sem1 fin/AdventureQuestEngine/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/workspaces/CPP-25/sem1 fin/AdventureQuestEngine/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

@@ -1,13 +1,8 @@
-/*******************************************************************************
- * C++ Adventure Quest Engine
- * GameEngine.cpp - Main Game Engine Implementation
- * 
- * This file contains the implementation of the GameEngine class which
- * coordinates all game systems and provides the main game loop.
- * 
- * Author: Adventure Quest Engine Team
- * Version: 1.0
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// Main game engine implementation
 
 #include "../include/GameEngine.h"
 #include "../include/Constants.h"
@@ -20,9 +15,9 @@
 
 namespace AQE {
 
-//==============================================================================
+// ---
 // CONSTRUCTOR / DESTRUCTOR
-//==============================================================================
+// ---
 
 GameEngine::GameEngine()
     : m_mapGenerator(DEFAULT_MAP_WIDTH, DEFAULT_MAP_HEIGHT),
@@ -40,9 +35,9 @@ GameEngine::~GameEngine() {
     // Cleanup if needed
 }
 
-//==============================================================================
+// ---
 // MAIN GAME FLOW
-//==============================================================================
+// ---
 
 int GameEngine::run() {
     m_isRunning = true;
@@ -253,7 +248,7 @@ void GameEngine::addStarterItems() {
     healthPotion.isUsable = true;
     healthPotion.isStackable = true;
     m_gameState.player.inventory.push_back(healthPotion);
-    
+
     // Add a starter weapon based on class
     Item weapon;
     weapon.id = 2001;
@@ -267,13 +262,13 @@ void GameEngine::addStarterItems() {
         case CharacterClass::WARRIOR:
             weapon.name = "Steel Longsword";
             weapon.description = "A sturdy blade forged for battle.";
-            weapon.attackBonus = 8;
+            weapon.attackBonus = 13;
             weapon.value = 100;
             break;
         case CharacterClass::MAGE:
             weapon.name = "Enchanted Staff";
             weapon.description = "A staff humming with magical energy.";
-            weapon.attackBonus = 5;
+            weapon.attackBonus = 13;
             weapon.critBonus = 10;
             weapon.value = 120;
             break;
@@ -282,15 +277,15 @@ void GameEngine::addStarterItems() {
             weapon.description = "Twin daggers perfect for swift strikes.";
             weapon.attackBonus = 6;
             weapon.critBonus = 15;
-            weapon.speedBonus = 3;
+            weapon.speedBonus = 4;
             weapon.value = 110;
             break;
         case CharacterClass::PALADIN:
             weapon.name = "Blessed Warhammer";
             weapon.description = "A holy weapon that smites evil.";
-            weapon.attackBonus = 7;
-            weapon.defenseBonus = 3;
-            weapon.value = 130;
+            weapon.attackBonus = 10;
+            weapon.defenseBonus = 7;
+            weapon.value = 170;
             break;
     }
     
@@ -375,9 +370,9 @@ void GameEngine::endGame() {
     waitForEnter();
 }
 
-//==============================================================================
+// ---
 // CHARACTER CREATION
-//==============================================================================
+// ---
 
 void GameEngine::characterCreation() {
     clearScreen();
@@ -607,9 +602,9 @@ void GameEngine::displayClassInfo(CharacterClass charClass) {
     }
 }
 
-//==============================================================================
+// ---
 // EXPLORATION
-//==============================================================================
+// ---
 
 void GameEngine::displayCurrentRoom() {
     clearScreen();
@@ -959,9 +954,9 @@ bool GameEngine::pickupItem(int itemIndex) {
     return true;
 }
 
-//==============================================================================
+// ---
 // MENUS & UI
-//==============================================================================
+// ---
 
 int GameEngine::showGameMenu() {
     clearScreen();
@@ -1164,9 +1159,9 @@ void GameEngine::waitForEnter() {
     pause();
 }
 
-//==============================================================================
+// ---
 // ENDING SYSTEM
-//==============================================================================
+// ---
 
 EndingType GameEngine::determineEnding() {
     const Player& p = m_gameState.player;
@@ -1362,9 +1357,9 @@ void GameEngine::displayLeaderboard() {
     waitForEnter();
 }
 
-//==============================================================================
+// ---
 // SAVE / LOAD
-//==============================================================================
+// ---
 
 bool GameEngine::saveGame(const std::string& filename) {
     return m_fileIO.saveGame(m_gameState, filename);
@@ -1378,9 +1373,9 @@ std::vector<std::string> GameEngine::listSaveFiles() {
     return m_fileIO.listSaveFiles();
 }
 
-//==============================================================================
+// ---
 // UTILITY METHODS
-//==============================================================================
+// ---
 
 void GameEngine::logEvent(const std::string& message) {
     m_gameState.player.gameLog.push_back(message);
@@ -1419,9 +1414,9 @@ void GameEngine::initializeRandom(unsigned int seed) {
     initRandom(seed);
 }
 
-//==============================================================================
+// ---
 // GETTERS
-//==============================================================================
+// ---
 
 GameState& GameEngine::getGameState() {
     return m_gameState;
@@ -1435,9 +1430,9 @@ bool GameEngine::isRunning() const {
     return m_isRunning;
 }
 
-//==============================================================================
+// ---
 // PRIVATE HELPER METHODS
-//==============================================================================
+// ---
 
 bool GameEngine::loadGameData() {
     return m_fileIO.loadAllGameData(m_gameState);

@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I"/mnt/c/Users/mintt/Documents/c++/CPP-25/sem1 fin/AdventureQuestEngine/include"
+CXX_INCLUDES = -I"/workspaces/CPP-25/sem1 fin/AdventureQuestEngine/include"
 
 CXX_FLAGS = -std=gnu++17 -Wall -Wextra -Wpedantic
 

@@ -1,13 +1,8 @@
-/*******************************************************************************
- * C++ Adventure Quest Engine
- * MapGenerator.cpp - Procedural Map Generation Implementation
- * 
- * This file contains the implementation of the procedural dungeon map generator,
- * including room placement, connectivity algorithms, and population logic.
- * 
- * Author: Adventure Quest Engine Team
- * Version: 1.0
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// Procedural map generation implementation
 
 #include "../include/MapGenerator.h"
 #include "../include/Utils.h"
@@ -20,9 +15,9 @@
 
 namespace AQE {
 
-//==============================================================================
+// ---
 // CONSTRUCTOR
-//==============================================================================
+// ---
 
 MapGenerator::MapGenerator(int width, int height)
     : mapWidth(width), mapHeight(height), entranceId(-1), exitId(-1), nextRoomId(0) {
@@ -33,9 +28,9 @@ MapGenerator::MapGenerator(int width, int height)
     if (mapHeight > MAX_MAP_HEIGHT) mapHeight = MAX_MAP_HEIGHT;
 }
 
-//==============================================================================
+// ---
 // PUBLIC METHODS
-//==============================================================================
+// ---
 
 bool MapGenerator::generateMap(GameState& gameState) {
     // Store map dimensions in game state
@@ -166,9 +161,9 @@ void MapGenerator::printMap() const {
     std::cout << "\nLegend: E=Entrance, X=Exit, B=Boss, T=Treasure, !=Trap, ?=Puzzle, S=Secret, R=Rest, .=Normal\n\n";
 }
 
-//==============================================================================
+// ---
 // PRIVATE METHODS - Core Generation
-//==============================================================================
+// ---
 
 void MapGenerator::initializeGrid() {
     grid.clear();
@@ -381,9 +376,9 @@ void MapGenerator::connectRooms() {
     }
 }
 
-//==============================================================================
+// ---
 // PRIVATE METHODS - Room Creation
-//==============================================================================
+// ---
 
 Room MapGenerator::createRoom(int x, int y, RoomType type) {
     Room room;
@@ -475,9 +470,9 @@ RoomType MapGenerator::determineRoomType(int x, int y) {
     return RoomType::NORMAL;
 }
 
-//==============================================================================
+// ---
 // PRIVATE METHODS - Population
-//==============================================================================
+// ---
 
 void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& templates) {
     // Skip certain room types
@@ -654,9 +649,9 @@ void MapGenerator::setupTrap(Room& room) {
     room.description += " " + randomElement(trapDescs);
 }
 
-//==============================================================================
+// ---
 // PRIVATE METHODS - Validation
-//==============================================================================
+// ---
 
 bool MapGenerator::isValidPosition(int x, int y) const {
     return x >= 0 && x < mapWidth && y >= 0 && y < mapHeight;
@@ -728,9 +723,9 @@ std::vector<int> MapGenerator::getAdjacentRooms(int x, int y) {
     return result;
 }
 
-//==============================================================================
+// ---
 // STANDALONE HELPER FUNCTIONS
-//==============================================================================
+// ---
 
 bool generateDungeon(GameState& gameState, int width, int height) {
     MapGenerator generator(width, height);

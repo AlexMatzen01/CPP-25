@@ -1,17 +1,8 @@
-/*******************************************************************************
- * C++ Adventure Quest Engine - ENHANCED EDITION
- * Crafting.h - Crafting, Enchanting, and Economy System
- * 
- * Features:
- * - Item crafting with recipes and materials
- * - Weapon/armor enchanting and upgrading
- * - Dynamic merchant pricing based on supply/demand
- * - Trading and bartering
- * - Resource gathering and material conversion
- * 
- * Author: Adventure Quest Engine Team
- * Version: 2.0 - MASSIVE OVERHAUL
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// Crafting and economy system (partially implemented - many features scrapped)
 
 #ifndef CRAFTING_H
 #define CRAFTING_H
@@ -23,9 +14,9 @@
 
 namespace AQE {
 
-//==============================================================================
+// ---
 // CRAFTING MATERIALS AND RECIPES
-//==============================================================================
+// ---
 
 enum class MaterialType {
     WOOD,
@@ -71,9 +62,9 @@ struct Recipe {
                experienceGained(10) {}
 };
 
-//==============================================================================
+// ---
 // ENCHANTING SYSTEM
-//==============================================================================
+// ---
 
 enum class EnchantmentType {
     FIRE_DAMAGE,         // +X fire damage
@@ -117,9 +108,9 @@ struct EnchantedItem {
                      durability(100), maxDurability(100) {}
 };
 
-//==============================================================================
+// ---
 // MERCHANT AND ECONOMY
-//==============================================================================
+// ---
 
 struct MerchantInventory {
     std::vector<Item> items;
@@ -142,9 +133,9 @@ struct TradeOffer {
     TradeOffer() : goldDifference(0), isAcceptable(false) {}
 };
 
-//==============================================================================
+// ---
 // CRAFTING SYSTEM MANAGER
-//==============================================================================
+// ---
 
 class CraftingSystem {
 public:
@@ -194,9 +185,9 @@ private:
     float calculateSuccessChance(const Recipe& recipe) const;
 };
 
-//==============================================================================
+// ---
 // MERCHANT SYSTEM
-//==============================================================================
+// ---
 
 class MerchantSystem {
 public:

@@ -1,13 +1,8 @@
-/*******************************************************************************
- * C++ Adventure Quest Engine
- * Combat.cpp - Combat System Implementation
- * 
- * This file contains the implementation of the turn-based combat system,
- * including attack calculations, abilities, fleeing, and loot distribution.
- * 
- * Author: Adventure Quest Engine Team
- * Version: 1.0
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// Combat system implementation
 
 #include "../include/Combat.h"
 #include "../include/Utils.h"
@@ -55,9 +50,9 @@ namespace {
     }
 }
 
-//==============================================================================
+// ---
 // CONSTRUCTOR
-//==============================================================================
+// ---
 
 CombatSystem::CombatSystem(Player& player, int difficulty)
     : playerRef(player), gameDifficulty(difficulty),
@@ -67,9 +62,9 @@ CombatSystem::CombatSystem(Player& player, int difficulty)
     if (gameDifficulty > 3) gameDifficulty = 3;
 }
 
-//==============================================================================
+// ---
 // PUBLIC METHODS
-//==============================================================================
+// ---
 
 CombatResult CombatSystem::startCombat(std::vector<Enemy>& enemies) {
     CombatResult result;
@@ -225,9 +220,9 @@ CombatStats CombatSystem::getEffectiveEnemyStats(const Enemy& enemy) const {
     return effective;
 }
 
-//==============================================================================
+// ---
 // PRIVATE METHODS - Combat Flow
-//==============================================================================
+// ---
 
 bool CombatSystem::combatLoop(std::vector<Enemy>& enemies) {
     while (!combatEnded) {
@@ -575,9 +570,9 @@ void CombatSystem::rollEnemyIntents(std::vector<Enemy>& enemies) {
     }
 }
 
-//==============================================================================
+// ---
 // PRIVATE METHODS - Attack Calculations
-//==============================================================================
+// ---
 
 AttackResult CombatSystem::playerAttack(Enemy& target) {
     AttackResult result;
@@ -691,9 +686,9 @@ int CombatSystem::calculateFinalDamage(int baseDamage, int defense, bool isCrit)
     return finalDamage;
 }
 
-//==============================================================================
+// ---
 // PRIVATE METHODS - Abilities
-//==============================================================================
+// ---
 
 AbilityResult CombatSystem::usePlayerAbility(int abilityIndex, Enemy* target) {
     AbilityResult result;
@@ -846,9 +841,9 @@ bool CombatSystem::shouldEnemyUseAbility(const Enemy& enemy) const {
     return false;
 }
 
-//==============================================================================
+// ---
 // PRIVATE METHODS - Status Effects
-//==============================================================================
+// ---
 
 void CombatSystem::applyStatusToPlayer(const StatusEffect& effect) {
     playerRef.activeEffects.push_back(effect);
@@ -918,9 +913,9 @@ int CombatSystem::applyShieldThenDamage(int incoming, std::vector<StatusEffect>&
     return absorbed;
 }
 
-//==============================================================================
+// ---
 // PRIVATE METHODS - Flee & Items
-//==============================================================================
+// ---
 
 bool CombatSystem::attemptFlee(const std::vector<Enemy>& enemies) {
     // Calculate flee chance based on speed difference
@@ -1004,9 +999,9 @@ bool CombatSystem::useItemInCombat(int itemIndex) {
     return true;
 }
 
-//==============================================================================
+// ---
 // PRIVATE METHODS - Loot
-//==============================================================================
+// ---
 
 std::vector<Item> CombatSystem::generateLoot(const std::vector<Enemy>& enemies) {
     std::vector<Item> loot;
@@ -1104,9 +1099,9 @@ int CombatSystem::calculateGold(const std::vector<Enemy>& enemies) const {
     return (total < 0) ? 0 : total;
 }
 
-//==============================================================================
+// ---
 // PRIVATE METHODS - Logging
-//==============================================================================
+// ---
 
 void CombatSystem::log(const std::string& message) {
     combatLog.push_back(message);
@@ -1117,9 +1112,9 @@ void CombatSystem::displayMessage(const std::string& message, int delayMs) const
     delay(delayMs);
 }
 
-//==============================================================================
+// ---
 // STANDALONE COMBAT FUNCTIONS
-//==============================================================================
+// ---
 
 bool quickCombat(Player& player, Enemy& enemy) {
     CombatSystem combat(player, 2);

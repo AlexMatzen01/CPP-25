@@ -1,17 +1,8 @@
-/*******************************************************************************
- * C++ Adventure Quest Engine - ENHANCED EDITION
- * Achievement.h - Achievement and Meta-Progression System
- * 
- * Features:
- * - Comprehensive achievement system
- * - Unlockable perks and bonuses
- * - New Game+ mode with difficulty modifiers
- * - Challenge runs (ironman, speedrun, pacifist, etc.)
- * - Statistics tracking and leaderboards
- * 
- * Author: Adventure Quest Engine Team
- * Version: 2.0 - MASSIVE OVERHAUL
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// Achievement system (partially implemented - some features scrapped)
 
 #ifndef ACHIEVEMENT_H
 #define ACHIEVEMENT_H
@@ -23,9 +14,9 @@
 
 namespace AQE {
 
-//==============================================================================
+// ---
 // ACHIEVEMENT SYSTEM
-//==============================================================================
+// ---
 
 enum class AchievementCategory {
     COMBAT,          // Kill X enemies, etc.
@@ -74,9 +65,9 @@ struct Achievement {
                    goldReward(0), experienceReward(0) {}
 };
 
-//==============================================================================
+// ---
 // PERMANENT PERKS (META-PROGRESSION)
-//==============================================================================
+// ---
 
 struct PermanentPerk {
     std::string id;
@@ -108,9 +99,9 @@ struct PermanentPerk {
                      storageSize(0), grantsVision(false) {}
 };
 
-//==============================================================================
+// ---
 // NEW GAME+ SYSTEM
-//==============================================================================
+// ---
 
 struct NewGamePlusModifiers {
     int difficultyMultiplier;            // 1.5x, 2x, 3x enemy stats
@@ -141,9 +132,9 @@ struct NewGamePlusModifiers {
                             xpRewardMultiplier(1.0f), unlocksBonusEnding(false) {}
 };
 
-//==============================================================================
+// ---
 // CHALLENGE MODES
-//==============================================================================
+// ---
 
 enum class ChallengeMode {
     NONE,
@@ -177,9 +168,9 @@ struct ChallengeRun {
                     cosmeticRewardId(-1) {}
 };
 
-//==============================================================================
+// ---
 // STATISTICS TRACKING
-//==============================================================================
+// ---
 
 struct PlayerStatistics {
     // Combat stats
@@ -235,9 +226,9 @@ struct PlayerStatistics {
                         currentStreak(0), bestStreak(0) {}
 };
 
-//==============================================================================
+// ---
 // ACHIEVEMENT MANAGER
-//==============================================================================
+// ---
 
 class AchievementManager {
 public:
@@ -282,9 +273,9 @@ private:
     PermanentPerk* findPerk(const std::string& perkId);
 };
 
-//==============================================================================
+// ---
 // STATISTICS MANAGER
-//==============================================================================
+// ---
 
 class StatisticsManager {
 public:

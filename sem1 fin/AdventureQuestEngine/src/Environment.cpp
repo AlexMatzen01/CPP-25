@@ -1,6 +1,8 @@
-/*******************************************************************************
- * Environment.cpp - Full implementation for Environment System
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// Environment system implementation (partially implemented - many features scrapped)
 
 #include "../include/Environment.h"
 #include <iostream>
@@ -10,9 +12,9 @@
 
 namespace AQE {
 
-//==============================================================================
+// ---
 // EnvironmentManager Implementation
-//==============================================================================
+// ---
 
 EnvironmentManager::EnvironmentManager(GameState& gameState) : gameStateRef(gameState) {
     initializeBiomes();
@@ -798,9 +800,9 @@ BiomeProperties& EnvironmentManager::getBiomeProperties(BiomeType biome) {
     return dummy;
 }
 
-//==============================================================================
+// ---
 // BiomeMapGenerator Implementation
-//==============================================================================
+// ---
 
 BiomeMapGenerator::BiomeMapGenerator(int width, int height) 
     : mapWidth(width), mapHeight(height) {

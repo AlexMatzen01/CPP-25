@@ -1,18 +1,8 @@
-/*******************************************************************************
- * C++ Adventure Quest Engine - ENHANCED EDITION
- * Environment.h - Dynamic Environment and Biome System
- * 
- * Features:
- * - Multiple biomes with unique characteristics
- * - Environmental hazards and interactive terrain
- * - Weather system affecting combat and exploration
- * - Dynamic events based on location
- * - Landmarks and points of interest
- * - Day/night cycle (if applicable)
- * 
- * Author: Adventure Quest Engine Team
- * Version: 2.0 - MASSIVE OVERHAUL
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// Environment and biome system (partially implemented - many features scrapped)
 
 #ifndef ENVIRONMENT_H
 #define ENVIRONMENT_H
@@ -26,9 +16,9 @@
 
 namespace AQE {
 
-//==============================================================================
+// ---
 // BIOME SYSTEM
-//==============================================================================
+// ---
 
 enum class BiomeType {
     DUNGEON_DEPTHS,      // Classic dungeon
@@ -88,9 +78,9 @@ struct BiomeProperties {
                        hasElectricArcs(false), hasPitfalls(false), hazardDamage(0) {}
 };
 
-//==============================================================================
+// ---
 // WEATHER SYSTEM
-//==============================================================================
+// ---
 
 enum class WeatherType {
     NONE,
@@ -130,9 +120,9 @@ struct WeatherEffect {
                      dealsDamagePerTurn(false), damagePerTurn(0) {}
 };
 
-//==============================================================================
+// ---
 // LANDMARKS AND POINTS OF INTEREST
-//==============================================================================
+// ---
 
 enum class LandmarkType {
     SHRINE,              // Heal/buff
@@ -176,9 +166,9 @@ struct Landmark {
                 requiresOffering(false), offeringItemId(-1), offeringGold(0) {}
 };
 
-//==============================================================================
+// ---
 // INTERACTIVE TERRAIN
-//==============================================================================
+// ---
 
 enum class TerrainFeature {
     WALL,                // Blocks movement
@@ -210,9 +200,9 @@ struct InteractiveTerrain {
                           triggersEvent(false), eventId(-1) {}
 };
 
-//==============================================================================
+// ---
 // ENVIRONMENTAL HAZARDS
-//==============================================================================
+// ---
 
 struct EnvironmentalHazard {
     std::string name;
@@ -233,9 +223,9 @@ struct EnvironmentalHazard {
                            dodgeThreshold(50), warningTurns(0) {}
 };
 
-//==============================================================================
+// ---
 // ENVIRONMENT MANAGER
-//==============================================================================
+// ---
 
 class EnvironmentManager {
 public:
@@ -297,9 +287,9 @@ private:
     BiomeProperties& getBiomeProperties(BiomeType biome);
 };
 
-//==============================================================================
+// ---
 // ENHANCED MAP GENERATION
-//==============================================================================
+// ---
 
 class BiomeMapGenerator {
 public:

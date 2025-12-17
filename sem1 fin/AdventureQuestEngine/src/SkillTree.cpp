@@ -1,6 +1,8 @@
-/*******************************************************************************
- * SkillTree.cpp - Full implementation for Skill Tree System
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// Skill tree system implementation (partially implemented - some features scrapped)
 
 #include "../include/SkillTree.h"
 #include <iostream>
@@ -10,9 +12,9 @@
 
 namespace AQE {
 
-//==============================================================================
+// ---
 // SkillTreeManager Implementation
-//==============================================================================
+// ---
 
 SkillTreeManager::SkillTreeManager(Player& player) 
     : playerRef(player), selectedSpecialization(0), totalTalentPoints(0), spentTalentPoints(0) {
