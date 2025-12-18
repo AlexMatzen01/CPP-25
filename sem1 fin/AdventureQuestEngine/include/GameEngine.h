@@ -403,11 +403,6 @@ private:
     void handleShopEncounter();
     
     /**
-// Checks for random encounters
-     */
-    void checkRandomEncounter();
-    
-    /**
 // Updates player status effects
      */
     void updateStatusEffects();

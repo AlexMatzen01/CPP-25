@@ -303,6 +303,8 @@ void GameEngine::addStarterItems() {
     }
     
     m_gameState.player.inventory.push_back(weapon);
+    // Auto-equip starter weapon
+    m_inventorySystem.equipItem(static_cast<int>(m_gameState.player.inventory.size()) - 1);
     
     // Add starting armor
     Item armor;
@@ -318,6 +320,8 @@ void GameEngine::addStarterItems() {
     armor.isUsable = false;
     armor.isStackable = false;
     m_gameState.player.inventory.push_back(armor);
+    // Auto-equip starter armor
+    m_inventorySystem.equipItem(static_cast<int>(m_gameState.player.inventory.size()) - 1);
 }
 
 void GameEngine::gameLoop() {
@@ -346,11 +350,6 @@ void GameEngine::gameLoop() {
         
         // Check for room events
         checkRoomEvents();
-        
-        // Random encounter chance
-        if (randomChance(15)) {
-            checkRandomEncounter();
-        }
     }
 }
 
@@ -545,7 +544,7 @@ void GameEngine::applyClassStats(CharacterClass charClass) {
             skill.name = "Power Strike";
             skill.description = "A heavy blow that deals 150% damage.";
             skill.manaCost = 10;
-            skill.cooldown = 3;
+            skill.cooldown = 4;
             skill.damageMultiplier = 1.5f;
             m_gameState.player.skills.push_back(skill);
             
@@ -553,7 +552,7 @@ void GameEngine::applyClassStats(CharacterClass charClass) {
             skill.name = "Shield Bash";
             skill.description = "Bash the enemy with your shield.";
             skill.manaCost = 15;
-            skill.cooldown = 4;
+            skill.cooldown = 5;
             skill.damageMultiplier = 1.2f;
             m_gameState.player.skills.push_back(skill);
             break;
@@ -562,7 +561,7 @@ void GameEngine::applyClassStats(CharacterClass charClass) {
             skill.name = "Fireball";
             skill.description = "Launch a ball of fire.";
             skill.manaCost = 15;
-            skill.cooldown = 2;
+            skill.cooldown = 3;
             skill.damageMultiplier = 2.0f;
             skill.isMagical = true;
             m_gameState.player.skills.push_back(skill);
@@ -571,7 +570,7 @@ void GameEngine::applyClassStats(CharacterClass charClass) {
             skill.name = "Ice Shard";
             skill.description = "Pierce enemy with ice.";
             skill.manaCost = 10;
-            skill.cooldown = 1;
+            skill.cooldown = 2;
             skill.damageMultiplier = 1.5f;
             skill.isMagical = true;
             m_gameState.player.skills.push_back(skill);
@@ -581,7 +580,7 @@ void GameEngine::applyClassStats(CharacterClass charClass) {
             skill.name = "Backstab";
             skill.description = "Strike from the shadows.";
             skill.manaCost = 20;
-            skill.cooldown = 4;
+            skill.cooldown = 5;
             skill.damageMultiplier = 2.5f;
             m_gameState.player.skills.push_back(skill);
             
@@ -589,7 +588,8 @@ void GameEngine::applyClassStats(CharacterClass charClass) {
             skill.name = "Quick Slash";
             skill.description = "A fast attack.";
             skill.manaCost = 5;
-            skill.cooldown = 0;
+            // Quick Slash now has a short cooldown so frequent spamming is punished
+            skill.cooldown = 1;
             skill.damageMultiplier = 1.2f;
             m_gameState.player.skills.push_back(skill);
             break;
@@ -598,7 +598,7 @@ void GameEngine::applyClassStats(CharacterClass charClass) {
             skill.name = "Holy Smite";
             skill.description = "Smite the enemy with holy light.";
             skill.manaCost = 15;
-            skill.cooldown = 3;
+            skill.cooldown = 4;
             skill.damageMultiplier = 3.5f;
             skill.isMagical = true;
             m_gameState.player.skills.push_back(skill);
@@ -607,7 +607,8 @@ void GameEngine::applyClassStats(CharacterClass charClass) {
             skill.name = "Heal";
             skill.description = "Restore health.";
             skill.manaCost = 20;
-            skill.cooldown = 4;
+            // Increase heal cooldown to make resource management more meaningful
+            skill.cooldown = 6;
             skill.damageMultiplier = 4.0f; // Heals 2x Magic Power
             skill.isHeal = true;
             skill.isMagical = true;
@@ -1818,12 +1819,6 @@ void GameEngine::handleShopEncounter() {
     m_merchantSystem.runShopMenu(merchant);
     
     clearScreen();
-}
-
-void GameEngine::checkRandomEncounter() {
-    std::cout << "\nA random encounter occurs!\n";
-    // Would implement random encounter logic
-    waitForEnter();
 }
 
 void GameEngine::updateStatusEffects() {

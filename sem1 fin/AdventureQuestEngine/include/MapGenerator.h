@@ -157,9 +157,10 @@ private:
 // Determine room type for a position
      * @param x Grid X coordinate
      * @param y Grid Y coordinate
+     * @param isMainPath Whether this room is on the main path
      * @return Determined room type
      */
-    RoomType determineRoomType(int x, int y);
+    RoomType determineRoomType(int x, int y, bool isMainPath = false);
     
     //==========================================================================
     // PRIVATE METHODS - Population

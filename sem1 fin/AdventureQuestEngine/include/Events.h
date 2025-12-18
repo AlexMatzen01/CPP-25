@@ -89,12 +89,6 @@ public:
     EventResult processEvent(Event& event);
     
     /**
-// Trigger a random encounter
-     * @return Event result (may include combat)
-     */
-    EventResult triggerRandomEncounter();
-    
-    /**
 // Check and trigger trap in room
      * @param room The room to check
      * @return Event result

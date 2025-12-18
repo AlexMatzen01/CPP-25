@@ -489,7 +489,7 @@ void CompanionManager::initializeCompanions() {
     volley.name = "Volley";
     volley.description = "Fire arrows at all enemies for 60% damage each";
     volley.damage = 20;
-    volley.cooldown = 4;
+    volley.cooldown = 5;
     volley.targetsAllEnemies = true;
     lyra.abilities.push_back(volley);
     
@@ -529,7 +529,7 @@ void CompanionManager::initializeCompanions() {
     massHeal.name = "Healing Light";
     massHeal.description = "Heal the player for 40 HP";
     massHeal.healing = 40;
-    massHeal.cooldown = 3;
+    massHeal.cooldown = 5;
     aldric.abilities.push_back(massHeal);
     
     CompanionAbility healAura;
@@ -567,7 +567,7 @@ void CompanionManager::initializeCompanions() {
     shieldWall.name = "Shield Wall";
     shieldWall.description = "Block the next attack against you";
     shieldWall.shieldAmount = 50;
-    shieldWall.cooldown = 5;
+    shieldWall.cooldown = 6;
     gorath.abilities.push_back(shieldWall);
     
     CompanionAbility defenseAura;
@@ -607,7 +607,7 @@ void CompanionManager::initializeCompanions() {
     fireBlast.name = "Fire Blast";
     fireBlast.description = "Deal 35 fire damage to an enemy";
     fireBlast.damage = 35;
-    fireBlast.cooldown = 2;
+    fireBlast.cooldown = 3;
     elara.abilities.push_back(fireBlast);
     
     CompanionAbility magicAura;
@@ -647,7 +647,7 @@ void CompanionManager::initializeCompanions() {
     backstab.name = "Backstab";
     backstab.description = "Deal 45 critical damage to an enemy";
     backstab.damage = 45;
-    backstab.cooldown = 4;
+    backstab.cooldown = 5;
     shadow.abilities.push_back(backstab);
     
     CompanionAbility lockpick;

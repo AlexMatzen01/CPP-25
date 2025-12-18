@@ -60,14 +60,6 @@ std::vector<EventResult> EventSystem::processRoomEvents(Room& room) {
         }
     }
     
-    // Random encounter chance in normal rooms
-    if (room.type == RoomType::NORMAL && !room.isCleared) {
-        if (randomChance(20)) {
-            EventResult encounter = triggerRandomEncounter();
-            results.push_back(encounter);
-        }
-    }
-    
     return results;
 }
 
@@ -178,40 +170,6 @@ EventResult EventSystem::processEvent(Event& event) {
     
     logEvent(event.name + ": " + result.message);
     
-    return result;
-}
-
-EventResult EventSystem::triggerRandomEncounter() {
-    EventResult result;
-    
-    int encounterType = randomInt(1, 100);
-    
-    if (encounterType <= 40) {
-        // Combat encounter
-        result.triggersCombat = true;
-        result.combatEnemyId = 0;  // Random enemy
-        result.message = "A wild enemy appears!";
-    } else if (encounterType <= 60) {
-        // Find gold
-        int gold = randomInt(5, 25);
-        result.goldChange = gold;
-        result.message = "You found " + std::to_string(gold) + " gold coins!";
-    } else if (encounterType <= 75) {
-        // Find item
-        Item item = generateRandomItem(ItemRarity::COMMON);
-        result.itemsGained.push_back(item);
-        result.message = "You found " + item.name + "!";
-    } else if (encounterType <= 85) {
-        // Healing spring
-        int heal = randomInt(10, 30);
-        result.hpChange = heal;
-        result.message = "You drink from a healing spring. +" + std::to_string(heal) + " HP!";
-    } else {
-        // Nothing happens
-        result.occurred = false;
-    }
-    
-    applyEventEffects(result);
     return result;
 }
 

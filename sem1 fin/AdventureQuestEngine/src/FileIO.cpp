@@ -894,8 +894,8 @@ std::vector<Item> createDefaultItems() {
     legendSword.description = "A legendary blade forged to slay dragons.";
     legendSword.type = ItemType::WEAPON;
     legendSword.rarity = ItemRarity::LEGENDARY;
-    legendSword.attackBonus = 20;
-    legendSword.critBonus = 10;
+    legendSword.attackBonus = 15;
+    legendSword.critBonus = 8;
     legendSword.value = 500;
     items.push_back(legendSword);
 
@@ -905,9 +905,10 @@ std::vector<Item> createDefaultItems() {
     frostmourne.description = "A cursed blade that steals the souls of its victims.";
     frostmourne.type = ItemType::WEAPON;
     frostmourne.rarity = ItemRarity::LEGENDARY;
-    frostmourne.attackBonus = 45;
-    frostmourne.critBonus = 20;
-    frostmourne.value = 5000;
+    // Tone down extremely high legendary stats for better balance
+    frostmourne.attackBonus = 30;
+    frostmourne.critBonus = 10;
+    frostmourne.value = 1500;
     items.push_back(frostmourne);
     
     // Armor
@@ -949,9 +950,10 @@ std::vector<Item> createDefaultItems() {
     demonsteel.description = "Armor forged in the bowels of Hell, offering divine defense.";
     demonsteel.type = ItemType::ARMOR;
     demonsteel.rarity = ItemRarity::LEGENDARY;
-    demonsteel.defenseBonus = 20;
+    // Reduce excessive legendary defense to keep encounters reasonable
+    demonsteel.defenseBonus = 14;
     demonsteel.speedBonus = -2;
-    demonsteel.value = 800;
+    demonsteel.value = 500;
     items.push_back(demonsteel);
 
     Item dominationhelm;
@@ -961,8 +963,8 @@ std::vector<Item> createDefaultItems() {
     dominationhelm.type = ItemType::ARMOR;
     dominationhelm.rarity = ItemRarity::LEGENDARY;
     dominationhelm.defenseBonus = 15;
-    dominationhelm.critBonus = 10;
-    dominationhelm.value = 10000;
+    dominationhelm.critBonus = 5;
+    dominationhelm.value = 3000;
     items.push_back(dominationhelm);
     
     // Accessories
@@ -1098,8 +1100,8 @@ std::vector<Item> createDefaultItems() {
     vorpalBlade.description = "One, two! One, two! And through and through...";
     vorpalBlade.type = ItemType::WEAPON;
     vorpalBlade.rarity = ItemRarity::LEGENDARY;
-    vorpalBlade.attackBonus = 25;
-    vorpalBlade.critBonus = 30;
+    vorpalBlade.attackBonus = 18;
+    vorpalBlade.critBonus = 20;
     vorpalBlade.value = 1200;
     items.push_back(vorpalBlade);
     
@@ -1508,7 +1510,8 @@ std::vector<Item> createDefaultItems() {
     ultimatePotion.description = "Fully restores HP.";
     ultimatePotion.type = ItemType::CONSUMABLE;
     ultimatePotion.rarity = ItemRarity::LEGENDARY;
-    ultimatePotion.healAmount = 9999;
+    // Make ultimate potion powerful but not trivialize the game
+    ultimatePotion.healAmount = 999;
     ultimatePotion.value = 250;
     ultimatePotion.isUsable = true;
     ultimatePotion.isStackable = true;
@@ -1632,7 +1635,8 @@ std::vector<Enemy> createDefaultEnemies() {
     lifeDrain.damage = 12;
     lifeDrain.heals = true;
     lifeDrain.healAmount = 8;
-    lifeDrain.cooldown = 3;
+    // Slightly increase enemy ability cooldowns to make skill pacing more punishing
+    lifeDrain.cooldown = 4;
     lifeDrain.triggerChance = 0.25f;
     wraith.abilities.push_back(lifeDrain);
     
@@ -1658,7 +1662,7 @@ std::vector<Enemy> createDefaultEnemies() {
     regen.description = "The troll regenerates health.";
     regen.heals = true;
     regen.healAmount = 12;
-    regen.cooldown = 3;
+    regen.cooldown = 4;
     regen.triggerChance = 0.4f;
     troll.abilities.push_back(regen);
     
@@ -1687,7 +1691,7 @@ std::vector<Enemy> createDefaultEnemies() {
     fireBreath.name = "Fire Breath";
     fireBreath.description = "The dragon breathes devastating fire!";
     fireBreath.damage = 24;
-    fireBreath.cooldown = 4;
+    fireBreath.cooldown = 5;
     fireBreath.triggerChance = 0.35f;
     dragon.abilities.push_back(fireBreath);
     
@@ -1713,7 +1717,7 @@ std::vector<Enemy> createDefaultEnemies() {
     darkBolt.name = "Dark Bolt";
     darkBolt.description = "A bolt of dark energy!";
     darkBolt.damage = 18;
-    darkBolt.cooldown = 3;
+    darkBolt.cooldown = 4;
     darkBolt.triggerChance = 0.30f;
     lich.abilities.push_back(darkBolt);
     
@@ -1722,7 +1726,7 @@ std::vector<Enemy> createDefaultEnemies() {
     summon.description = "The Lich heals itself with dark magic.";
     summon.heals = true;
     summon.healAmount = 20;
-    summon.cooldown = 5;
+    summon.cooldown = 6;
     summon.triggerChance = 0.20f;
     lich.abilities.push_back(summon);
     

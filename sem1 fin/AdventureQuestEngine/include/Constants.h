@@ -45,15 +45,15 @@ namespace Color {
 
 // Map generation settings
 constexpr int MIN_MAP_WIDTH = 5;
-constexpr int MAX_MAP_WIDTH = 12;
+constexpr int MAX_MAP_WIDTH = 20;
 constexpr int MIN_MAP_HEIGHT = 5;
-constexpr int MAX_MAP_HEIGHT = 12;
-constexpr int DEFAULT_MAP_WIDTH = 8;
-constexpr int DEFAULT_MAP_HEIGHT = 8;
+constexpr int MAX_MAP_HEIGHT = 20;
+constexpr int DEFAULT_MAP_WIDTH = 15;
+constexpr int DEFAULT_MAP_HEIGHT = 15;
 
 // Room generation probabilities (percentages)
 constexpr int TREASURE_ROOM_CHANCE = 15;
-constexpr int BOSS_ROOM_CHANCE = 5;
+constexpr int BOSS_ROOM_CHANCE = 15;
 constexpr int TRAP_ROOM_CHANCE = 12;
 constexpr int PUZZLE_ROOM_CHANCE = 10;
 constexpr int SECRET_ROOM_CHANCE = 8;

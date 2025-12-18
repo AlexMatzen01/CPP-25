@@ -1,0 +1,69 @@
+# Adventure Quest Engine Save File
+# DO NOT EDIT MANUALLY
+
+[PLAYER]
+name=Luke
+class=1
+level=1
+experience=0
+gold=50
+currentHP=120
+maxHP=120
+attack=10
+defense=8
+critChance=18
+dodgeChance=10
+speed=12
+currentRoom=17
+morality=0
+kills=0
+turns=16
+secrets=0
+puzzles=0
+bosses=0
+
+[INVENTORY]
+count=5
+item=1001,Health Potion,0,0,5,0
+item=2001,Enchanted Staff,1,1,1,0
+item=3001,Adventurer's Armor,2,0,1,0
+item=81,War Axe,1,1,1,0
+item=86,Steel Pike,1,1,1,0
+
+[VISITED]
+room=2
+room=3
+room=4
+room=6
+room=7
+room=17
+
+[GAMESTATE]
+mapWidth=8
+mapHeight=8
+dungeonLevel=1
+seed=0
+difficulty=2
+
+[DUNGEON]
+room=0,1,1,0,0
+room=1,0,0,0,0
+room=2,1,0,0,0
+room=3,1,0,0,0
+room=4,1,0,0,0
+room=5,0,0,0,0
+room=6,1,1,0,0
+room=7,1,0,1,0
+room=8,0,0,0,0
+room=9,0,0,1,0
+room=10,0,0,0,0
+room=11,0,0,0,0
+room=12,0,0,1,0
+room=13,0,0,0,0
+room=14,0,0,0,0
+room=15,0,0,0,0
+room=16,0,0,0,0
+room=17,1,0,0,0
+room=18,0,0,0,0
+room=19,0,0,0,0
+room=20,0,0,0,0

@@ -382,7 +382,7 @@ bool MapGenerator::generateMainPath() {
         // Check if valid position
         if (isValidPosition(newX, newY) && !hasRoom(newX, newY)) {
             // Create room at this position
-            RoomType type = determineRoomType(newX, newY);
+            RoomType type = determineRoomType(newX, newY, true);
             Room room = createRoom(newX, newY, type);
             rooms.push_back(room);
             grid[newY][newX] = room.id;
@@ -556,13 +556,16 @@ std::string MapGenerator::generateRoomDescription(RoomType type) {
     return base + extra;
 }
 
-RoomType MapGenerator::determineRoomType(int x, int y) {
+RoomType MapGenerator::determineRoomType(int x, int y, bool isMainPath) {
     // Random determination based on probabilities
     int roll = randomInt(1, 100);
     int cumulative = 0;
     
-    cumulative += BOSS_ROOM_CHANCE;
-    if (roll <= cumulative) return RoomType::BOSS;
+    // Boss rooms should not be on the main path to keep them "on the side"
+    if (!isMainPath) {
+        cumulative += BOSS_ROOM_CHANCE;
+        if (roll <= cumulative) return RoomType::BOSS;
+    }
     
     cumulative += TREASURE_ROOM_CHANCE;
     if (roll <= cumulative) return RoomType::TREASURE;

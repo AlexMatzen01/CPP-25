@@ -14,6 +14,12 @@
 #include <thread>
 #include <iomanip>
 #include <ctime>
+#ifdef _WIN32
+#include <conio.h>
+#else
+#include <termios.h>
+#include <unistd.h>
+#endif
 
 namespace AQE {
 
@@ -230,7 +236,38 @@ void clearScreen() {
 
 void pause(const std::string& message) {
     std::cout << "\n" << message;
-    std::cin.get();
+    std::cout << std::flush;
+
+    // Use platform-specific raw input to ensure only Enter proceeds.
+#ifdef _WIN32
+    // _getch() reads a single character without echo. Continue until Enter is pressed.
+    int ch;
+    while (true) {
+        ch = _getch();
+        if (ch == '\r' || ch == '\n') break;
+        // ignore other keys
+    }
+#else
+    struct termios oldt, newt;
+    if (tcgetattr(STDIN_FILENO, &oldt) == 0) {
+        newt = oldt;
+        newt.c_lflag &= ~(ICANON | ECHO);
+        tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+
+        int c;
+        // Read characters until newline; ignore all other keystrokes
+        while ((c = getchar()) != '\n' && c != EOF) {
+            // consume and ignore
+        }
+
+        // Restore terminal settings
+        tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    } else {
+        // Fallback to simple getline if termios unavailable
+        std::string tmp;
+        std::getline(std::cin, tmp);
+    }
+#endif
 }
 
 void displayProgressBar(int current, int max, int width, const std::string& label) {
