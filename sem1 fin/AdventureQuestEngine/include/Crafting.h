@@ -1,17 +1,8 @@
-/*******************************************************************************
- * C++ Adventure Quest Engine - ENHANCED EDITION
- * Crafting.h - Crafting, Enchanting, and Economy System
- * 
- * Features:
- * - Item crafting with recipes and materials
- * - Weapon/armor enchanting and upgrading
- * - Dynamic merchant pricing based on supply/demand
- * - Trading and bartering
- * - Resource gathering and material conversion
- * 
- * Author: Adventure Quest Engine Team
- * Version: 2.0 - MASSIVE OVERHAUL
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// Crafting and economy system (partially implemented - many features scrapped)
 
 #ifndef CRAFTING_H
 #define CRAFTING_H
@@ -23,9 +14,9 @@
 
 namespace AQE {
 
-//==============================================================================
+// ---
 // CRAFTING MATERIALS AND RECIPES
-//==============================================================================
+// ---
 
 enum class MaterialType {
     WOOD,
@@ -71,9 +62,9 @@ struct Recipe {
                experienceGained(10) {}
 };
 
-//==============================================================================
+// ---
 // ENCHANTING SYSTEM
-//==============================================================================
+// ---
 
 enum class EnchantmentType {
     FIRE_DAMAGE,         // +X fire damage
@@ -117,20 +108,40 @@ struct EnchantedItem {
                      durability(100), maxDurability(100) {}
 };
 
-//==============================================================================
+// ---
 // MERCHANT AND ECONOMY
-//==============================================================================
+// ---
+
+enum class VendorType {
+    GENERAL_STORE,    // Basic items, potions, food
+    WEAPONSMITH,      // Weapons and weapon upgrades
+    ARMORER,          // Armor and defensive gear
+    APOTHECARY,       // Potions, healing items, buffs
+    ENCHANTER,        // Magical items and enchantments
+    BLACK_MARKET,     // Rare/illegal items, high prices
+    TRAVELING,        // Random rare goods, changes stock
+    QUEST_VENDOR      // Quest-related items only
+};
 
 struct MerchantInventory {
+    std::string name;
+    std::string greeting;
+    VendorType vendorType;
     std::vector<Item> items;
+    std::map<int, int> stock;                // ItemID -> Quantity (-1 = infinite)
     std::map<int, float> priceMultipliers;   // ItemID -> Price multiplier
     int merchantGold;
     float buyPriceMultiplier;                // Usually 1.5x
     float sellPriceMultiplier;               // Usually 0.5x
     int reputationLevel;                     // Better deals at high rep
+    int restockTurns;                        // Turns until restock
+    bool acceptsAllItems;                    // Will buy any item?
     
-    MerchantInventory() : merchantGold(1000), buyPriceMultiplier(1.5f),
-                         sellPriceMultiplier(0.5f), reputationLevel(0) {}
+    MerchantInventory() : name("Merchant"), greeting("Welcome to my shop!"),
+                         vendorType(VendorType::GENERAL_STORE),
+                         merchantGold(1000), buyPriceMultiplier(1.5f),
+                         sellPriceMultiplier(0.5f), reputationLevel(0),
+                         restockTurns(0), acceptsAllItems(true) {}
 };
 
 struct TradeOffer {
@@ -142,9 +153,9 @@ struct TradeOffer {
     TradeOffer() : goldDifference(0), isAcceptable(false) {}
 };
 
-//==============================================================================
+// ---
 // CRAFTING SYSTEM MANAGER
-//==============================================================================
+// ---
 
 class CraftingSystem {
 public:
@@ -194,9 +205,9 @@ private:
     float calculateSuccessChance(const Recipe& recipe) const;
 };
 
-//==============================================================================
+// ---
 // MERCHANT SYSTEM
-//==============================================================================
+// ---
 
 class MerchantSystem {
 public:
@@ -206,12 +217,33 @@ public:
     void displayShop(const MerchantInventory& merchant);
     bool buyItem(MerchantInventory& merchant, int itemId);
     bool sellItem(MerchantInventory& merchant, int itemId);
+    int calculateBuyPrice(const Item& item, const MerchantInventory& merchant) const;
+    int calculateSellPrice(const Item& item, const MerchantInventory& merchant) const;
+    
+    // Stock management
+    bool hasStock(const MerchantInventory& merchant, int itemId) const;
+    void reduceStock(MerchantInventory& merchant, int itemId);
+    void restockVendor(MerchantInventory& merchant);
+    void addItemToStock(MerchantInventory& merchant, const Item& item, int quantity);
+    
+    // Vendor creation and types
+    MerchantInventory createVendor(VendorType type, int dungeonLevel);
+    MerchantInventory createGeneralStore(int level);
+    MerchantInventory createWeaponsmith(int level);
+    MerchantInventory createArmorer(int level);
+    MerchantInventory createApothecary(int level);
+    MerchantInventory createEnchanter(int level);
+    MerchantInventory createBlackMarket(int level);
+    MerchantInventory createTravelingMerchant(int level);
     
     // Trading/bartering
     TradeOffer createTradeOffer(const std::vector<int>& offered,
                                const std::vector<int>& requested);
     bool executeTrade(MerchantInventory& merchant, const TradeOffer& trade);
     int evaluateItemValue(const Item& item) const;
+    
+    // Interactive menu
+    void runShopMenu(MerchantInventory& merchant);
     
     // Dynamic pricing
     void updatePrices(MerchantInventory& merchant);
@@ -232,6 +264,10 @@ private:
     
     void updateDemand(int itemId, int change);
     bool checkBarterSkill(int difficulty) const;
+    void displayBuyMenu(MerchantInventory& merchant);
+    void displaySellMenu(MerchantInventory& merchant);
+    Item* findItemInVendorStock(MerchantInventory& merchant, int itemId);
+    Item* findItemInPlayerInventory(int itemId);
 };
 
 }  // namespace AQE

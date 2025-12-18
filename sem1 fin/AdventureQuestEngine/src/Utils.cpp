@@ -1,13 +1,8 @@
-/*******************************************************************************
- * C++ Adventure Quest Engine
- * Utils.cpp - Utility Functions Implementation
- * 
- * This file contains the implementation of utility functions for random number
- * generation, string manipulation, input validation, and helper functions.
- * 
- * Author: Adventure Quest Engine Team
- * Version: 1.0
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// Utility functions for RNG, strings, and input validation
 
 #include "../include/Utils.h"
 #include "../include/Constants.h"
@@ -22,9 +17,9 @@
 
 namespace AQE {
 
-//==============================================================================
+// ---
 // COLOR UTILITIES
-//==============================================================================
+// ---
 
 std::string colorize(const std::string& text, const std::string& colorCode) {
     return colorCode + text + Color::RESET;
@@ -37,9 +32,9 @@ void printColor(const std::string& text, const std::string& colorCode, bool newL
     }
 }
 
-//==============================================================================
+// ---
 // RANDOM NUMBER GENERATOR (Static instance)
-//==============================================================================
+// ---
 
 static std::mt19937 rng;
 static bool rngInitialized = false;
@@ -77,9 +72,9 @@ bool randomChance(int percentChance) {
     return randomInt(1, 100) <= percentChance;
 }
 
-//==============================================================================
+// ---
 // STRING UTILITIES
-//==============================================================================
+// ---
 
 std::string toLower(const std::string& str) {
     std::string result = str;
@@ -142,9 +137,9 @@ std::string wrapText(const std::string& text, int width) {
     return result.str();
 }
 
-//==============================================================================
+// ---
 // INPUT VALIDATION
-//==============================================================================
+// ---
 
 int getValidatedInt(const std::string& prompt, int min, int max) {
     int value;
@@ -220,9 +215,9 @@ int displayMenu(const std::string& title, const std::vector<std::string>& option
     return getValidatedInt("Enter your choice: ", 1, static_cast<int>(options.size()));
 }
 
-//==============================================================================
+// ---
 // DISPLAY UTILITIES
-//==============================================================================
+// ---
 
 void clearScreen() {
     // Cross-platform clear screen
@@ -273,9 +268,9 @@ void delay(int milliseconds) {
     std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
 }
 
-//==============================================================================
+// ---
 // TYPE CONVERSION UTILITIES
-//==============================================================================
+// ---
 
 std::string rarityToString(ItemRarity rarity) {
     switch (rarity) {
@@ -352,9 +347,9 @@ std::string endingToString(EndingType ending) {
     }
 }
 
-//==============================================================================
+// ---
 // GAME CALCULATIONS
-//==============================================================================
+// ---
 
 int calculateDamage(int rawDamage, int defense) {
     int damage = rawDamage - defense;

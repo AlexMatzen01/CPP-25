@@ -1,13 +1,8 @@
-/*******************************************************************************
- * C++ Adventure Quest Engine
- * Events.cpp - Event and Quest System Implementation
- * 
- * This file contains the implementation of the event system including
- * story events, branching choices, quests, puzzles, and random encounters.
- * 
- * Author: Adventure Quest Engine Team
- * Version: 1.0
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// Event and quest system implementation
 
 #include "../include/Events.h"
 #include "../include/Utils.h"
@@ -32,16 +27,16 @@ namespace {
 
 namespace AQE {
 
-//==============================================================================
+// ---
 // CONSTRUCTOR
-//==============================================================================
+// ---
 
 EventSystem::EventSystem(Player& player, GameState& gameState)
     : playerRef(player), gameRef(gameState) {}
 
-//==============================================================================
+// ---
 // EVENT PROCESSING
-//==============================================================================
+// ---
 
 std::vector<EventResult> EventSystem::processRoomEvents(Room& room) {
     std::vector<EventResult> results;
@@ -299,9 +294,9 @@ EventResult EventSystem::checkTrap(Room& room) {
     return result;
 }
 
-//==============================================================================
+// ---
 // BRANCHING CHOICES
-//==============================================================================
+// ---
 
 EventResult EventSystem::processChoiceEvent(Event& event) {
     EventResult result;
@@ -427,9 +422,9 @@ std::vector<int> EventSystem::getAvailableChoices(const Event& event) const {
     return available;
 }
 
-//==============================================================================
+// ---
 // PUZZLES
-//==============================================================================
+// ---
 
 PuzzleResult EventSystem::presentPuzzle(Room& room) {
     PuzzleResult result;
@@ -559,9 +554,9 @@ bool EventSystem::presentNumberPuzzle() {
     return false;
 }
 
-//==============================================================================
+// ---
 // QUESTS
-//==============================================================================
+// ---
 
 bool EventSystem::startQuest(int questId) {
     Quest* quest = getQuest(questId);
@@ -747,9 +742,9 @@ Quest* EventSystem::getQuest(int questId) {
     return nullptr;
 }
 
-//==============================================================================
+// ---
 // RANDOM EVENTS
-//==============================================================================
+// ---
 
 EventResult EventSystem::rollRandomEvent() {
     EventResult result;
@@ -912,9 +907,9 @@ EventResult EventSystem::generateAmbushEvent() {
     return result;
 }
 
-//==============================================================================
+// ---
 // PRIVATE METHODS
-//==============================================================================
+// ---
 
 void EventSystem::applyEventEffects(const EventResult& result) {
     // Apply HP change
@@ -978,9 +973,9 @@ bool EventSystem::meetsEventRequirements(const Event& event) const {
     return true;
 }
 
-//==============================================================================
+// ---
 // PREDEFINED STORY CHOICES
-//==============================================================================
+// ---
 
 EventResult storyChoice_WoundedTraveler(Player& player) {
     EventResult result;
@@ -1244,9 +1239,9 @@ EventResult storyChoice_BossMercy(Player& player) {
     return result;
 }
 
-//==============================================================================
+// ---
 // STANDALONE FUNCTIONS
-//==============================================================================
+// ---
 
 std::vector<Event> createDefaultEvents() {
     std::vector<Event> events;

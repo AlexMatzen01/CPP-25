@@ -1,3 +1,0 @@
-/mnt/c/Users/mintt/Documents/c++/CPP-25/sem1 fin/AdventureQuestEngine/build/CMakeFiles/AdventureQuestEngine.dir
-/mnt/c/Users/mintt/Documents/c++/CPP-25/sem1 fin/AdventureQuestEngine/build/CMakeFiles/edit_cache.dir
-/mnt/c/Users/mintt/Documents/c++/CPP-25/sem1 fin/AdventureQuestEngine/build/CMakeFiles/rebuild_cache.dir

@@ -1,13 +1,8 @@
-/*******************************************************************************
- * C++ Adventure Quest Engine
- * Types.h - Core Data Structures and Type Definitions
- * 
- * This file contains all the fundamental data structures used throughout
- * the game engine including Player, Enemy, Item, Room, Quest, and Event.
- * 
- * Author: Adventure Quest Engine Team
- * Version: 1.0
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// Core data structures for the game engine
 
 #ifndef TYPES_H
 #define TYPES_H
@@ -19,12 +14,12 @@
 
 namespace AQE {  // Adventure Quest Engine namespace
 
-//==============================================================================
+// ---
 // ENUMERATIONS
-//==============================================================================
+// ---
 
 /**
- * @brief Item rarity tiers affecting drop rates and power
+// Item rarity tiers affecting drop rates and power
  */
 enum class ItemRarity {
     COMMON,      // 50% drop rate
@@ -35,7 +30,7 @@ enum class ItemRarity {
 };
 
 /**
- * @brief Types of items available in the game
+// Types of items available in the game
  */
 enum class ItemType {
     CONSUMABLE,   // Healing potions, food, etc.
@@ -48,7 +43,7 @@ enum class ItemType {
 };
 
 /**
- * @brief Types of rooms in the dungeon
+// Types of rooms in the dungeon
  */
 enum class RoomType {
     NORMAL,       // Standard room with possible encounters
@@ -58,12 +53,13 @@ enum class RoomType {
     PUZZLE,       // Puzzle to solve for rewards
     SECRET,       // Hidden room with rare items
     SAFE,         // Rest area, no enemies
+    SHOP,         // Merchant/vendor room
     ENTRANCE,     // Starting room
     EXIT          // Final destination
 };
 
 /**
- * @brief Types of events that can occur
+// Types of events that can occur
  */
 enum class EventType {
     COMBAT,       // Enemy encounter
@@ -79,7 +75,7 @@ enum class EventType {
 };
 
 /**
- * @brief Telegraphable intent for enemies (for fairness/readability)
+// Telegraphable intent for enemies (for fairness/readability)
  */
 enum class EnemyIntent {
     UNKNOWN,
@@ -95,7 +91,7 @@ enum class EnemyIntent {
 };
 
 /**
- * @brief Quest status tracking
+// Quest status tracking
  */
 enum class QuestStatus {
     NOT_STARTED,
@@ -105,7 +101,7 @@ enum class QuestStatus {
 };
 
 /**
- * @brief Character classes with different starting stats
+// Character classes with different starting stats
  */
 enum class CharacterClass {
     WARRIOR,      // High HP, high attack
@@ -115,7 +111,7 @@ enum class CharacterClass {
 };
 
 /**
- * @brief Possible game endings
+// Possible game endings
  */
 enum class EndingType {
     VICTORY_NORMAL,      // Defeated final boss
@@ -130,12 +126,12 @@ enum class EndingType {
     ENDING_COMPLETIONIST // Completed all quests
 };
 
-//==============================================================================
+// ---
 // STAT STRUCTURES
-//==============================================================================
+// ---
 
 /**
- * @brief Combat statistics for players and enemies
+// Combat statistics for players and enemies
  */
 struct CombatStats {
     int maxHP;           // Maximum hit points
@@ -156,7 +152,7 @@ struct CombatStats {
 };
 
 /**
- * @brief Temporary buff/debuff effect
+// Temporary buff/debuff effect
  */
 struct StatusEffect {
     std::string name;
@@ -188,12 +184,12 @@ struct StatusEffect {
                      stackCount(0), maxStacks(1), ticksStartOfTurn(true) {}
 };
 
-//==============================================================================
+// ---
 // ITEM STRUCTURE
-//==============================================================================
+// ---
 
 /**
- * @brief Represents an item in the game world
+// Represents an item in the game world
  */
 struct Item {
     int id;                      // Unique identifier
@@ -224,12 +220,12 @@ struct Item {
              duration(0), isEquipped(false), isUsable(true), isStackable(true) {}
 };
 
-//==============================================================================
+// ---
 // ENEMY STRUCTURE
-//==============================================================================
+// ---
 
 /**
- * @brief Special ability for enemies
+// Special ability for enemies
  */
 struct EnemyAbility {
     std::string name;
@@ -246,7 +242,7 @@ struct EnemyAbility {
 };
 
 /**
- * @brief Represents an enemy in the game
+// Represents an enemy in the game
  */
 struct Enemy {
     int id;                           // Unique identifier
@@ -271,12 +267,12 @@ struct Enemy {
               nextIntent(EnemyIntent::UNKNOWN), intentStrength(0) {}
 };
 
-//==============================================================================
+// ---
 // ROOM STRUCTURE
-//==============================================================================
+// ---
 
 /**
- * @brief Represents a room/location in the dungeon
+// Represents a room/location in the dungeon
  */
 struct Room {
     int id;                          // Unique identifier
@@ -318,12 +314,12 @@ struct Room {
              trapDamage(0), puzzleSolved(false), puzzleRewardItemId(-1) {}
 };
 
-//==============================================================================
+// ---
 // QUEST STRUCTURE
-//==============================================================================
+// ---
 
 /**
- * @brief Represents a quest/mission
+// Represents a quest/mission
  */
 struct Quest {
     int id;                          // Unique identifier
@@ -357,12 +353,12 @@ struct Quest {
               affectsMorality(false), moralityChange(0) {}
 };
 
-//==============================================================================
+// ---
 // EVENT STRUCTURE
-//==============================================================================
+// ---
 
 /**
- * @brief Choice option for decision events
+// Choice option for decision events
  */
 struct EventChoice {
     std::string text;                // Choice display text
@@ -381,7 +377,7 @@ struct EventChoice {
 };
 
 /**
- * @brief Represents a game event (encounter, trap, choice, etc.)
+// Represents a game event (encounter, trap, choice, etc.)
  */
 struct Event {
     int id;                          // Unique identifier
@@ -424,12 +420,12 @@ struct Event {
               riddleRewardId(-1), riddleFailDamage(0) {}
 };
 
-//==============================================================================
+// ---
 // SKILL STRUCTURE
-//==============================================================================
+// ---
 
 /**
- * @brief Represents a player skill/ability
+// Represents a player skill/ability
  */
 struct Skill {
     std::string name;
@@ -446,12 +442,12 @@ struct Skill {
               damageMultiplier(1.0f), isMagical(false), isHeal(false) {}
 };
 
-//==============================================================================
+// ---
 // PLAYER STRUCTURE
-//==============================================================================
+// ---
 
 /**
- * @brief Represents the player character
+// Represents the player character
  */
 struct Player {
     std::string name;                // Character name
@@ -509,12 +505,12 @@ struct Player {
                hasSecretEnding(false) {}
 };
 
-//==============================================================================
+// ---
 // GAME STATE STRUCTURE
-//==============================================================================
+// ---
 
 /**
- * @brief Main game state container
+// Main game state container
  */
 struct GameState {
     Player player;                           // Player data
@@ -544,12 +540,12 @@ struct GameState {
                   difficulty(2) {}
 };
 
-//==============================================================================
+// ---
 // RIDDLE STRUCTURE
-//==============================================================================
+// ---
 
 /**
- * @brief Represents a riddle/puzzle
+// Represents a riddle/puzzle
  */
 struct Riddle {
     std::string question;

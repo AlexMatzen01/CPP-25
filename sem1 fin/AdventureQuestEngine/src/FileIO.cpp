@@ -1,13 +1,8 @@
-/*******************************************************************************
- * C++ Adventure Quest Engine
- * FileIO.cpp - File Input/Output Implementation
- * 
- * This file contains the implementation of file I/O operations including
- * loading game data, saving game logs, save/load game state, and leaderboards.
- * 
- * Author: Adventure Quest Engine Team
- * Version: 1.0
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// File I/O implementation
 
 #include "../include/FileIO.h"
 #include "../include/Utils.h"
@@ -30,17 +25,17 @@
 
 namespace AQE {
 
-//==============================================================================
+// ---
 // CONSTRUCTOR
-//==============================================================================
+// ---
 
 FileIO::FileIO(const std::string& dataFolder) : dataPath(dataFolder) {
     ensureDataDirectory();
 }
 
-//==============================================================================
+// ---
 // DATA LOADING
-//==============================================================================
+// ---
 
 bool FileIO::loadAllGameData(GameState& gameState) {
     bool success = true;
@@ -330,9 +325,9 @@ std::vector<Quest> FileIO::loadQuests(const std::string& filename) {
     return quests;
 }
 
-//==============================================================================
+// ---
 // GAME SAVING/LOADING
-//==============================================================================
+// ---
 
 bool FileIO::saveGame(const GameState& gameState, const std::string& filename) {
     std::ofstream file(filename);
@@ -530,9 +525,9 @@ std::vector<std::string> FileIO::listSaveFiles() const {
     return saveFiles;
 }
 
-//==============================================================================
+// ---
 // GAME LOG
-//==============================================================================
+// ---
 
 bool FileIO::saveGameLog(const Player& player, const std::string& filename,
                          EndingType ending) {
@@ -608,9 +603,9 @@ bool FileIO::appendToLog(const std::string& message, const std::string& filename
     return true;
 }
 
-//==============================================================================
+// ---
 // LEADERBOARD
-//==============================================================================
+// ---
 
 std::vector<LeaderboardEntry> FileIO::loadLeaderboard(const std::string& filename) {
     std::vector<LeaderboardEntry> entries;
@@ -780,9 +775,9 @@ void FileIO::sortLeaderboardByTurns(std::vector<LeaderboardEntry>& entries) {
     }
 }
 
-//==============================================================================
+// ---
 // PRIVATE METHODS
-//==============================================================================
+// ---
 
 bool FileIO::ensureDataDirectory() {
     // Try to create directory
@@ -816,9 +811,9 @@ std::string FileIO::getCurrentDateTime() const {
     return ss.str();
 }
 
-//==============================================================================
+// ---
 // DEFAULT DATA CREATION
-//==============================================================================
+// ---
 
 std::vector<Item> createDefaultItems() {
     std::vector<Item> items;
@@ -903,6 +898,17 @@ std::vector<Item> createDefaultItems() {
     legendSword.critBonus = 10;
     legendSword.value = 500;
     items.push_back(legendSword);
+
+    Item frostmourne;
+    frostmourne.id = 14;
+    frostmourne.name = "Frostmourne";
+    frostmourne.description = "A cursed blade that steals the souls of its victims.";
+    frostmourne.type = ItemType::WEAPON;
+    frostmourne.rarity = ItemRarity::LEGENDARY;
+    frostmourne.attackBonus = 45;
+    frostmourne.critBonus = 20;
+    frostmourne.value = 5000;
+    items.push_back(frostmourne);
     
     // Armor
     Item leather;
@@ -936,6 +942,28 @@ std::vector<Item> createDefaultItems() {
     plate.speedBonus = -3;
     plate.value = 200;
     items.push_back(plate);
+
+    Item demonsteel;
+    demonsteel.id = 23;
+    demonsteel.name = "Demonsteel Armor";
+    demonsteel.description = "Armor forged in the bowels of Hell, offering divine defense.";
+    demonsteel.type = ItemType::ARMOR;
+    demonsteel.rarity = ItemRarity::LEGENDARY;
+    demonsteel.defenseBonus = 20;
+    demonsteel.speedBonus = -2;
+    demonsteel.value = 800;
+    items.push_back(demonsteel);
+
+    Item dominationhelm;
+    dominationhelm.id = 24;
+    dominationhelm.name = "Helm of Domination";
+    dominationhelm.description = "A helm that grants control over death itself.";
+    dominationhelm.type = ItemType::ARMOR;
+    dominationhelm.rarity = ItemRarity::LEGENDARY;
+    dominationhelm.defenseBonus = 15;
+    dominationhelm.critBonus = 10;
+    dominationhelm.value = 10000;
+    items.push_back(dominationhelm);
     
     // Accessories
     Item ring;
@@ -994,6 +1022,534 @@ std::vector<Item> createDefaultItems() {
     strengthElixir.isUsable = true;
     items.push_back(strengthElixir);
     
+    Item defenseElixir;
+    defenseElixir.id = 61;
+    defenseElixir.name = "Elixir of Defense";
+    defenseElixir.description = "Temporarily increases defense.";
+    defenseElixir.type = ItemType::CONSUMABLE;
+    defenseElixir.rarity = ItemRarity::UNCOMMON;
+    defenseElixir.defenseBonus = 8;
+    defenseElixir.duration = 5;
+    defenseElixir.value = 40;
+    defenseElixir.isUsable = true;
+    items.push_back(defenseElixir);
+    
+    Item speedElixir;
+    speedElixir.id = 62;
+    speedElixir.name = "Elixir of Agility";
+    speedElixir.description = "Temporarily increases speed and dodge chance.";
+    speedElixir.type = ItemType::CONSUMABLE;
+    speedElixir.rarity = ItemRarity::RARE;
+    speedElixir.speedBonus = 7;
+    speedElixir.dodgeBonus = 10;
+    speedElixir.duration = 5;
+    speedElixir.value = 60;
+    speedElixir.isUsable = true;
+    items.push_back(speedElixir);
+    
+    // More Weapons - Swords
+    Item bronzeSword;
+    bronzeSword.id = 15;
+    bronzeSword.name = "Bronze Sword";
+    bronzeSword.description = "A basic bronze blade for beginners.";
+    bronzeSword.type = ItemType::WEAPON;
+    bronzeSword.rarity = ItemRarity::COMMON;
+    bronzeSword.attackBonus = 3;
+    bronzeSword.value = 15;
+    items.push_back(bronzeSword);
+    
+    Item steelSword;
+    steelSword.id = 16;
+    steelSword.name = "Steel Sword";
+    steelSword.description = "A well-crafted steel blade.";
+    steelSword.type = ItemType::WEAPON;
+    steelSword.rarity = ItemRarity::UNCOMMON;
+    steelSword.attackBonus = 10;
+    steelSword.critBonus = 3;
+    steelSword.value = 80;
+    items.push_back(steelSword);
+    
+    Item mithrilSword;
+    mithrilSword.id = 17;
+    mithrilSword.name = "Mithril Sword";
+    mithrilSword.description = "A lightweight sword of superior craftsmanship.";
+    mithrilSword.type = ItemType::WEAPON;
+    mithrilSword.rarity = ItemRarity::RARE;
+    mithrilSword.attackBonus = 15;
+    mithrilSword.critBonus = 8;
+    mithrilSword.speedBonus = 2;
+    mithrilSword.value = 250;
+    items.push_back(mithrilSword);
+    
+    Item flamingSword;
+    flamingSword.id = 18;
+    flamingSword.name = "Flaming Longsword";
+    flamingSword.description = "A blade wreathed in eternal flames.";
+    flamingSword.type = ItemType::WEAPON;
+    flamingSword.rarity = ItemRarity::EPIC;
+    flamingSword.attackBonus = 18;
+    flamingSword.critBonus = 12;
+    flamingSword.value = 400;
+    items.push_back(flamingSword);
+    
+    Item vorpalBlade;
+    vorpalBlade.id = 19;
+    vorpalBlade.name = "Vorpal Blade";
+    vorpalBlade.description = "One, two! One, two! And through and through...";
+    vorpalBlade.type = ItemType::WEAPON;
+    vorpalBlade.rarity = ItemRarity::LEGENDARY;
+    vorpalBlade.attackBonus = 25;
+    vorpalBlade.critBonus = 30;
+    vorpalBlade.value = 1200;
+    items.push_back(vorpalBlade);
+    
+    // Daggers
+    Item rustyDagger;
+    rustyDagger.id = 70;
+    rustyDagger.name = "Rusty Dagger";
+    rustyDagger.description = "A worn dagger, still sharp enough.";
+    rustyDagger.type = ItemType::WEAPON;
+    rustyDagger.rarity = ItemRarity::COMMON;
+    rustyDagger.attackBonus = 2;
+    rustyDagger.critBonus = 5;
+    rustyDagger.speedBonus = 3;
+    rustyDagger.value = 8;
+    items.push_back(rustyDagger);
+    
+    Item poisonDagger;
+    poisonDagger.id = 71;
+    poisonDagger.name = "Poison Dagger";
+    poisonDagger.description = "Coated with deadly venom.";
+    poisonDagger.type = ItemType::WEAPON;
+    poisonDagger.rarity = ItemRarity::UNCOMMON;
+    poisonDagger.attackBonus = 5;
+    poisonDagger.critBonus = 15;
+    poisonDagger.speedBonus = 4;
+    poisonDagger.value = 90;
+    items.push_back(poisonDagger);
+    
+    Item shadowDagger;
+    shadowDagger.id = 72;
+    shadowDagger.name = "Shadow Fang";
+    shadowDagger.description = "Forged in darkness, strikes from nowhere.";
+    shadowDagger.type = ItemType::WEAPON;
+    shadowDagger.rarity = ItemRarity::RARE;
+    shadowDagger.attackBonus = 8;
+    shadowDagger.critBonus = 25;
+    shadowDagger.speedBonus = 6;
+    shadowDagger.dodgeBonus = 5;
+    shadowDagger.value = 200;
+    items.push_back(shadowDagger);
+    
+    // Axes
+    Item woodcutterAxe;
+    woodcutterAxe.id = 80;
+    woodcutterAxe.name = "Woodcutter's Axe";
+    woodcutterAxe.description = "Better for trees than combat, but it'll do.";
+    woodcutterAxe.type = ItemType::WEAPON;
+    woodcutterAxe.rarity = ItemRarity::COMMON;
+    woodcutterAxe.attackBonus = 4;
+    woodcutterAxe.critBonus = 3;
+    woodcutterAxe.value = 20;
+    items.push_back(woodcutterAxe);
+    
+    Item warAxe;
+    warAxe.id = 81;
+    warAxe.name = "War Axe";
+    warAxe.description = "A brutal weapon designed for war.";
+    warAxe.type = ItemType::WEAPON;
+    warAxe.rarity = ItemRarity::UNCOMMON;
+    warAxe.attackBonus = 12;
+    warAxe.critBonus = 8;
+    warAxe.speedBonus = -1;
+    warAxe.value = 95;
+    items.push_back(warAxe);
+    
+    Item greatAxe;
+    greatAxe.id = 82;
+    greatAxe.name = "Executioner's Greataxe";
+    greatAxe.description = "A massive axe that cleaves through armor.";
+    greatAxe.type = ItemType::WEAPON;
+    greatAxe.rarity = ItemRarity::RARE;
+    greatAxe.attackBonus = 20;
+    greatAxe.critBonus = 15;
+    greatAxe.speedBonus = -3;
+    greatAxe.value = 280;
+    items.push_back(greatAxe);
+    
+    // Spears
+    Item woodenSpear;
+    woodenSpear.id = 85;
+    woodenSpear.name = "Wooden Spear";
+    woodenSpear.description = "A simple spear with reach advantage.";
+    woodenSpear.type = ItemType::WEAPON;
+    woodenSpear.rarity = ItemRarity::COMMON;
+    woodenSpear.attackBonus = 4;
+    woodenSpear.value = 12;
+    items.push_back(woodenSpear);
+    
+    Item pike;
+    pike.id = 86;
+    pike.name = "Steel Pike";
+    pike.description = "A long pike for keeping enemies at bay.";
+    pike.type = ItemType::WEAPON;
+    pike.rarity = ItemRarity::UNCOMMON;
+    pike.attackBonus = 9;
+    pike.defenseBonus = 2;
+    pike.value = 70;
+    items.push_back(pike);
+    
+    Item halberd;
+    halberd.id = 87;
+    halberd.name = "Halberd";
+    halberd.description = "A versatile polearm weapon.";
+    halberd.type = ItemType::WEAPON;
+    halberd.rarity = ItemRarity::RARE;
+    halberd.attackBonus = 14;
+    halberd.defenseBonus = 4;
+    halberd.critBonus = 5;
+    halberd.value = 180;
+    items.push_back(halberd);
+    
+    // Staves and Wands
+    Item apprenticeStaff;
+    apprenticeStaff.id = 90;
+    apprenticeStaff.name = "Apprentice's Staff";
+    apprenticeStaff.description = "A basic staff for novice mages.";
+    apprenticeStaff.type = ItemType::WEAPON;
+    apprenticeStaff.rarity = ItemRarity::COMMON;
+    apprenticeStaff.attackBonus = 3;
+    apprenticeStaff.critBonus = 8;
+    apprenticeStaff.value = 25;
+    items.push_back(apprenticeStaff);
+    
+    Item fireStaff;
+    fireStaff.id = 91;
+    fireStaff.name = "Staff of Flames";
+    fireStaff.description = "Channels the power of fire.";
+    fireStaff.type = ItemType::WEAPON;
+    fireStaff.rarity = ItemRarity::UNCOMMON;
+    fireStaff.attackBonus = 7;
+    fireStaff.critBonus = 12;
+    fireStaff.value = 110;
+    items.push_back(fireStaff);
+    
+    Item frostStaff;
+    frostStaff.id = 92;
+    frostStaff.name = "Staff of Winter";
+    frostStaff.description = "Freezes enemies with icy magic.";
+    frostStaff.type = ItemType::WEAPON;
+    frostStaff.rarity = ItemRarity::RARE;
+    frostStaff.attackBonus = 10;
+    frostStaff.critBonus = 18;
+    frostStaff.speedBonus = 1;
+    frostStaff.value = 220;
+    items.push_back(frostStaff);
+    
+    Item archmagusStaff;
+    archmagusStaff.id = 93;
+    archmagusStaff.name = "Archmagus Staff";
+    archmagusStaff.description = "The staff of a grand wizard.";
+    archmagusStaff.type = ItemType::WEAPON;
+    archmagusStaff.rarity = ItemRarity::EPIC;
+    archmagusStaff.attackBonus = 12;
+    archmagusStaff.critBonus = 25;
+    archmagusStaff.defenseBonus = 3;
+    archmagusStaff.value = 450;
+    items.push_back(archmagusStaff);
+    
+    // Armor Sets - Light
+    Item clothRobe;
+    clothRobe.id = 100;
+    clothRobe.name = "Cloth Robe";
+    clothRobe.description = "Simple cloth offering minimal protection.";
+    clothRobe.type = ItemType::ARMOR;
+    clothRobe.rarity = ItemRarity::COMMON;
+    clothRobe.defenseBonus = 1;
+    clothRobe.value = 10;
+    items.push_back(clothRobe);
+    
+    Item paddedArmor;
+    paddedArmor.id = 101;
+    paddedArmor.name = "Padded Armor";
+    paddedArmor.description = "Quilted layers provide basic protection.";
+    paddedArmor.type = ItemType::ARMOR;
+    paddedArmor.rarity = ItemRarity::COMMON;
+    paddedArmor.defenseBonus = 2;
+    paddedArmor.value = 18;
+    items.push_back(paddedArmor);
+    
+    Item hideArmor;
+    hideArmor.id = 102;
+    hideArmor.name = "Hide Armor";
+    hideArmor.description = "Tough animal hide offers good flexibility.";
+    hideArmor.type = ItemType::ARMOR;
+    hideArmor.rarity = ItemRarity::COMMON;
+    hideArmor.defenseBonus = 4;
+    hideArmor.value = 35;
+    items.push_back(hideArmor);
+    
+    Item studdedLeather;
+    studdedLeather.id = 103;
+    studdedLeather.name = "Studded Leather Armor";
+    studdedLeather.description = "Leather reinforced with metal studs.";
+    studdedLeather.type = ItemType::ARMOR;
+    studdedLeather.rarity = ItemRarity::UNCOMMON;
+    studdedLeather.defenseBonus = 5;
+    studdedLeather.dodgeBonus = 3;
+    studdedLeather.value = 60;
+    items.push_back(studdedLeather);
+    
+    // Armor Sets - Medium
+    Item scalemail;
+    scalemail.id = 104;
+    scalemail.name = "Scale Mail";
+    scalemail.description = "Overlapping metal scales.";
+    scalemail.type = ItemType::ARMOR;
+    scalemail.rarity = ItemRarity::UNCOMMON;
+    scalemail.defenseBonus = 7;
+    scalemail.speedBonus = -1;
+    scalemail.value = 90;
+    items.push_back(scalemail);
+    
+    Item breastplate;
+    breastplate.id = 105;
+    breastplate.name = "Breastplate";
+    breastplate.description = "Solid chest protection.";
+    breastplate.type = ItemType::ARMOR;
+    breastplate.rarity = ItemRarity::UNCOMMON;
+    breastplate.defenseBonus = 8;
+    breastplate.speedBonus = -1;
+    breastplate.value = 110;
+    items.push_back(breastplate);
+    
+    Item halfPlate;
+    halfPlate.id = 106;
+    halfPlate.name = "Half Plate";
+    halfPlate.description = "Partial plate armor with good mobility.";
+    halfPlate.type = ItemType::ARMOR;
+    halfPlate.rarity = ItemRarity::RARE;
+    halfPlate.defenseBonus = 10;
+    halfPlate.speedBonus = -2;
+    halfPlate.value = 180;
+    items.push_back(halfPlate);
+    
+    // Armor Sets - Heavy
+    Item bandedArmor;
+    bandedArmor.id = 107;
+    bandedArmor.name = "Banded Mail";
+    bandedArmor.description = "Strips of metal bound together.";
+    bandedArmor.type = ItemType::ARMOR;
+    bandedArmor.rarity = ItemRarity::UNCOMMON;
+    bandedArmor.defenseBonus = 9;
+    bandedArmor.speedBonus = -2;
+    bandedArmor.value = 125;
+    items.push_back(bandedArmor);
+    
+    Item splintArmor;
+    splintArmor.id = 108;
+    splintArmor.name = "Splint Armor";
+    splintArmor.description = "Vertical metal strips over leather.";
+    splintArmor.type = ItemType::ARMOR;
+    splintArmor.rarity = ItemRarity::RARE;
+    splintArmor.defenseBonus = 11;
+    splintArmor.speedBonus = -2;
+    splintArmor.value = 195;
+    items.push_back(splintArmor);
+    
+    Item fullPlate;
+    fullPlate.id = 109;
+    fullPlate.name = "Full Plate Armor";
+    fullPlate.description = "Complete heavy plate protection.";
+    fullPlate.type = ItemType::ARMOR;
+    fullPlate.rarity = ItemRarity::RARE;
+    fullPlate.defenseBonus = 15;
+    fullPlate.speedBonus = -4;
+    fullPlate.value = 350;
+    items.push_back(fullPlate);
+    
+    Item dragonscale;
+    dragonscale.id = 110;
+    dragonscale.name = "Dragonscale Armor";
+    dragonscale.description = "Crafted from genuine dragon scales.";
+    dragonscale.type = ItemType::ARMOR;
+    dragonscale.rarity = ItemRarity::EPIC;
+    dragonscale.defenseBonus = 14;
+    dragonscale.dodgeBonus = 5;
+    dragonscale.speedBonus = -1;
+    dragonscale.value = 600;
+    items.push_back(dragonscale);
+    
+    Item celestialArmor;
+    celestialArmor.id = 111;
+    celestialArmor.name = "Celestial Armor";
+    celestialArmor.description = "Blessed armor from the heavens.";
+    celestialArmor.type = ItemType::ARMOR;
+    celestialArmor.rarity = ItemRarity::LEGENDARY;
+    celestialArmor.defenseBonus = 18;
+    celestialArmor.dodgeBonus = 8;
+    celestialArmor.speedBonus = 1;
+    celestialArmor.value = 1500;
+    items.push_back(celestialArmor);
+    
+    // Shields
+    Item woodenShield;
+    woodenShield.id = 120;
+    woodenShield.name = "Wooden Shield";
+    woodenShield.description = "A basic wooden shield.";
+    woodenShield.type = ItemType::ARMOR;
+    woodenShield.rarity = ItemRarity::COMMON;
+    woodenShield.defenseBonus = 2;
+    woodenShield.value = 15;
+    items.push_back(woodenShield);
+    
+    Item steelShield;
+    steelShield.id = 121;
+    steelShield.name = "Steel Shield";
+    steelShield.description = "Sturdy metal shield.";
+    steelShield.type = ItemType::ARMOR;
+    steelShield.rarity = ItemRarity::UNCOMMON;
+    steelShield.defenseBonus = 4;
+    steelShield.value = 55;
+    items.push_back(steelShield);
+    
+    Item towerShield;
+    towerShield.id = 122;
+    towerShield.name = "Tower Shield";
+    towerShield.description = "Massive shield offering great protection.";
+    towerShield.type = ItemType::ARMOR;
+    towerShield.rarity = ItemRarity::RARE;
+    towerShield.defenseBonus = 7;
+    towerShield.speedBonus = -2;
+    towerShield.value = 160;
+    items.push_back(towerShield);
+    
+    // More Accessories
+    Item strengthRing;
+    strengthRing.id = 130;
+    strengthRing.name = "Ring of Might";
+    strengthRing.description = "Increases physical strength.";
+    strengthRing.type = ItemType::ACCESSORY;
+    strengthRing.rarity = ItemRarity::UNCOMMON;
+    strengthRing.attackBonus = 5;
+    strengthRing.value = 85;
+    items.push_back(strengthRing);
+    
+    Item defenseRing;
+    defenseRing.id = 131;
+    defenseRing.name = "Ring of Protection";
+    defenseRing.description = "Enhances defensive capabilities.";
+    defenseRing.type = ItemType::ACCESSORY;
+    defenseRing.rarity = ItemRarity::UNCOMMON;
+    defenseRing.defenseBonus = 4;
+    defenseRing.value = 75;
+    items.push_back(defenseRing);
+    
+    Item vitalityAmulet;
+    vitalityAmulet.id = 132;
+    vitalityAmulet.name = "Amulet of Vitality";
+    vitalityAmulet.description = "Increases maximum health.";
+    vitalityAmulet.type = ItemType::ACCESSORY;
+    vitalityAmulet.rarity = ItemRarity::RARE;
+    vitalityAmulet.defenseBonus = 3;
+    vitalityAmulet.value = 140;
+    items.push_back(vitalityAmulet);
+    
+    Item shadowCloak;
+    shadowCloak.id = 133;
+    shadowCloak.name = "Cloak of Shadows";
+    shadowCloak.description = "Enhances stealth and evasion.";
+    shadowCloak.type = ItemType::ACCESSORY;
+    shadowCloak.rarity = ItemRarity::RARE;
+    shadowCloak.dodgeBonus = 12;
+    shadowCloak.speedBonus = 3;
+    shadowCloak.value = 175;
+    items.push_back(shadowCloak);
+    
+    Item dragonHeart;
+    dragonHeart.id = 134;
+    dragonHeart.name = "Heart of the Dragon";
+    dragonHeart.description = "Contains the essence of a slain dragon.";
+    dragonHeart.type = ItemType::ACCESSORY;
+    dragonHeart.rarity = ItemRarity::EPIC;
+    dragonHeart.attackBonus = 8;
+    dragonHeart.defenseBonus = 6;
+    dragonHeart.critBonus = 10;
+    dragonHeart.value = 500;
+    items.push_back(dragonHeart);
+    
+    Item phoenixFeather;
+    phoenixFeather.id = 135;
+    phoenixFeather.name = "Phoenix Feather";
+    phoenixFeather.description = "Grants regenerative powers.";
+    phoenixFeather.type = ItemType::ACCESSORY;
+    phoenixFeather.rarity = ItemRarity::LEGENDARY;
+    phoenixFeather.defenseBonus = 5;
+    phoenixFeather.dodgeBonus = 15;
+    phoenixFeather.value = 800;
+    items.push_back(phoenixFeather);
+    
+    // Advanced Consumables
+    Item supremePotion;
+    supremePotion.id = 4;
+    supremePotion.name = "Supreme Health Potion";
+    supremePotion.description = "Restores 200 HP.";
+    supremePotion.type = ItemType::CONSUMABLE;
+    supremePotion.rarity = ItemRarity::EPIC;
+    supremePotion.healAmount = 200;
+    supremePotion.value = 100;
+    supremePotion.isUsable = true;
+    supremePotion.isStackable = true;
+    items.push_back(supremePotion);
+    
+    Item ultimatePotion;
+    ultimatePotion.id = 5;
+    ultimatePotion.name = "Ultimate Healing Elixir";
+    ultimatePotion.description = "Fully restores HP.";
+    ultimatePotion.type = ItemType::CONSUMABLE;
+    ultimatePotion.rarity = ItemRarity::LEGENDARY;
+    ultimatePotion.healAmount = 9999;
+    ultimatePotion.value = 250;
+    ultimatePotion.isUsable = true;
+    ultimatePotion.isStackable = true;
+    items.push_back(ultimatePotion);
+    
+    Item resurrectionScroll;
+    resurrectionScroll.id = 140;
+    resurrectionScroll.name = "Scroll of Resurrection";
+    resurrectionScroll.description = "Brings you back from death once.";
+    resurrectionScroll.type = ItemType::CONSUMABLE;
+    resurrectionScroll.rarity = ItemRarity::LEGENDARY;
+    resurrectionScroll.value = 500;
+    resurrectionScroll.isUsable = true;
+    resurrectionScroll.isStackable = false;
+    items.push_back(resurrectionScroll);
+    
+    Item berserkPotion;
+    berserkPotion.id = 141;
+    berserkPotion.name = "Potion of Berserker Rage";
+    berserkPotion.description = "Massive attack boost, reduced defense.";
+    berserkPotion.type = ItemType::CONSUMABLE;
+    berserkPotion.rarity = ItemRarity::RARE;
+    berserkPotion.attackBonus = 20;
+    berserkPotion.defenseBonus = -5;
+    berserkPotion.duration = 3;
+    berserkPotion.value = 80;
+    berserkPotion.isUsable = true;
+    items.push_back(berserkPotion);
+    
+    Item invisPotion;
+    invisPotion.id = 142;
+    invisPotion.name = "Potion of Invisibility";
+    invisPotion.description = "Become invisible to enemies.";
+    invisPotion.type = ItemType::CONSUMABLE;
+    invisPotion.rarity = ItemRarity::EPIC;
+    invisPotion.dodgeBonus = 50;
+    invisPotion.duration = 2;
+    invisPotion.value = 150;
+    invisPotion.isUsable = true;
+    items.push_back(invisPotion);
+    
     return items;
 }
 
@@ -1006,12 +1562,12 @@ std::vector<Enemy> createDefaultEnemies() {
     skeleton.name = "Skeleton";
     skeleton.description = "A reanimated skeleton warrior.";
     skeleton.dialogue = "Clatter clatter...";
-    skeleton.stats.maxHP = 40;
-    skeleton.stats.currentHP = 40;
-    skeleton.stats.attack = 8;
-    skeleton.stats.defense = 3;
+    skeleton.stats.maxHP = 25;
+    skeleton.stats.currentHP = 25;
+    skeleton.stats.attack = 6;
+    skeleton.stats.defense = 2;
     skeleton.stats.critChance = 5;
-    skeleton.stats.dodgeChance = 10;
+    skeleton.stats.dodgeChance = 8;
     skeleton.stats.speed = 8;
     skeleton.experienceReward = 25;
     skeleton.goldReward = 10;
@@ -1024,12 +1580,12 @@ std::vector<Enemy> createDefaultEnemies() {
     goblin.name = "Goblin";
     goblin.description = "A sneaky green-skinned goblin.";
     goblin.dialogue = "Gimme your shinies!";
-    goblin.stats.maxHP = 30;
-    goblin.stats.currentHP = 30;
-    goblin.stats.attack = 6;
-    goblin.stats.defense = 2;
-    goblin.stats.critChance = 15;
-    goblin.stats.dodgeChance = 20;
+    goblin.stats.maxHP = 20;
+    goblin.stats.currentHP = 20;
+    goblin.stats.attack = 5;
+    goblin.stats.defense = 1;
+    goblin.stats.critChance = 12;
+    goblin.stats.dodgeChance = 18;
     goblin.stats.speed = 12;
     goblin.experienceReward = 20;
     goblin.goldReward = 15;
@@ -1042,12 +1598,12 @@ std::vector<Enemy> createDefaultEnemies() {
     orc.name = "Orc Warrior";
     orc.description = "A brutish orc with a massive club.";
     orc.dialogue = "ORC SMASH!";
-    orc.stats.maxHP = 70;
-    orc.stats.currentHP = 70;
-    orc.stats.attack = 12;
-    orc.stats.defense = 5;
-    orc.stats.critChance = 10;
-    orc.stats.dodgeChance = 5;
+    orc.stats.maxHP = 45;
+    orc.stats.currentHP = 45;
+    orc.stats.attack = 9;
+    orc.stats.defense = 4;
+    orc.stats.critChance = 8;
+    orc.stats.dodgeChance = 4;
     orc.stats.speed = 6;
     orc.experienceReward = 40;
     orc.goldReward = 20;
@@ -1060,12 +1616,12 @@ std::vector<Enemy> createDefaultEnemies() {
     wraith.name = "Wraith";
     wraith.description = "A ghostly apparition that drains life.";
     wraith.dialogue = "Join usss...";
-    wraith.stats.maxHP = 50;
-    wraith.stats.currentHP = 50;
-    wraith.stats.attack = 10;
-    wraith.stats.defense = 2;
-    wraith.stats.critChance = 20;
-    wraith.stats.dodgeChance = 30;
+    wraith.stats.maxHP = 32;
+    wraith.stats.currentHP = 32;
+    wraith.stats.attack = 8;
+    wraith.stats.defense = 1;
+    wraith.stats.critChance = 15;
+    wraith.stats.dodgeChance = 25;
     wraith.stats.speed = 14;
     wraith.experienceReward = 50;
     wraith.goldReward = 25;
@@ -1073,11 +1629,11 @@ std::vector<Enemy> createDefaultEnemies() {
     EnemyAbility lifeDrain;
     lifeDrain.name = "Life Drain";
     lifeDrain.description = "Drains health from the target.";
-    lifeDrain.damage = 15;
+    lifeDrain.damage = 12;
     lifeDrain.heals = true;
-    lifeDrain.healAmount = 10;
+    lifeDrain.healAmount = 8;
     lifeDrain.cooldown = 3;
-    lifeDrain.triggerChance = 0.3f;
+    lifeDrain.triggerChance = 0.25f;
     wraith.abilities.push_back(lifeDrain);
     
     enemies.push_back(wraith);
@@ -1087,12 +1643,12 @@ std::vector<Enemy> createDefaultEnemies() {
     troll.name = "Cave Troll";
     troll.description = "A massive troll that regenerates health.";
     troll.dialogue = "RAAAWR!";
-    troll.stats.maxHP = 100;
-    troll.stats.currentHP = 100;
-    troll.stats.attack = 15;
-    troll.stats.defense = 8;
+    troll.stats.maxHP = 65;
+    troll.stats.currentHP = 65;
+    troll.stats.attack = 11;
+    troll.stats.defense = 6;
     troll.stats.critChance = 5;
-    troll.stats.dodgeChance = 5;
+    troll.stats.dodgeChance = 3;
     troll.stats.speed = 4;
     troll.experienceReward = 60;
     troll.goldReward = 30;
@@ -1101,9 +1657,9 @@ std::vector<Enemy> createDefaultEnemies() {
     regen.name = "Regeneration";
     regen.description = "The troll regenerates health.";
     regen.heals = true;
-    regen.healAmount = 20;
-    regen.cooldown = 2;
-    regen.triggerChance = 0.5f;
+    regen.healAmount = 12;
+    regen.cooldown = 3;
+    regen.triggerChance = 0.4f;
     troll.abilities.push_back(regen);
     
     enemies.push_back(troll);
@@ -1114,12 +1670,12 @@ std::vector<Enemy> createDefaultEnemies() {
     dragon.name = "Ancient Dragon";
     dragon.description = "A terrifying ancient dragon guards the exit.";
     dragon.dialogue = "You dare challenge me, mortal?!";
-    dragon.stats.maxHP = 300;
-    dragon.stats.currentHP = 300;
-    dragon.stats.attack = 25;
-    dragon.stats.defense = 15;
-    dragon.stats.critChance = 15;
-    dragon.stats.dodgeChance = 10;
+    dragon.stats.maxHP = 180;
+    dragon.stats.currentHP = 180;
+    dragon.stats.attack = 16;
+    dragon.stats.defense = 10;
+    dragon.stats.critChance = 12;
+    dragon.stats.dodgeChance = 8;
     dragon.stats.speed = 12;
     dragon.experienceReward = 500;
     dragon.goldReward = 200;
@@ -1130,9 +1686,9 @@ std::vector<Enemy> createDefaultEnemies() {
     EnemyAbility fireBreath;
     fireBreath.name = "Fire Breath";
     fireBreath.description = "The dragon breathes devastating fire!";
-    fireBreath.damage = 40;
+    fireBreath.damage = 24;
     fireBreath.cooldown = 4;
-    fireBreath.triggerChance = 0.4f;
+    fireBreath.triggerChance = 0.35f;
     dragon.abilities.push_back(fireBreath);
     
     enemies.push_back(dragon);
@@ -1142,12 +1698,12 @@ std::vector<Enemy> createDefaultEnemies() {
     lich.name = "The Lich King";
     lich.description = "An undead sorcerer of immense power.";
     lich.dialogue = "Death is only the beginning!";
-    lich.stats.maxHP = 200;
-    lich.stats.currentHP = 200;
-    lich.stats.attack = 20;
-    lich.stats.defense = 10;
-    lich.stats.critChance = 25;
-    lich.stats.dodgeChance = 15;
+    lich.stats.maxHP = 100;
+    lich.stats.currentHP = 100;
+    lich.stats.attack = 8;
+    lich.stats.defense = 5;
+    lich.stats.critChance = 5;
+    lich.stats.dodgeChance = 5;
     lich.stats.speed = 10;
     lich.experienceReward = 400;
     lich.goldReward = 150;
@@ -1156,18 +1712,18 @@ std::vector<Enemy> createDefaultEnemies() {
     EnemyAbility darkBolt;
     darkBolt.name = "Dark Bolt";
     darkBolt.description = "A bolt of dark energy!";
-    darkBolt.damage = 30;
+    darkBolt.damage = 18;
     darkBolt.cooldown = 3;
-    darkBolt.triggerChance = 0.35f;
+    darkBolt.triggerChance = 0.30f;
     lich.abilities.push_back(darkBolt);
     
     EnemyAbility summon;
     summon.name = "Raise Dead";
     summon.description = "The Lich heals itself with dark magic.";
     summon.heals = true;
-    summon.healAmount = 30;
+    summon.healAmount = 20;
     summon.cooldown = 5;
-    summon.triggerChance = 0.25f;
+    summon.triggerChance = 0.20f;
     lich.abilities.push_back(summon);
     
     enemies.push_back(lich);

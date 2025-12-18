@@ -1,19 +1,8 @@
-/*******************************************************************************
- * C++ Adventure Quest Engine - ENHANCED EDITION
- * UIEnhanced.h - Advanced UI and Visual Presentation
- * 
- * Features:
- * - Animated ASCII art
- * - Enhanced color schemes and themes
- * - Status bars and health meters
- * - Formatted combat logs with color coding
- * - Particle effects (text-based)
- * - Screen transitions and effects
- * - Interactive menus with icons
- * 
- * Author: Adventure Quest Engine Team
- * Version: 2.0 - MASSIVE OVERHAUL
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// Enhanced UI system (partially implemented - many features scrapped)
 
 #ifndef UI_ENHANCED_H
 #define UI_ENHANCED_H
@@ -26,9 +15,9 @@
 
 namespace AQE {
 
-//==============================================================================
+// ---
 // COLOR SYSTEM (ANSI CODES)
-//==============================================================================
+// ---
 
 enum class UIColor {
     BLACK = 30,
@@ -60,9 +49,9 @@ enum class UIEffect {
     HIDDEN = 8
 };
 
-//==============================================================================
+// ---
 // UI ELEMENTS
-//==============================================================================
+// ---
 
 struct HealthBar {
     int current;
@@ -112,9 +101,9 @@ struct StatusDisplay {
                      level(1), gold(0) {}
 };
 
-//==============================================================================
+// ---
 // ASCII ART FRAMES AND ANIMATIONS
-//==============================================================================
+// ---
 
 struct ASCIIFrame {
     std::vector<std::string> lines;
@@ -132,9 +121,9 @@ struct Animation {
     Animation() : loop(false), currentFrame(0) {}
 };
 
-//==============================================================================
+// ---
 // VISUAL EFFECTS
-//==============================================================================
+// ---
 
 enum class EffectType {
     SLASH,               // Sword slash animation
@@ -160,9 +149,9 @@ struct VisualEffect {
                     secondaryColor(UIColor::WHITE), durationMs(500) {}
 };
 
-//==============================================================================
+// ---
 // MENU SYSTEM
-//==============================================================================
+// ---
 
 struct MenuItem {
     std::string text;
@@ -193,9 +182,9 @@ struct Menu {
             borderColor(UIColor::BLUE), showBorder(true), borderStyle("double") {}
 };
 
-//==============================================================================
+// ---
 // COMBAT LOG FORMATTING
-//==============================================================================
+// ---
 
 enum class LogLevel {
     INFO,
@@ -223,9 +212,9 @@ struct LogEntry {
                 timestamp(0), important(false) {}
 };
 
-//==============================================================================
+// ---
 // UI MANAGER CLASS
-//==============================================================================
+// ---
 
 class UIManager {
 public:
@@ -322,9 +311,9 @@ private:
     static std::string getBoxChar(const std::string& style, const std::string& position);
 };
 
-//==============================================================================
+// ---
 // ENHANCED ASCII ART LIBRARY
-//==============================================================================
+// ---
 
 class ASCIIArtLibrary {
 public:

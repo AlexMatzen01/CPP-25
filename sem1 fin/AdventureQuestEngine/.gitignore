@@ -1,0 +1,20 @@
+# Build artifacts
+build/*.o
+build/
+bin/
+*.o
+
+# Executables
+AdventureQuestEngine
+*.exe
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Save files
+saves/
+*.sav

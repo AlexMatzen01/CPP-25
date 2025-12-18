@@ -1,13 +1,8 @@
-/*******************************************************************************
- * C++ Adventure Quest Engine
- * main.cpp - Program Entry Point
- * 
- * This is the main entry point for the Adventure Quest Engine game.
- * It creates the game engine instance and starts the game loop.
- * 
- * Author: Adventure Quest Engine Team
- * Version: 1.0
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// Main entry point for Adventure Quest Engine
 
 #include "include/GameEngine.h"
 #include <iostream>
@@ -15,10 +10,8 @@
 
 int main() {
     try {
-        // Create game engine instance
+        // Create game engine and run
         AQE::GameEngine game;
-        
-        // Run the game
         return game.run();
         
     } catch (const std::exception& e) {

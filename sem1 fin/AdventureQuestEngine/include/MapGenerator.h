@@ -1,13 +1,8 @@
-/*******************************************************************************
- * C++ Adventure Quest Engine
- * MapGenerator.h - Procedural Map Generation Header
- * 
- * This file contains declarations for the procedural dungeon map generator,
- * including room placement, connectivity, and population algorithms.
- * 
- * Author: Adventure Quest Engine Team
- * Version: 1.0
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// Procedural dungeon map generation
 
 #ifndef MAP_GENERATOR_H
 #define MAP_GENERATOR_H
@@ -19,12 +14,12 @@
 
 namespace AQE {
 
-//==============================================================================
+// ---
 // MAP GENERATOR CLASS
-//==============================================================================
+// ---
 
 /**
- * @brief Procedural dungeon map generator
+// Procedural dungeon map generator
  * 
  * Generates a connected grid-based map with various room types,
  * guaranteeing a path from entrance to exit with optional secret rooms.
@@ -32,41 +27,48 @@ namespace AQE {
 class MapGenerator {
 public:
     /**
-     * @brief Constructor with map dimensions
+// Constructor with map dimensions
      * @param width Map width in rooms
      * @param height Map height in rooms
      */
     MapGenerator(int width, int height);
     
     /**
-     * @brief Generate a complete dungeon map
+// Generate a complete dungeon map
      * @param gameState Reference to game state to populate
      * @return True if generation successful
      */
     bool generateMap(GameState& gameState);
     
     /**
-     * @brief Get the generated rooms
+// Get the generated rooms
      * @return Vector of generated rooms
      */
     const std::vector<Room>& getRooms() const;
     
     /**
-     * @brief Get entrance room ID
+// Get entrance room ID
      * @return ID of the entrance room
      */
     int getEntranceRoomId() const;
     
     /**
-     * @brief Get exit room ID
+// Get exit room ID
      * @return ID of the exit room
      */
     int getExitRoomId() const;
     
     /**
-     * @brief Print ASCII representation of the map
+// Get the dungeon grid
+     * @return 2D grid of room IDs
      */
-    void printMap() const;
+    const std::vector<std::vector<int>>& getGrid() const;
+    
+    /**
+// Print ASCII representation of the map
+     * @param currentRoomId ID of the room the player is currently in (for highlighting)
+     */
+    void printMap(int currentRoomId = -1) const;
 
 private:
     //==========================================================================
@@ -86,41 +88,41 @@ private:
     //==========================================================================
     
     /**
-     * @brief Initialize the grid with empty cells
+// Initialize the grid with empty cells
      */
     void initializeGrid();
     
     /**
-     * @brief Place entrance room at starting position
+// Place entrance room at starting position
      * @return ID of entrance room
      */
     int placeEntranceRoom();
     
     /**
-     * @brief Place exit room at ending position
+// Place exit room at ending position
      * @return ID of exit room
      */
     int placeExitRoom();
     
     /**
-     * @brief Generate the main path from entrance to exit
+// Generate the main path from entrance to exit
      * @return True if path successfully generated
      */
     bool generateMainPath();
     
     /**
-     * @brief Fill remaining grid spaces with optional rooms
+// Fill remaining grid spaces with optional rooms
      */
     void fillRemainingRooms();
     
     /**
-     * @brief Place secret rooms off the main path
+// Place secret rooms off the main path
      * @param count Number of secret rooms to place
      */
     void placeSecretRooms(int count);
     
     /**
-     * @brief Connect adjacent rooms with doorways
+// Connect adjacent rooms with doorways
      */
     void connectRooms();
     
@@ -129,7 +131,7 @@ private:
     //==========================================================================
     
     /**
-     * @brief Create a room at specified grid position
+// Create a room at specified grid position
      * @param x Grid X coordinate
      * @param y Grid Y coordinate
      * @param type Type of room to create
@@ -138,21 +140,21 @@ private:
     Room createRoom(int x, int y, RoomType type);
     
     /**
-     * @brief Generate room name based on type and position
+// Generate room name based on type and position
      * @param type Room type
      * @return Generated room name
      */
     std::string generateRoomName(RoomType type);
     
     /**
-     * @brief Generate room description based on type
+// Generate room description based on type
      * @param type Room type
      * @return Generated room description
      */
     std::string generateRoomDescription(RoomType type);
     
     /**
-     * @brief Determine room type for a position
+// Determine room type for a position
      * @param x Grid X coordinate
      * @param y Grid Y coordinate
      * @return Determined room type
@@ -164,34 +166,34 @@ private:
     //==========================================================================
     
     /**
-     * @brief Populate room with enemies based on type
+// Populate room with enemies based on type
      * @param room Reference to room to populate
      * @param templates Available enemy templates
      */
     void populateWithEnemies(Room& room, const std::vector<Enemy>& templates);
     
     /**
-     * @brief Populate room with items based on type
+// Populate room with items based on type
      * @param room Reference to room to populate
      * @param templates Available item templates
      */
     void populateWithItems(Room& room, const std::vector<Item>& templates);
     
     /**
-     * @brief Assign events to room based on type
+// Assign events to room based on type
      * @param room Reference to room
      * @param templates Available event templates
      */
     void assignEvents(Room& room, const std::vector<Event>& templates);
     
     /**
-     * @brief Setup puzzle for puzzle rooms
+// Setup puzzle for puzzle rooms
      * @param room Reference to puzzle room
      */
     void setupPuzzle(Room& room);
     
     /**
-     * @brief Setup trap for trap rooms
+// Setup trap for trap rooms
      * @param room Reference to trap room
      */
     void setupTrap(Room& room);
@@ -201,7 +203,7 @@ private:
     //==========================================================================
     
     /**
-     * @brief Check if position is valid grid coordinate
+// Check if position is valid grid coordinate
      * @param x X coordinate
      * @param y Y coordinate
      * @return True if valid
@@ -209,7 +211,7 @@ private:
     bool isValidPosition(int x, int y) const;
     
     /**
-     * @brief Check if position has a room
+// Check if position has a room
      * @param x X coordinate
      * @param y Y coordinate
      * @return True if room exists at position
@@ -217,13 +219,13 @@ private:
     bool hasRoom(int x, int y) const;
     
     /**
-     * @brief Verify map is fully connected (BFS)
+// Verify map is fully connected (BFS)
      * @return True if all rooms reachable from entrance
      */
     bool verifyConnectivity();
     
     /**
-     * @brief Get adjacent empty cells
+// Get adjacent empty cells
      * @param x Current X
      * @param y Current Y
      * @return Vector of (x,y) pairs
@@ -231,7 +233,7 @@ private:
     std::vector<std::pair<int,int>> getAdjacentEmpty(int x, int y);
     
     /**
-     * @brief Get adjacent rooms
+// Get adjacent rooms
      * @param x Current X
      * @param y Current Y
      * @return Vector of room IDs
@@ -239,12 +241,12 @@ private:
     std::vector<int> getAdjacentRooms(int x, int y);
 };
 
-//==============================================================================
+// ---
 // STANDALONE HELPER FUNCTIONS
-//==============================================================================
+// ---
 
 /**
- * @brief Generate a complete default dungeon
+// Generate a complete default dungeon
  * @param gameState Game state to populate
  * @param width Map width
  * @param height Map height
@@ -253,14 +255,14 @@ private:
 bool generateDungeon(GameState& gameState, int width = 8, int height = 8);
 
 /**
- * @brief Load room templates from file
+// Load room templates from file
  * @param filename Path to rooms file
  * @return Vector of room templates
  */
 std::vector<Room> loadRoomTemplates(const std::string& filename);
 
 /**
- * @brief Get room by ID from game state
+// Get room by ID from game state
  * @param gameState Game state to search
  * @param roomId ID of room to find
  * @return Pointer to room or nullptr
@@ -268,7 +270,7 @@ std::vector<Room> loadRoomTemplates(const std::string& filename);
 Room* getRoomById(GameState& gameState, int roomId);
 
 /**
- * @brief Get room at grid position
+// Get room at grid position
  * @param gameState Game state to search
  * @param x Grid X coordinate
  * @param y Grid Y coordinate

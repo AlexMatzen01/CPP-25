@@ -1,13 +1,8 @@
-/*******************************************************************************
- * C++ Adventure Quest Engine
- * Combat.cpp - Combat System Implementation
- * 
- * This file contains the implementation of the turn-based combat system,
- * including attack calculations, abilities, fleeing, and loot distribution.
- * 
- * Author: Adventure Quest Engine Team
- * Version: 1.0
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// Combat system implementation
 
 #include "../include/Combat.h"
 #include "../include/Utils.h"
@@ -55,9 +50,9 @@ namespace {
     }
 }
 
-//==============================================================================
+// ---
 // CONSTRUCTOR
-//==============================================================================
+// ---
 
 CombatSystem::CombatSystem(Player& player, int difficulty)
     : playerRef(player), gameDifficulty(difficulty),
@@ -67,9 +62,9 @@ CombatSystem::CombatSystem(Player& player, int difficulty)
     if (gameDifficulty > 3) gameDifficulty = 3;
 }
 
-//==============================================================================
+// ---
 // PUBLIC METHODS
-//==============================================================================
+// ---
 
 CombatResult CombatSystem::startCombat(std::vector<Enemy>& enemies) {
     CombatResult result;
@@ -214,20 +209,21 @@ CombatStats CombatSystem::getEffectiveEnemyStats(const Enemy& enemy) const {
     
     // Apply difficulty modifiers
     if (gameDifficulty == 1) {  // Easy
-        effective.attack = static_cast<int>(effective.attack * 0.8f);
-        effective.defense = static_cast<int>(effective.defense * 0.8f);
+        effective.attack = static_cast<int>(effective.attack * 0.7f);
+        effective.defense = static_cast<int>(effective.defense * 0.7f);
+        effective.maxHP = static_cast<int>(effective.maxHP * 0.85f);
     } else if (gameDifficulty == 3) {  // Hard
-        effective.attack = static_cast<int>(effective.attack * 1.3f);
-        effective.defense = static_cast<int>(effective.defense * 1.2f);
-        effective.maxHP = static_cast<int>(effective.maxHP * 1.2f);
+        effective.attack = static_cast<int>(effective.attack * 1.15f);
+        effective.defense = static_cast<int>(effective.defense * 1.1f);
+        effective.maxHP = static_cast<int>(effective.maxHP * 1.1f);
     }
     
     return effective;
 }
 
-//==============================================================================
+// ---
 // PRIVATE METHODS - Combat Flow
-//==============================================================================
+// ---
 
 bool CombatSystem::combatLoop(std::vector<Enemy>& enemies) {
     while (!combatEnded) {
@@ -532,14 +528,16 @@ void CombatSystem::rollEnemyIntents(std::vector<Enemy>& enemies) {
             continue;
         }
 
-        // Healing intent if low
+        // Healing intent if low (very rare — only 5% chance)
         if (enemy.stats.currentHP < enemy.stats.maxHP / 3) {
             bool hasHeal = std::any_of(enemy.abilities.begin(), enemy.abilities.end(),
                 [](const EnemyAbility& a) { return a.heals; });
             if (hasHeal) {
-                enemy.nextIntent = EnemyIntent::HEAL;
-                enemy.intentStrength = 1;
-                continue;
+                if (randomChance(5)) {
+                    enemy.nextIntent = EnemyIntent::HEAL;
+                    enemy.intentStrength = 1;
+                    continue;
+                }
             }
         }
 
@@ -554,7 +552,19 @@ void CombatSystem::rollEnemyIntents(std::vector<Enemy>& enemies) {
 
         if (readyAbility) {
             if (readyAbility->heals) {
-                enemy.nextIntent = EnemyIntent::HEAL;
+                // Healing abilities are rare: 5% chance to use heal intent
+                if (randomChance(5)) {
+                    enemy.nextIntent = EnemyIntent::HEAL;
+                    enemy.intentStrength = readyAbility->damage;
+                    continue;
+                } else {
+                    // If not healing, choose a fallback intent based on ability damage
+                    if (readyAbility->damage > enemy.stats.attack * 1.2f) {
+                        enemy.nextIntent = EnemyIntent::ATTACK_HEAVY;
+                    } else {
+                        enemy.nextIntent = EnemyIntent::DEBUFF;
+                    }
+                }
             } else if (readyAbility->damage > enemy.stats.attack * 1.2f) {
                 enemy.nextIntent = EnemyIntent::ATTACK_HEAVY;
             } else {
@@ -575,9 +585,9 @@ void CombatSystem::rollEnemyIntents(std::vector<Enemy>& enemies) {
     }
 }
 
-//==============================================================================
+// ---
 // PRIVATE METHODS - Attack Calculations
-//==============================================================================
+// ---
 
 AttackResult CombatSystem::playerAttack(Enemy& target) {
     AttackResult result;
@@ -598,8 +608,8 @@ AttackResult CombatSystem::playerAttack(Enemy& target) {
     // Roll for critical
     result.critical = rollCritical(pStats.critChance);
     
-    // Calculate damage
-    int baseDamage = pStats.attack + randomInt(-2, 2);
+    // Calculate damage with better variance and bonus
+    int baseDamage = pStats.attack + randomInt(0, 4) + 2;  // +2 base bonus, 0-4 variance instead of -2 to 2
     result.rawDamage = baseDamage;
     result.damageDealt = calculateFinalDamage(baseDamage, eStats.defense, result.critical);
 
@@ -638,13 +648,12 @@ AttackResult CombatSystem::enemyAttack(const Enemy& attacker) {
     // Roll for critical
     result.critical = rollCritical(eStats.critChance);
     
-    // Calculate damage
-    int baseDamage = eStats.attack + randomInt(-2, 2);
+    // Calculate damage with reduced variance
+    int baseDamage = eStats.attack + randomInt(-1, 1);  // Reduced variance from -2/2 to -1/1
     result.rawDamage = baseDamage;
     result.damageDealt = calculateFinalDamage(baseDamage, pStats.defense, result.critical);
     
-    // Apply difficulty modifier
-    result.damageDealt = applyDifficultyModifier(result.damageDealt, gameDifficulty, false);
+    // Difficulty already factored into enemy stats, no additional modifier needed
     
     int vuln = computeVulnerablePercent(playerRef.activeEffects);
     if (vuln > 0) {
@@ -662,10 +671,10 @@ AttackResult CombatSystem::enemyAttack(const Enemy& attacker) {
 }
 
 bool CombatSystem::rollToHit(int attackerSpeed, int targetDodge) const {
-    // Base hit chance is 85% + speed bonus - dodge
-    int hitChance = 85 + attackerSpeed - targetDodge;
-    if (hitChance < 20) hitChance = 20;   // Minimum 20% hit chance
-    if (hitChance > 95) hitChance = 95;   // Maximum 95% hit chance
+    // Base hit chance is 90% + speed bonus - dodge
+    int hitChance = 90 + attackerSpeed - targetDodge;
+    if (hitChance < 30) hitChance = 30;   // Minimum 30% hit chance
+    if (hitChance > 98) hitChance = 98;   // Maximum 98% hit chance
     return randomChance(hitChance);
 }
 
@@ -681,19 +690,19 @@ int CombatSystem::calculateFinalDamage(int baseDamage, int defense, bool isCrit)
     }
 
     // Diminishing returns on defense for stability
-    const float k = 40.0f; // tuning constant
+    const float k = 60.0f; // tuning constant - higher value means defense is less effective
     float mitigation = static_cast<float>(defense) / (static_cast<float>(defense) + k);
     if (mitigation < 0.0f) mitigation = 0.0f;
-    if (mitigation > 0.8f) mitigation = 0.8f; // keep some damage always going through
+    if (mitigation > 0.70f) mitigation = 0.70f; // keep at least 30% damage always going through
 
     int finalDamage = static_cast<int>(std::floor(damage * (1.0f - mitigation)));
     if (finalDamage < 1) finalDamage = 1;
     return finalDamage;
 }
 
-//==============================================================================
+// ---
 // PRIVATE METHODS - Abilities
-//==============================================================================
+// ---
 
 AbilityResult CombatSystem::usePlayerAbility(int abilityIndex, Enemy* target) {
     AbilityResult result;
@@ -846,9 +855,9 @@ bool CombatSystem::shouldEnemyUseAbility(const Enemy& enemy) const {
     return false;
 }
 
-//==============================================================================
+// ---
 // PRIVATE METHODS - Status Effects
-//==============================================================================
+// ---
 
 void CombatSystem::applyStatusToPlayer(const StatusEffect& effect) {
     playerRef.activeEffects.push_back(effect);
@@ -918,9 +927,9 @@ int CombatSystem::applyShieldThenDamage(int incoming, std::vector<StatusEffect>&
     return absorbed;
 }
 
-//==============================================================================
+// ---
 // PRIVATE METHODS - Flee & Items
-//==============================================================================
+// ---
 
 bool CombatSystem::attemptFlee(const std::vector<Enemy>& enemies) {
     // Calculate flee chance based on speed difference
@@ -1004,9 +1013,9 @@ bool CombatSystem::useItemInCombat(int itemIndex) {
     return true;
 }
 
-//==============================================================================
+// ---
 // PRIVATE METHODS - Loot
-//==============================================================================
+// ---
 
 std::vector<Item> CombatSystem::generateLoot(const std::vector<Enemy>& enemies) {
     std::vector<Item> loot;
@@ -1104,9 +1113,9 @@ int CombatSystem::calculateGold(const std::vector<Enemy>& enemies) const {
     return (total < 0) ? 0 : total;
 }
 
-//==============================================================================
+// ---
 // PRIVATE METHODS - Logging
-//==============================================================================
+// ---
 
 void CombatSystem::log(const std::string& message) {
     combatLog.push_back(message);
@@ -1117,9 +1126,9 @@ void CombatSystem::displayMessage(const std::string& message, int delayMs) const
     delay(delayMs);
 }
 
-//==============================================================================
+// ---
 // STANDALONE COMBAT FUNCTIONS
-//==============================================================================
+// ---
 
 bool quickCombat(Player& player, Enemy& enemy) {
     CombatSystem combat(player, 2);

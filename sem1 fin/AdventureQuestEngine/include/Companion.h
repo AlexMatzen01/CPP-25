@@ -1,17 +1,8 @@
-/*******************************************************************************
- * C++ Adventure Quest Engine - ENHANCED EDITION
- * Companion.h - Companion and Faction System
- * 
- * Features:
- * - Recruitable NPC companions with unique abilities
- * - Companion loyalty and relationship system
- * - Faction reputation and allegiances
- * - Companion combat assistance
- * - Companion quests and personal stories
- * 
- * Author: Adventure Quest Engine Team
- * Version: 2.0 - MASSIVE OVERHAUL
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// Companion and faction system (partially implemented - many features scrapped)
 
 #ifndef COMPANION_H
 #define COMPANION_H
@@ -23,9 +14,9 @@
 
 namespace AQE {
 
-//==============================================================================
+// ---
 // COMPANION SYSTEM
-//==============================================================================
+// ---
 
 enum class CompanionClass {
     ARCHER,          // Ranged DPS
@@ -103,9 +94,9 @@ struct Companion {
                   grantsLootBonus(false), cantDie(false) {}
 };
 
-//==============================================================================
+// ---
 // FACTION SYSTEM
-//==============================================================================
+// ---
 
 enum class FactionId {
     KNIGHTS_ORDER,       // Lawful good
@@ -151,9 +142,9 @@ struct FactionReward {
                      grantsTitle(false) {}
 };
 
-//==============================================================================
+// ---
 // COMPANION MANAGER
-//==============================================================================
+// ---
 
 class CompanionManager {
 public:
@@ -203,9 +194,9 @@ private:
     void triggerLoyaltyDialogue(int companionId, bool isPositive);
 };
 
-//==============================================================================
+// ---
 // FACTION MANAGER
-//==============================================================================
+// ---
 
 class FactionManager {
 public:

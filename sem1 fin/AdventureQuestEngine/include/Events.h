@@ -1,13 +1,8 @@
-/*******************************************************************************
- * C++ Adventure Quest Engine
- * Events.h - Event and Quest System Header
- * 
- * This file contains declarations for the event system including
- * story events, branching choices, quests, puzzles, and random encounters.
- * 
- * Author: Adventure Quest Engine Team
- * Version: 1.0
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// Event and quest system with story events and random encounters
 
 #ifndef EVENTS_H
 #define EVENTS_H
@@ -19,12 +14,12 @@
 
 namespace AQE {
 
-//==============================================================================
+// ---
 // EVENT RESULT STRUCTURE
-//==============================================================================
+// ---
 
 /**
- * @brief Result of processing an event
+// Result of processing an event
  */
 struct EventResult {
     bool occurred;           // Did event happen?
@@ -47,7 +42,7 @@ struct EventResult {
 };
 
 /**
- * @brief Result of a puzzle attempt
+// Result of a puzzle attempt
  */
 struct PuzzleResult {
     bool attempted;
@@ -59,17 +54,17 @@ struct PuzzleResult {
     PuzzleResult() : attempted(false), solved(false), damageOnFail(0) {}
 };
 
-//==============================================================================
+// ---
 // EVENT SYSTEM CLASS
-//==============================================================================
+// ---
 
 /**
- * @brief Manages game events, quests, and story progression
+// Manages game events, quests, and story progression
  */
 class EventSystem {
 public:
     /**
-     * @brief Constructor
+// Constructor
      * @param player Reference to player
      * @param gameState Reference to game state
      */
@@ -80,27 +75,27 @@ public:
     //==========================================================================
     
     /**
-     * @brief Process events when entering a room
+// Process events when entering a room
      * @param room The room being entered
      * @return Vector of event results
      */
     std::vector<EventResult> processRoomEvents(Room& room);
     
     /**
-     * @brief Process a specific event
+// Process a specific event
      * @param event The event to process
      * @return Event result
      */
     EventResult processEvent(Event& event);
     
     /**
-     * @brief Trigger a random encounter
+// Trigger a random encounter
      * @return Event result (may include combat)
      */
     EventResult triggerRandomEncounter();
     
     /**
-     * @brief Check and trigger trap in room
+// Check and trigger trap in room
      * @param room The room to check
      * @return Event result
      */
@@ -111,21 +106,21 @@ public:
     //==========================================================================
     
     /**
-     * @brief Display and process a choice event
+// Display and process a choice event
      * @param event The choice event
      * @return Event result based on player's choice
      */
     EventResult processChoiceEvent(Event& event);
     
     /**
-     * @brief Process a story choice (5+ required branching decisions)
+// Process a story choice (5+ required branching decisions)
      * @param choiceId Unique choice identifier
      * @return Event result
      */
     EventResult processStoryChoice(int choiceId);
     
     /**
-     * @brief Get available choices based on current state
+// Get available choices based on current state
      * @param event The event with choices
      * @return Vector of available choice indices
      */
@@ -136,14 +131,14 @@ public:
     //==========================================================================
     
     /**
-     * @brief Present puzzle to player
+// Present puzzle to player
      * @param room Room containing puzzle
      * @return Puzzle result
      */
     PuzzleResult presentPuzzle(Room& room);
     
     /**
-     * @brief Present riddle to player
+// Present riddle to player
      * @param question The riddle question
      * @param answer The correct answer
      * @param maxAttempts Maximum attempts allowed
@@ -154,7 +149,7 @@ public:
                        int maxAttempts = 3);
     
     /**
-     * @brief Present number puzzle
+// Present number puzzle
      * @return True if solved
      */
     bool presentNumberPuzzle();
@@ -164,45 +159,45 @@ public:
     //==========================================================================
     
     /**
-     * @brief Start a new quest
+// Start a new quest
      * @param questId Quest ID to start
      * @return True if started
      */
     bool startQuest(int questId);
     
     /**
-     * @brief Update quest progress
+// Update quest progress
      * @param questId Quest to update
      * @param progress Progress to add
      */
     void updateQuestProgress(int questId, int progress = 1);
     
     /**
-     * @brief Check if quest is complete
+// Check if quest is complete
      * @param questId Quest to check
      * @return True if completed
      */
     bool checkQuestCompletion(int questId);
     
     /**
-     * @brief Complete a quest and give rewards
+// Complete a quest and give rewards
      * @param questId Quest to complete
      * @return Event result with rewards
      */
     EventResult completeQuest(int questId);
     
     /**
-     * @brief Display active quests
+// Display active quests
      */
     void displayActiveQuests() const;
     
     /**
-     * @brief Display completed quests
+// Display completed quests
      */
     void displayCompletedQuests() const;
     
     /**
-     * @brief Get quest by ID
+// Get quest by ID
      * @param questId Quest ID
      * @return Pointer to quest or nullptr
      */
@@ -213,25 +208,25 @@ public:
     //==========================================================================
     
     /**
-     * @brief Roll for random event during exploration
+// Roll for random event during exploration
      * @return Event result if event occurred
      */
     EventResult rollRandomEvent();
     
     /**
-     * @brief Generate merchant encounter
+// Generate merchant encounter
      * @return Event result
      */
     EventResult generateMerchantEvent();
     
     /**
-     * @brief Generate treasure find event
+// Generate treasure find event
      * @return Event result
      */
     EventResult generateTreasureEvent();
     
     /**
-     * @brief Generate ambush event
+// Generate ambush event
      * @return Event result
      */
     EventResult generateAmbushEvent();
@@ -242,84 +237,84 @@ private:
     std::map<int, bool> triggeredEvents;  // Track one-time events
     
     /**
-     * @brief Apply event effects to player
+// Apply event effects to player
      * @param result Event result to apply
      */
     void applyEventEffects(const EventResult& result);
     
     /**
-     * @brief Log event to player's game log
+// Log event to player's game log
      * @param message Message to log
      */
     void logEvent(const std::string& message);
     
     /**
-     * @brief Check if player meets event requirements
+// Check if player meets event requirements
      * @param event Event to check
      * @return True if requirements met
      */
     bool meetsEventRequirements(const Event& event) const;
 };
 
-//==============================================================================
+// ---
 // PREDEFINED STORY CHOICE EVENTS
-//==============================================================================
+// ---
 
 /**
- * @brief Story choice 1: Help or rob a wounded traveler
+// Story choice 1: Help or rob a wounded traveler
  */
 EventResult storyChoice_WoundedTraveler(Player& player);
 
 /**
- * @brief Story choice 2: Take cursed treasure or leave it
+// Story choice 2: Take cursed treasure or leave it
  */
 EventResult storyChoice_CursedTreasure(Player& player);
 
 /**
- * @brief Story choice 3: Side with rebels or kingdom
+// Story choice 3: Side with rebels or kingdom
  */
 EventResult storyChoice_Rebellion(Player& player);
 
 /**
- * @brief Story choice 4: Sacrifice item for power
+// Story choice 4: Sacrifice item for power
  */
 EventResult storyChoice_DarkRitual(Player& player, GameState& gameState);
 
 /**
- * @brief Story choice 5: Reveal secret or keep it
+// Story choice 5: Reveal secret or keep it
  */
 EventResult storyChoice_SecretKeeper(Player& player);
 
 /**
- * @brief Story choice 6: Mercy or execute boss
+// Story choice 6: Mercy or execute boss
  */
 EventResult storyChoice_BossMercy(Player& player);
 
-//==============================================================================
+// ---
 // STANDALONE EVENT FUNCTIONS
-//==============================================================================
+// ---
 
 /**
- * @brief Create default event templates
+// Create default event templates
  * @return Vector of event templates
  */
 std::vector<Event> createDefaultEvents();
 
 /**
- * @brief Create default quest templates
+// Create default quest templates
  * @return Vector of quest templates
  */
 std::vector<Quest> createDefaultQuests();
 
 /**
- * @brief Load events from file
+// Load events from file
  * @param filename Path to events file
  * @return Vector of loaded events
  */
 std::vector<Event> loadEvents(const std::string& filename);
 
 /**
- * @brief Load quests from file
+// Load quests from file
  * @param filename Path to quests file
  * @return Vector of loaded quests
  */

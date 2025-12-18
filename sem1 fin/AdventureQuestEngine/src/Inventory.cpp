@@ -1,13 +1,8 @@
-/*******************************************************************************
- * C++ Adventure Quest Engine
- * Inventory.cpp - Inventory Management Implementation
- * 
- * This file contains the implementation of the inventory system including
- * item management, sorting algorithms, searching algorithms, and item effects.
- * 
- * Author: Adventure Quest Engine Team
- * Version: 1.0
- ******************************************************************************/
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+
+// Inventory management implementation
 
 #include "../include/Inventory.h"
 #include "../include/Utils.h"
@@ -19,15 +14,15 @@
 
 namespace AQE {
 
-//==============================================================================
+// ---
 // CONSTRUCTOR
-//==============================================================================
+// ---
 
 InventorySystem::InventorySystem(Player& player) : playerRef(player) {}
 
-//==============================================================================
+// ---
 // INVENTORY DISPLAY
-//==============================================================================
+// ---
 
 void InventorySystem::displayInventoryMenu() {
     bool exitMenu = false;
@@ -285,9 +280,9 @@ void InventorySystem::displayEquipment() const {
     displaySeparator(50, '=');
 }
 
-//==============================================================================
+// ---
 // ITEM MANAGEMENT
-//==============================================================================
+// ---
 
 bool InventorySystem::addItem(const Item& item) {
     // Check inventory space
@@ -382,9 +377,9 @@ bool InventorySystem::tryStackItem(const Item& item) {
     return false;
 }
 
-//==============================================================================
+// ---
 // SORTING ALGORITHMS
-//==============================================================================
+// ---
 
 void InventorySystem::sortInventory(SortType sortType) {
     switch (sortType) {
@@ -479,9 +474,9 @@ void InventorySystem::insertionSortByRarity() {
     }
 }
 
-//==============================================================================
+// ---
 // SEARCHING ALGORITHMS
-//==============================================================================
+// ---
 
 int InventorySystem::linearSearchByName(const std::string& name) const {
     // Simple linear search - O(n)
@@ -566,9 +561,9 @@ std::vector<int> InventorySystem::searchPartial(const std::string& partialName) 
     return results;
 }
 
-//==============================================================================
+// ---
 // ITEM USAGE
-//==============================================================================
+// ---
 
 bool InventorySystem::useItem(int itemIndex) {
     if (itemIndex < 0 || itemIndex >= static_cast<int>(playerRef.inventory.size())) {
@@ -731,9 +726,9 @@ Item InventorySystem::dropItem(int itemIndex) {
     return dropped;
 }
 
-//==============================================================================
+// ---
 // ECONOMY
-//==============================================================================
+// ---
 
 int InventorySystem::calculateTotalValue() const {
     int total = 0;
@@ -781,9 +776,9 @@ std::function<bool(const Item&, const Item&)> InventorySystem::getComparator(Sor
     }
 }
 
-//==============================================================================
+// ---
 // STANDALONE FUNCTIONS
-//==============================================================================
+// ---
 
 std::vector<Item> createStartingItems(CharacterClass charClass) {
     std::vector<Item> items;
