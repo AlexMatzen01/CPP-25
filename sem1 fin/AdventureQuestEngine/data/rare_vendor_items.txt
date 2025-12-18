@@ -1,0 +1,98 @@
+# Rare Vendor Items - Collectibles with no function, only gold value
+# Format: Name|Type|Rarity|Value|Description
+
+Ancient Coin|misc|rare|150|A weathered coin from a forgotten empire
+Crystalline Shard|misc|rare|200|A fragment of pure crystal that gleams in the light
+Golden Statuette|misc|rare|350|A small golden figurine of an unknown deity
+Emerald Eye|misc|rare|400|A perfectly cut emerald shaped like an eye
+Dragon Scale Fragment|misc|rare|250|A piece of shimmering dragon scale
+Obsidian Orb|misc|rare|300|A smooth black orb that reflects no light
+Silver Chalice|misc|rare|275|An ornate chalice made of pure silver
+Ruby Ring|misc|rare|425|A ring set with a brilliant ruby
+Jade Amulet|misc|rare|375|An amulet carved from solid jade
+Pearl Necklace|misc|rare|450|A string of perfectly matched pearls
+Sapphire Brooch|misc|rare|500|An intricate brooch with a large sapphire
+Platinum Band|misc|rare|325|A simple but elegant platinum ring
+Bronze Mask|misc|rare|225|An ancient ceremonial mask
+Ivory Tusk|misc|rare|275|A small carved tusk
+Onyx Pendant|misc|rare|350|A pendant with a deep black onyx stone
+Topaz Earring|misc|rare|300|A single earring set with golden topaz
+Amethyst Geode|misc|rare|400|A hollow stone filled with purple crystals
+Copper Bracelet|misc|rare|175|An ornate bracelet with engravings
+Moonstone Cabochon|misc|rare|375|A polished moonstone that glows faintly
+Turquoise Chip|misc|rare|150|A small piece of vibrant turquoise
+Coral Branch|misc|rare|225|A delicate branch of red coral
+Amber Fossil|misc|rare|350|Amber containing a perfectly preserved insect
+Garnet Cluster|misc|rare|275|A cluster of deep red garnets
+Opal Fragment|misc|rare|400|A piece of opal with dancing colors
+Quartz Crystal|misc|rare|200|A clear quartz crystal point
+Peridot Stone|misc|rare|250|A bright green peridot gemstone
+Malachite Sphere|misc|rare|325|A polished sphere of green malachite
+Lapis Lazuli Block|misc|rare|375|A chunk of deep blue lapis lazuli
+Jasper Cabochon|misc|rare|225|A polished jasper stone
+Azurite Specimen|misc|rare|300|A sample of brilliant blue azurite
+Carnelian Bead|misc|rare|175|A smooth orange-red carnelian bead
+Alexandrite Chip|misc|rare|500|A tiny piece of color-changing alexandrite
+Citrine Point|misc|rare|250|A pointed citrine crystal
+Aquamarine Shard|misc|rare|450|A fragment of pale blue aquamarine
+Zircon Crystal|misc|rare|275|A small but brilliant zircon crystal
+Ancient Scroll Fragment|misc|rare|300|Piece of an indecipherable ancient text
+Dusty Tome|misc|rare|225|An old book in a language you don't recognize
+Tarnished Locket|misc|rare|200|A silver locket containing a faded portrait
+Broken Compass|misc|rare|175|A compass with a cracked face
+Ornate Key|misc|rare|250|An elaborate key that fits no known lock
+Clockwork Mechanism|misc|rare|350|Intricate gears from an unknown device
+Stained Glass Fragment|misc|rare|225|A colorful piece of stained glass
+Illuminated Manuscript Page|misc|rare|400|A page with beautiful calligraphy and gold leaf
+Sealed Vial|misc|rare|175|A vial containing an unknown liquid
+Exotic Spice Pouch|misc|rare|200|A pouch of rare and fragrant spices
+Musical Automaton|misc|rare|500|A small mechanical bird that no longer sings
+Engraved Telescope|misc|rare|375|A brass telescope with constellation markings
+Porcelain Doll|misc|rare|250|A delicate doll in pristine condition
+Silk Fan|misc|rare|225|An elegant fan with hand-painted scenes
+Lacquered Box|misc|rare|275|A small box with intricate lacquer work
+Miniature Ship|misc|rare|325|A detailed model ship in a bottle
+Antique Hourglass|misc|rare|300|An hourglass with black sand
+Jeweled Dagger Sheath|misc|rare|425|An empty sheath covered in gems
+Decorated Pipe|misc|rare|175|An ornate smoking pipe
+Wax Seal Stamp|misc|rare|200|A seal bearing a noble family crest
+Feathered Quill|misc|rare|150|A quill made from an exotic bird
+Gold Leaf Sheet|misc|rare|350|A sheet of hammered gold leaf
+Silver Thread Spool|misc|rare|225|A spool of pure silver thread
+Perfume Bottle|misc|rare|275|An ornate bottle with dried perfume residue
+Bone Dice Set|misc|rare|200|A set of dice carved from bone
+Tarot Card Deck|misc|rare|300|An incomplete deck of fortune-telling cards
+Prayer Beads|misc|rare|250|A string of carved prayer beads
+Incense Burner|misc|rare|325|A bronze burner with intricate designs
+Ceremonial Dagger|misc|rare|400|A decorative dagger never meant for combat
+Tribal Mask|misc|rare|350|A wooden mask with ritual markings
+Totem Carving|misc|rare|275|A small carved totem of an animal spirit
+Shaman's Rattle|misc|rare|225|A ritual rattle filled with stones
+War Paint Jar|misc|rare|175|A jar of dried ceremonial paint
+Feathered Headdress Piece|misc|rare|300|A single feather from a chieftain's headdress
+Dreamcatcher|misc|rare|250|A small dreamcatcher with intricate webbing
+Medicine Bundle|misc|rare|275|A leather pouch with mysterious contents
+Spirit Stone|misc|rare|325|A stone said to contain a guardian spirit
+Ancestor Tablet|misc|rare|350|A wooden tablet honoring the dead
+Sacred Drum|misc|rare|400|A small drum used in rituals
+Blessing Cloth|misc|rare|225|A cloth imbued with protective symbols
+Fertility Idol|misc|rare|375|A small carved figure
+Rain Stick|misc|rare|200|A hollow stick that sounds like rain
+Sun Medallion|misc|rare|450|A golden disc representing the sun
+Moon Charm|misc|rare|425|A silver charm shaped like a crescent moon
+Star Chart|misc|rare|300|An ancient map of the heavens
+Meteorite Fragment|misc|rare|500|A piece of metal from the stars
+Volcanic Rock|misc|rare|175|A porous rock from a volcano
+Glacier Ice Crystal|misc|rare|250|A crystal that never melts
+Desert Rose Stone|misc|rare|225|A crystalline formation from the desert
+Deep Sea Pearl|misc|rare|475|A pearl from the ocean depths
+Mammoth Tooth|misc|rare|350|A fossilized tooth from a prehistoric beast
+Dinosaur Egg Shell|misc|rare|425|A fragment of a fossilized egg
+Petrified Wood|misc|rare|200|Wood turned to stone over millennia
+Cave Crystal Formation|misc|rare|275|A delicate crystal formation
+Lodestone|misc|rare|250|A naturally magnetic stone
+Fool's Gold Nugget|misc|rare|150|Iron pyrite that sparkles like gold
+Geode Half|misc|rare|325|Half of a split geode revealing crystals within
+Bismuth Crystal|misc|rare|375|A laboratory-grown rainbow metal crystal
+Mercury Droplet in Glass|misc|rare|300|A sealed glass containing liquid mercury
+Sulfur Crystal|misc|rare|225|A bright yellow sulfur crystal

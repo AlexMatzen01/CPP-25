@@ -59,9 +59,16 @@ public:
     int getExitRoomId() const;
     
     /**
-// Print ASCII representation of the map
+// Get the dungeon grid
+     * @return 2D grid of room IDs
      */
-    void printMap() const;
+    const std::vector<std::vector<int>>& getGrid() const;
+    
+    /**
+// Print ASCII representation of the map
+     * @param currentRoomId ID of the room the player is currently in (for highlighting)
+     */
+    void printMap(int currentRoomId = -1) const;
 
 private:
     //==========================================================================

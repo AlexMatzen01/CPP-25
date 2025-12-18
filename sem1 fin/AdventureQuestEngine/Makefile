@@ -28,7 +28,6 @@ SOURCES = $(SRC_DIR)/Combat.cpp \
           $(SRC_DIR)/Crafting.cpp \
           $(SRC_DIR)/Companion.cpp \
           $(SRC_DIR)/Achievement.cpp \
-          $(SRC_DIR)/Environment.cpp \
           $(SRC_DIR)/UIEnhanced.cpp \
           main.cpp
 

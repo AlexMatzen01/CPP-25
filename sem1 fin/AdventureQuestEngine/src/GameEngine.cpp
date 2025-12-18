@@ -6,6 +6,7 @@
 
 #include "../include/GameEngine.h"
 #include "../include/Constants.h"
+#include "../include/UIEnhanced.h"
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -25,6 +26,8 @@ GameEngine::GameEngine()
       m_inventorySystem(m_gameState.player),
       m_eventSystem(m_gameState.player, m_gameState),
       m_fileIO(DATA_FOLDER),
+      m_merchantSystem(m_gameState.player),
+      m_craftingSystem(m_gameState.player),
       m_isRunning(false),
       m_debugMode(false) {
     
@@ -91,15 +94,21 @@ void GameEngine::showIntro() {
 
 int GameEngine::showMainMenu() {
     clearScreen();
-    displayDivider(80, '=');
-    std::cout << centerString("MAIN MENU", 80) << std::endl;
-    displayDivider(80, '=');
+    
+    // Create fancy title
+    std::cout << UIManager::createTitle("⚔ ADVENTURE QUEST ENGINE ⚔", 80, UIColor::BRIGHT_CYAN);
     std::cout << "\n";
-    std::cout << "  1. New Game\n";
-    std::cout << "  2. Load Game\n";
-    std::cout << "  3. Settings\n";
-    std::cout << "  4. Leaderboard\n";
-    std::cout << "  5. Quit\n\n";
+    std::cout << UIManager::centerText("✨ A C++ Text-Based Dungeon Crawler ✨", 80) << "\n";
+    std::cout << UIManager::centerText("Version 1.0", 80) << "\n\n";
+    
+    // Simple menu display  
+    displayDivider(80, '-');
+    std::cout << "\n";
+    std::cout << "  ⚔  1. New Game\n";
+    std::cout << "  💾  2. Load Game\n";
+    std::cout << "  ⚙  3. Settings\n";
+    std::cout << "  🏆  4. Leaderboard\n";
+    std::cout << "  ❌  5. Quit\n\n";
     displayDivider(80, '-');
     
     return getValidatedInt("Enter your choice: ", 1, 5);
@@ -262,29 +271,33 @@ void GameEngine::addStarterItems() {
         case CharacterClass::WARRIOR:
             weapon.name = "Steel Longsword";
             weapon.description = "A sturdy blade forged for battle.";
-            weapon.attackBonus = 22;
+            // Lowered starter weapon damage for easier early game balance
+            weapon.attackBonus = 16;
             weapon.value = 100;
             break;
         case CharacterClass::MAGE:
             weapon.name = "Enchanted Staff";
             weapon.description = "A staff humming with magical energy.";
-            weapon.attackBonus = 13;
-            weapon.critBonus = 18;
+            // Reduced attack and crit to make early encounters less punishing
+            weapon.attackBonus = 9;
+            weapon.critBonus = 12;
             weapon.value = 120;
             break;
         case CharacterClass::ROGUE:
             weapon.name = "Shadow Daggers";
             weapon.description = "Twin daggers perfect for swift strikes.";
-            weapon.attackBonus = 9;
-            weapon.critBonus = 15;
-            weapon.speedBonus = 4;
+            // Slightly reduced damage/crit and speed bonus to keep rogue viable but not overpowering
+            weapon.attackBonus = 7;
+            weapon.critBonus = 10;
+            weapon.speedBonus = 3;
             weapon.value = 110;
             break;
         case CharacterClass::PALADIN:
             weapon.name = "Blessed Warhammer";
             weapon.description = "A holy weapon that smites evil.";
-            weapon.attackBonus = 17;
-            weapon.defenseBonus = 14;
+            // Toned down both attack and defense bonuses for starter paladin
+            weapon.attackBonus = 13;
+            weapon.defenseBonus = 10;
             weapon.value = 170;
             break;
     }
@@ -298,7 +311,8 @@ void GameEngine::addStarterItems() {
     armor.description = "Basic protective gear for dungeon delving.";
     armor.type = ItemType::ARMOR;
     armor.rarity = ItemRarity::COMMON;
-    armor.defenseBonus = 5;
+    // Slightly reduced starting armor to match lowered weapon stats
+    armor.defenseBonus = 3;
     armor.quantity = 1;
     armor.value = 75;
     armor.isUsable = false;
@@ -362,9 +376,36 @@ void GameEngine::endGame() {
     // Display stats
     displayGameStats();
     
-    // Check leaderboard
-    if (checkLeaderboard(score)) {
-        std::cout << "\nNew high score! You made the leaderboard!\n";
+    // Add to leaderboard
+    LeaderboardEntry entry;
+    entry.playerName = m_gameState.player.name;
+    entry.score = score;
+    entry.turns = m_gameState.player.totalTurns;
+    entry.characterClass = getClassName(m_gameState.player.charClass);
+    
+    // Determine ending string
+    std::string endingStr;
+    switch (ending) {
+        case EndingType::DEFEAT_DEATH: endingStr = "Death"; break;
+        case EndingType::DEFEAT_TRAP: endingStr = "Trapped"; break;
+        case EndingType::VICTORY_NORMAL: endingStr = "Victory"; break;
+        case EndingType::ENDING_HERO: endingStr = "Hero"; break;
+        case EndingType::ENDING_EVIL: endingStr = "Villain"; break;
+        case EndingType::VICTORY_SPEEDRUN: endingStr = "Speedrun"; break;
+        case EndingType::ENDING_COMPLETIONIST: endingStr = "Complete"; break;
+        case EndingType::ENDING_PACIFIST: endingStr = "Pacifist"; break;
+        case EndingType::ENDING_NEUTRAL: endingStr = "Neutral"; break;
+        case EndingType::VICTORY_SECRET: endingStr = "Secret"; break;
+        default: endingStr = "Unknown"; break;
+    }
+    entry.ending = endingStr;
+    
+    int position = m_fileIO.addToLeaderboard(entry, "data/leaderboard.txt", 20);
+    
+    if (position >= 0 && position < 10) {
+        std::cout << "\n" << UIManager::createBox("★ NEW HIGH SCORE! You ranked #" + std::to_string(position + 1) + " on the leaderboard! ★", 60) << "\n";
+    } else if (position >= 0) {
+        std::cout << "\nYou made the leaderboard at position #" << (position + 1) << "!\n";
     }
     
     waitForEnter();
@@ -416,11 +457,12 @@ std::string GameEngine::getPlayerName() {
 
 CharacterClass GameEngine::chooseClass() {
     clearScreen();
-    std::cout << "\n=== Choose Your Class ===\n\n";
-    std::cout << "1. Warrior - High HP and Attack\n";
-    std::cout << "2. Mage - High Magic Power\n";
-    std::cout << "3. Rogue - High Crit and Dodge\n";
-    std::cout << "4. Paladin - Balanced Stats\n\n";
+    std::cout << UIManager::createTitle("⚔ CHOOSE YOUR CLASS ⚔", 70, UIColor::BRIGHT_YELLOW);
+    std::cout << "\n";
+    std::cout << "  ⚔  " << UIManager::colorize("1. Warrior", UIColor::BRIGHT_RED) << " - High HP and Attack\n";
+    std::cout << "  ✨  " << UIManager::colorize("2. Mage", UIColor::BRIGHT_BLUE) << " - High Magic Power\n";
+    std::cout << "  🗡  " << UIManager::colorize("3. Rogue", UIColor::BRIGHT_GREEN) << " - High Crit and Dodge\n";
+    std::cout << "  ✨  " << UIManager::colorize("4. Paladin", UIColor::BRIGHT_YELLOW) << " - Balanced Stats\n\n";
     
     int choice = getValidatedInt("Enter class choice (1-4): ", 1, 4);
     
@@ -723,6 +765,9 @@ bool GameEngine::processAction(const std::string& action) {
         return true;
     } else if (action == "help" || action == "h" || action == "?") {
         showHelp();
+        return true;
+    } else if (action == "cheats" && m_debugMode) {
+        openCheatMenu();
         return true;
     } else if (action == "menu") {
         int choice = showGameMenu();
@@ -1047,7 +1092,7 @@ void GameEngine::openMap() {
     displayDivider(80, '=');
     std::cout << "\n";
     
-    m_mapGenerator.printMap();
+    m_mapGenerator.printMap(m_gameState.player.currentRoomId);
     
     displayDivider(80, '-');
     waitForEnter();
@@ -1087,6 +1132,11 @@ void GameEngine::showHelp() {
     std::cout << Color::YELLOW << "GAME COMMANDS:" << Color::RESET << "\n";
     std::cout << "  save         - Save your game progress\n";
     std::cout << "  quit         - Exit the game\n\n";
+    
+    if (m_debugMode) {
+        std::cout << Color::BRIGHT_RED << "DEBUG COMMANDS:" << Color::RESET << "\n";
+        std::cout << "  cheats       - Open cheat menu (DEBUG MODE ONLY)\n\n";
+    }
     
     std::cout << Color::BRIGHT_GREEN << "COMBAT TIPS:" << Color::RESET << "\n";
     std::cout << "  - Use potions during battle by selecting 'Use Item'\n";
@@ -1134,6 +1184,198 @@ void GameEngine::showSettings() {
     
     if (choice != 4) {
         showSettings();  // Recurse to show menu again
+    }
+}
+
+
+void GameEngine::openCheatMenu() {
+    if (!m_debugMode) {
+        std::cout << "\nCheats are only available in debug mode!\n";
+        waitForEnter();
+        return;
+    }
+    
+    bool inMenu = true;
+    
+    while (inMenu) {
+        clearScreen();
+        std::cout << UIManager::createTitle("⚠️ DEBUG CHEAT MENU ⚠️", 80, UIColor::BRIGHT_RED) << "\n\n";
+        
+        std::cout << Color::BRIGHT_RED << "WARNING: Using cheats may break game balance!" << Color::RESET << "\n\n";
+        
+        std::cout << Color::BRIGHT_YELLOW << "PLAYER CHEATS:" << Color::RESET << "\n";
+        std::cout << "  1. Full Heal (HP + Mana)\n";
+        std::cout << "  2. Add 1000 Gold\n";
+        std::cout << "  3. Add 5000 Experience\n";
+        std::cout << "  4. Max Out Stats (+20 to all)\n";
+        std::cout << "  5. Full Inventory of Potions\n\n";
+        
+        std::cout << Color::BRIGHT_CYAN << "ROOM CHEATS:" << Color::RESET << "\n";
+        std::cout << "  6. Clear All Enemies in Room\n";
+        std::cout << "  7. Reveal All Map Rooms\n";
+        std::cout << "  8. Teleport to Exit Room\n\n";
+        
+        std::cout << Color::BRIGHT_GREEN << "QUEST CHEATS:" << Color::RESET << "\n";
+        std::cout << "  9. Complete All Active Quests\n";
+        std::cout << " 10. Reset All Quests\n\n";
+        
+        std::cout << Color::BRIGHT_MAGENTA << "ITEM CHEATS:" << Color::RESET << "\n";
+        std::cout << " 11. God Mode Weapon (+999 Attack)\n";
+        std::cout << " 12. God Mode Armor (+999 Defense)\n\n";
+        
+        std::cout << Color::WHITE << " 0. Exit Cheat Menu\n\n" << Color::RESET;
+        
+        int choice = getValidatedInt("Select cheat: ", 0, 12);
+        
+        switch (choice) {
+            case 0:
+                inMenu = false;
+                break;
+                
+            case 1: // Full Heal
+                m_gameState.player.stats.currentHP = m_gameState.player.stats.maxHP;
+                m_gameState.player.stats.currentMana = m_gameState.player.stats.maxMana;
+                std::cout << "\n" << Color::BRIGHT_GREEN << "❤️ Full heal applied! HP and Mana restored!" << Color::RESET << "\n";
+                waitForEnter();
+                break;
+                
+            case 2: // Add Gold
+                m_gameState.player.gold += 1000;
+                std::cout << "\n" << Color::BRIGHT_YELLOW << "💰 +1000 gold added! Total: " << m_gameState.player.gold << Color::RESET << "\n";
+                waitForEnter();
+                break;
+                
+            case 3: // Add XP
+                m_gameState.player.experience += 5000;
+                std::cout << "\n" << Color::BRIGHT_CYAN << "✨ +5000 XP added! Total: " << m_gameState.player.experience << Color::RESET << "\n";
+                checkLevelUp();
+                waitForEnter();
+                break;
+                
+            case 4: // Max Stats
+                m_gameState.player.stats.maxHP += 200;
+                m_gameState.player.stats.currentHP = m_gameState.player.stats.maxHP;
+                m_gameState.player.stats.maxMana += 200;
+                m_gameState.player.stats.currentMana = m_gameState.player.stats.maxMana;
+                m_gameState.player.stats.attack += 20;
+                m_gameState.player.stats.defense += 20;
+                m_gameState.player.stats.speed += 20;
+                m_gameState.player.stats.critChance += 20;
+                m_gameState.player.stats.dodgeChance += 20;
+                std::cout << "\n" << Color::BRIGHT_GREEN << "💪 All stats massively boosted!" << Color::RESET << "\n";
+                waitForEnter();
+                break;
+                
+            case 5: // Full Inventory of Potions
+                {
+                    Item healthPotion;
+                    healthPotion.id = 9001;
+                    healthPotion.name = "Cheat Health Potion";
+                    healthPotion.description = "A debug potion that restores 100 HP.";
+                    healthPotion.type = ItemType::CONSUMABLE;
+                    healthPotion.rarity = ItemRarity::LEGENDARY;
+                    healthPotion.healAmount = 100;
+                    healthPotion.quantity = 99;
+                    healthPotion.value = 0;
+                    healthPotion.isUsable = true;
+                    healthPotion.isStackable = true;
+                    m_gameState.player.inventory.push_back(healthPotion);
+                    
+                    std::cout << "\n" << Color::BRIGHT_MAGENTA << "🧪 99 Health potions added!" << Color::RESET << "\n";
+                    waitForEnter();
+                }
+                break;
+                
+            case 6: // Clear Enemies
+                {
+                    Room& room = getCurrentRoom();
+                    int enemyCount = room.enemies.size();
+                    room.enemies.clear();
+                    std::cout << "\n" << Color::BRIGHT_RED << "⚔️ Cleared " << enemyCount << " enemies from the room!" << Color::RESET << "\n";
+                    waitForEnter();
+                }
+                break;
+                
+            case 7: // Reveal Map
+                for (auto& room : m_gameState.dungeon) {
+                    room.isExplored = true;
+                }
+                std::cout << "\n" << Color::BRIGHT_CYAN << "🗺️ All rooms revealed on the map!" << Color::RESET << "\n";
+                waitForEnter();
+                break;
+                
+            case 8: // Teleport to Exit
+                m_gameState.player.currentRoomId = m_mapGenerator.getExitRoomId();
+                std::cout << "\n" << Color::BRIGHT_MAGENTA << "✨ Teleported to the exit room!" << Color::RESET << "\n";
+                waitForEnter();
+                displayCurrentRoom();
+                break;
+                
+            case 9: // Complete Quests
+                {
+                    int completed = 0;
+                    for (auto& quest : m_gameState.player.activeQuests) {
+                        if (quest.status != QuestStatus::COMPLETED) {
+                            quest.status = QuestStatus::COMPLETED;
+                            quest.currentEnemyCount = quest.targetEnemyCount;
+                            m_gameState.player.completedQuests.push_back(quest);
+                            completed++;
+                        }
+                    }
+                    m_gameState.player.activeQuests.clear();
+                    std::cout << "\n" << Color::BRIGHT_GREEN << "✔️ Completed " << completed << " quests!" << Color::RESET << "\n";
+                    waitForEnter();
+                }
+                break;
+                
+            case 10: // Reset Quests
+                m_gameState.player.activeQuests.clear();
+                m_gameState.player.completedQuests.clear();
+                giveStarterQuests();
+                std::cout << "\n" << Color::BRIGHT_YELLOW << "🔄 All quests reset! Starter quests given." << Color::RESET << "\n";
+                waitForEnter();
+                break;
+                
+            case 11: // God Weapon
+                {
+                    Item godWeapon;
+                    godWeapon.id = 9999;
+                    godWeapon.name = "[DEBUG] God Slayer Blade";
+                    godWeapon.description = "A debug weapon with godlike power. Destroys balance.";
+                    godWeapon.type = ItemType::WEAPON;
+                    godWeapon.rarity = ItemRarity::LEGENDARY;
+                    godWeapon.attackBonus = 999;
+                    godWeapon.critBonus = 99;
+                    godWeapon.speedBonus = 50;
+                    godWeapon.quantity = 1;
+                    godWeapon.value = 999999;
+                    godWeapon.isUsable = false;
+                    godWeapon.isStackable = false;
+                    m_gameState.player.inventory.push_back(godWeapon);
+                    std::cout << "\n" << Color::BRIGHT_RED << "⚔️ God Slayer Blade added to inventory!" << Color::RESET << "\n";
+                    waitForEnter();
+                }
+                break;
+                
+            case 12: // God Armor
+                {
+                    Item godArmor;
+                    godArmor.id = 9998;
+                    godArmor.name = "[DEBUG] Invincible Plate";
+                    godArmor.description = "Debug armor that makes you nearly invincible.";
+                    godArmor.type = ItemType::ARMOR;
+                    godArmor.rarity = ItemRarity::LEGENDARY;
+                    godArmor.defenseBonus = 999;
+                    godArmor.quantity = 1;
+                    godArmor.value = 999999;
+                    godArmor.isUsable = false;
+                    godArmor.isStackable = false;
+                    m_gameState.player.inventory.push_back(godArmor);
+                    std::cout << "\n" << Color::BRIGHT_BLUE << "🛡️ Invincible Plate added to inventory!" << Color::RESET << "\n";
+                    waitForEnter();
+                }
+                break;
+        }
     }
 }
 
@@ -1341,19 +1583,27 @@ void GameEngine::displayGameStats() {
 }
 
 bool GameEngine::checkLeaderboard(int score) {
-    // Simple check - would implement full leaderboard system
-    return score > 1000;
+    // Load leaderboard and check if score qualifies
+    std::vector<LeaderboardEntry> entries = m_fileIO.loadLeaderboard("data/leaderboard.txt");
+    
+    // If less than 20 entries, always qualifies
+    if (entries.size() < 20) {
+        return true;
+    }
+    
+    // Check if score beats the lowest entry
+    return score > entries.back().score;
 }
 
 void GameEngine::displayLeaderboard() {
     clearScreen();
-    displayDivider(80, '=');
-    std::cout << centerString("LEADERBOARD", 80) << std::endl;
-    displayDivider(80, '=');
+    
+    std::cout << UIManager::createTitle("🏆 HALL OF LEGENDS 🏆", 80) << "\n\n";
+    
+    // Use FileIO's display function
+    m_fileIO.displayLeaderboard("data/leaderboard.txt", 15);
+    
     std::cout << "\n";
-    std::cout << "Top scores will be displayed here.\n";
-    std::cout << "(Leaderboard system not yet implemented)\n\n";
-    displayDivider(80, '-');
     waitForEnter();
 }
 
@@ -1447,6 +1697,13 @@ void GameEngine::initializeGame() {
 void GameEngine::checkRoomEvents() {
     Room& room = getCurrentRoom();
     
+    // Check for shop encounter
+    if (room.type == RoomType::SHOP && !room.isCleared) {
+        handleShopEncounter();
+        room.isCleared = true;
+        return;
+    }
+    
     // Process room events
     if (!room.eventIds.empty()) {
         std::vector<EventResult> results = m_eventSystem.processRoomEvents(room);
@@ -1524,6 +1781,43 @@ void GameEngine::checkRoomEvents() {
             waitForEnter();
         }
     }
+}
+
+void GameEngine::handleShopEncounter() {
+    clearScreen();
+    
+    std::cout << "\n";
+    std::cout << UIManager::createTitle("🛍 YOU DISCOVERED A SHOP! 🛍", 70, UIColor::BRIGHT_YELLOW);
+    std::cout << "\n";
+    
+    // Determine vendor type based on dungeon level and randomness
+    VendorType vendorType;
+    int roll = randomInt(1, 100);
+    
+    if (roll <= 40) {
+        vendorType = VendorType::GENERAL_STORE;
+    } else if (roll <= 60) {
+        vendorType = VendorType::APOTHECARY;
+    } else if (roll <= 75) {
+        vendorType = VendorType::WEAPONSMITH;
+    } else if (roll <= 85) {
+        vendorType = VendorType::ARMORER;
+    } else if (roll <= 93) {
+        vendorType = VendorType::ENCHANTER;
+    } else if (roll <= 97) {
+        vendorType = VendorType::TRAVELING;
+    } else {
+        vendorType = VendorType::BLACK_MARKET;
+    }
+    
+    // Create vendor inventory
+    int dungeonLevel = m_gameState.player.level;
+    MerchantInventory merchant = m_merchantSystem.createVendor(vendorType, dungeonLevel);
+    
+    // Run shop menu
+    m_merchantSystem.runShopMenu(merchant);
+    
+    clearScreen();
 }
 
 void GameEngine::checkRandomEncounter() {

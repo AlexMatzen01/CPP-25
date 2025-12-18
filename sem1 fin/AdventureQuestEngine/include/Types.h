@@ -53,6 +53,7 @@ enum class RoomType {
     PUZZLE,       // Puzzle to solve for rewards
     SECRET,       // Hidden room with rare items
     SAFE,         // Rest area, no enemies
+    SHOP,         // Merchant/vendor room
     ENTRANCE,     // Starting room
     EXIT          // Final destination
 };

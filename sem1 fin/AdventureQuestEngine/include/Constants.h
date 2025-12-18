@@ -28,10 +28,12 @@ namespace Color {
     const std::string MAGENTA = "\033[35m";
     const std::string CYAN = "\033[36m";
     const std::string WHITE = "\033[37m";
+    const std::string DARK_GRAY = "\033[90m";
     const std::string BOLD = "\033[1m";
     const std::string UNDERLINE = "\033[4m";
     
     // Bright/Bold Colors
+    const std::string BRIGHT_BLACK = "\033[90m";
     const std::string BRIGHT_RED = "\033[91m";
     const std::string BRIGHT_GREEN = "\033[92m";
     const std::string BRIGHT_YELLOW = "\033[93m";
@@ -56,6 +58,7 @@ constexpr int TRAP_ROOM_CHANCE = 12;
 constexpr int PUZZLE_ROOM_CHANCE = 10;
 constexpr int SECRET_ROOM_CHANCE = 8;
 constexpr int SAFE_ROOM_CHANCE = 10;
+constexpr int SHOP_ROOM_CHANCE = 8;
 
 // Combat settings
 constexpr int BASE_CRIT_MULTIPLIER = 2;
@@ -107,44 +110,44 @@ constexpr int LEGENDARY_DROP_RATE = 1;
 // ---
 
 // Warrior: High HP, High Attack, Medium Defense
-constexpr int WARRIOR_HP = 150;
-constexpr int WARRIOR_ATK = 15;
-constexpr int WARRIOR_DEF = 10;
-constexpr int WARRIOR_CRIT = 10;
-constexpr int WARRIOR_DODGE = 5;
-constexpr int WARRIOR_SPEED = 8;
-constexpr int WARRIOR_MAGIC = 5;
-constexpr int WARRIOR_MAGRES = 5;
+constexpr int WARRIOR_HP = 200;
+constexpr int WARRIOR_ATK = 22;
+constexpr int WARRIOR_DEF = 14;
+constexpr int WARRIOR_CRIT = 12;
+constexpr int WARRIOR_DODGE = 8;
+constexpr int WARRIOR_SPEED = 10;
+constexpr int WARRIOR_MAGIC = 8;
+constexpr int WARRIOR_MAGRES = 8;
 
 // Mage: Low HP, Low Attack, High Magic
-constexpr int MAGE_HP = 80;
-constexpr int MAGE_ATK = 5;
-constexpr int MAGE_DEF = 5;
-constexpr int MAGE_CRIT = 15;
-constexpr int MAGE_DODGE = 5;
-constexpr int MAGE_SPEED = 10;
-constexpr int MAGE_MAGIC = 25;
-constexpr int MAGE_MAGRES = 15;
+constexpr int MAGE_HP = 120;
+constexpr int MAGE_ATK = 10;
+constexpr int MAGE_DEF = 8;
+constexpr int MAGE_CRIT = 18;
+constexpr int MAGE_DODGE = 10;
+constexpr int MAGE_SPEED = 12;
+constexpr int MAGE_MAGIC = 35;
+constexpr int MAGE_MAGRES = 20;
 
 // Rogue: Medium HP, Medium Attack, High Crit/Dodge
-constexpr int ROGUE_HP = 100;
-constexpr int ROGUE_ATK = 12;
-constexpr int ROGUE_DEF = 5;
-constexpr int ROGUE_CRIT = 25;
-constexpr int ROGUE_DODGE = 20;
-constexpr int ROGUE_SPEED = 15;
-constexpr int ROGUE_MAGIC = 8;
-constexpr int ROGUE_MAGRES = 8;
+constexpr int ROGUE_HP = 150;
+constexpr int ROGUE_ATK = 18;
+constexpr int ROGUE_DEF = 9;
+constexpr int ROGUE_CRIT = 28;
+constexpr int ROGUE_DODGE = 25;
+constexpr int ROGUE_SPEED = 18;
+constexpr int ROGUE_MAGIC = 12;
+constexpr int ROGUE_MAGRES = 10;
 
 // Paladin: Balanced stats with self-healing
-constexpr int PALADIN_HP = 120;
-constexpr int PALADIN_ATK = 12;
-constexpr int PALADIN_DEF = 12;
-constexpr int PALADIN_CRIT = 8;
-constexpr int PALADIN_DODGE = 5;
-constexpr int PALADIN_SPEED = 8;
-constexpr int PALADIN_MAGIC = 15;
-constexpr int PALADIN_MAGRES = 12;
+constexpr int PALADIN_HP = 180;
+constexpr int PALADIN_ATK = 18;
+constexpr int PALADIN_DEF = 16;
+constexpr int PALADIN_CRIT = 10;
+constexpr int PALADIN_DODGE = 8;
+constexpr int PALADIN_SPEED = 10;
+constexpr int PALADIN_MAGIC = 22;
+constexpr int PALADIN_MAGRES = 16;
 
 // ---
 // ASCII ART TEMPLATES

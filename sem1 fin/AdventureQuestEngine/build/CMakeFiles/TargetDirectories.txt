@@ -1,3 +1,0 @@
-/workspaces/CPP-25/sem1 fin/AdventureQuestEngine/build/CMakeFiles/AdventureQuestEngine.dir
-/workspaces/CPP-25/sem1 fin/AdventureQuestEngine/build/CMakeFiles/edit_cache.dir
-/workspaces/CPP-25/sem1 fin/AdventureQuestEngine/build/CMakeFiles/rebuild_cache.dir

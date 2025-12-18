@@ -13,6 +13,7 @@
 #include "Inventory.h"
 #include "Events.h"
 #include "FileIO.h"
+#include "Crafting.h"
 #include "Utils.h"
 #include "Constants.h"
 
@@ -86,6 +87,11 @@ public:
 // Ends the game and shows appropriate ending
      */
     void endGame();
+    
+    /**
+// Print enhanced map with player position and fog of war
+     */
+    void printEnhancedMap();
     
     //==========================================================================
     // CHARACTER CREATION
@@ -365,6 +371,8 @@ private:
     InventorySystem m_inventorySystem; // Inventory handler
     EventSystem m_eventSystem;      // Event handler
     FileIO m_fileIO;                // File I/O handler
+    MerchantSystem m_merchantSystem; // Merchant/shop handler
+    CraftingSystem m_craftingSystem; // Crafting handler
     
     bool m_isRunning;               // Game running flag
     bool m_debugMode;               // Debug mode flag
@@ -388,6 +396,11 @@ private:
 // Checks for room events and triggers them
      */
     void checkRoomEvents();
+    
+    /**
+// Handles shop encounters
+     */
+    void handleShopEncounter();
     
     /**
 // Checks for random encounters
@@ -435,6 +448,11 @@ private:
 // Adds starter items to player inventory
      */
     void addStarterItems();
+    
+    /**
+// Opens the cheat menu (debug mode only)
+     */
+    void openCheatMenu();
     
     /**
 // Triggers the final boss fight

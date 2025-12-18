@@ -106,59 +106,168 @@ int MapGenerator::getExitRoomId() const {
     return exitId;
 }
 
-void MapGenerator::printMap() const {
-    std::cout << "\n=== DUNGEON MAP ===\n\n";
+const std::vector<std::vector<int>>& MapGenerator::getGrid() const {
+    return grid;
+}
+
+void MapGenerator::printMap(int currentRoomId) const {
+    std::cout << "\n";
+    displaySeparator(80, '=');
+    printColor(centerString("◆◆◆ DUNGEON MAP ◆◆◆", 80), Color::BRIGHT_CYAN);
+    displaySeparator(80, '=');
+    std::cout << "\n";
+    
+    // Print coordinate numbers on top
+    std::cout << "    ";
+    for (int x = 0; x < mapWidth; ++x) {
+        std::cout << "  " << colorize(std::to_string(x), Color::DARK_GRAY) << " ";
+    }
+    std::cout << "\n";
     
     for (int y = mapHeight - 1; y >= 0; --y) {
-        // Print top border of row
+        // Print top border of row with fancy corners
+        std::cout << "    ";
         for (int x = 0; x < mapWidth; ++x) {
             if (grid[y][x] >= 0) {
-                std::cout << "+---";
+                // Highlight current player room with special border
+                if (grid[y][x] == currentRoomId) {
+                    std::cout << colorize("┏━━━", Color::BRIGHT_GREEN);
+                } else {
+                    std::cout << colorize("┌───", Color::BRIGHT_BLACK);
+                }
             } else {
-                std::cout << "+   ";
+                std::cout << "    ";
             }
         }
-        std::cout << "+\n";
+        std::cout << "\n";
         
-        // Print room content
+        // Print room content with color-coded symbols
+        std::cout << " " << colorize(std::to_string(y), Color::DARK_GRAY) << "  ";
         for (int x = 0; x < mapWidth; ++x) {
             if (grid[y][x] >= 0) {
                 int roomId = grid[y][x];
-                char symbol = ' ';
+                const Room* room = nullptr;
                 
-                // Find room and get symbol
-                for (const Room& room : rooms) {
-                    if (room.id == roomId) {
-                        switch (room.type) {
-                            case RoomType::ENTRANCE: symbol = 'E'; break;
-                            case RoomType::EXIT:     symbol = 'X'; break;
-                            case RoomType::BOSS:     symbol = 'B'; break;
-                            case RoomType::TREASURE: symbol = 'T'; break;
-                            case RoomType::TRAP:     symbol = '!'; break;
-                            case RoomType::PUZZLE:   symbol = '?'; break;
-                            case RoomType::SECRET:   symbol = 'S'; break;
-                            case RoomType::SAFE:     symbol = 'R'; break;
-                            default:                 symbol = '.'; break;
-                        }
+                for (const Room& r : rooms) {
+                    if (r.id == roomId) {
+                        room = &r;
                         break;
                     }
                 }
-                std::cout << "| " << symbol << " ";
+                
+                if (room) {
+                    std::string symbol;
+                    std::string color;
+                    
+                    switch (room->type) {
+                        case RoomType::ENTRANCE:
+                            symbol = " ⌂ ";
+                            color = Color::BRIGHT_GREEN;
+                            break;
+                        case RoomType::EXIT:
+                            symbol = " ☆ ";
+                            color = Color::BRIGHT_YELLOW;
+                            break;
+                        case RoomType::BOSS:
+                            symbol = " ⚔ ";
+                            color = Color::BRIGHT_RED;
+                            break;
+                        case RoomType::TREASURE:
+                            symbol = " $ ";
+                            color = Color::YELLOW;
+                            break;
+                        case RoomType::TRAP:
+                            symbol = " ⚠ ";
+                            color = Color::RED;
+                            break;
+                        case RoomType::PUZZLE:
+                            symbol = " Ω ";
+                            color = Color::MAGENTA;
+                            break;
+                        case RoomType::SECRET:
+                            symbol = " ◊ ";
+                            color = Color::CYAN;
+                            break;
+                        case RoomType::SAFE:
+                            symbol = " ♥ ";
+                            color = Color::GREEN;
+                            break;
+                        case RoomType::SHOP:
+                            symbol = " ◘ ";
+                            color = Color::BRIGHT_MAGENTA;
+                            break;
+                        default:
+                            if (room->enemies.empty() && room->isCleared) {
+                                symbol = " · ";
+                                color = Color::DARK_GRAY;
+                            } else if (room->enemies.empty()) {
+                                symbol = " ○ ";
+                                color = Color::WHITE;
+                            } else {
+                                symbol = " • ";
+                                color = Color::BRIGHT_WHITE;
+                            }
+                            break;
+                    }
+                    
+                    // Highlight current player room
+                    if (room->id == currentRoomId) {
+                        // Use bright green border and bold symbol for player location
+                        std::cout << colorize("┃", Color::BRIGHT_GREEN) << "\033[7m" << colorize(symbol, color) << "\033[27m";
+                    } else {
+                        std::cout << colorize("│", Color::BRIGHT_BLACK) << colorize(symbol, color);
+                    }
+                } else {
+                    std::cout << "│ ? ";
+                }
             } else {
-                std::cout << "|   ";
+                std::cout << "    ";
             }
         }
-        std::cout << "|\n";
+        std::cout << "\n";
+        
+        // Print bottom border
+        std::cout << "    ";
+        for (int x = 0; x < mapWidth; ++x) {
+            if (grid[y][x] >= 0) {
+                // Highlight current player room with special border
+                if (grid[y][x] == currentRoomId) {
+                    std::cout << colorize("┗━━━", Color::BRIGHT_GREEN);
+                } else {
+                    std::cout << colorize("└───", Color::BRIGHT_BLACK);
+                }
+            } else {
+                std::cout << "    ";
+            }
+        }
+        std::cout << "\n";
     }
     
-    // Print bottom border
-    for (int x = 0; x < mapWidth; ++x) {
-        std::cout << "+---";
-    }
-    std::cout << "+\n";
+    std::cout << "\n";
+    displaySeparator(80, '-');
     
-    // Print legend
-    std::cout << "\nLegend: E=Entrance, X=Exit, B=Boss, T=Treasure, !=Trap, ?=Puzzle, S=Secret, R=Rest, .=Normal\n\n";
+    // Enhanced legend with colors and symbols
+    std::cout << "\n" << colorize("◆ LEGEND", Color::BRIGHT_CYAN) << "\n\n";
+    
+    std::cout << "  " << colorize("⌂", Color::BRIGHT_GREEN) << " Entrance (Start)      ";
+    std::cout << colorize("☆", Color::BRIGHT_YELLOW) << " Exit (Escape!)        ";
+    std::cout << colorize("⚔", Color::BRIGHT_RED) << " Boss Room\n";
+    
+    std::cout << "  " << colorize("$", Color::YELLOW) << " Treasure Chest        ";
+    std::cout << colorize("⚠", Color::RED) << " Dangerous Trap        ";
+    std::cout << colorize("Ω", Color::MAGENTA) << " Puzzle Challenge\n";
+    
+    std::cout << "  " << colorize("◊", Color::CYAN) << " Secret Room           ";
+    std::cout << colorize("♥", Color::GREEN) << " Safe Rest Area        ";
+    std::cout << colorize("◘", Color::BRIGHT_MAGENTA) << " Merchant Shop\n";
+    
+    std::cout << "  " << colorize("•", Color::BRIGHT_WHITE) << " Room (Unexplored)     ";
+    std::cout << colorize("○", Color::WHITE) << " Room (Explored)       ";
+    std::cout << colorize("·", Color::DARK_GRAY) << " Room (Cleared)\n\n";
+    
+    std::cout << "\n";
+    displaySeparator(80, '=');
+    std::cout << "\n";
 }
 
 // ---
@@ -457,6 +566,9 @@ RoomType MapGenerator::determineRoomType(int x, int y) {
     
     cumulative += TREASURE_ROOM_CHANCE;
     if (roll <= cumulative) return RoomType::TREASURE;
+    
+    cumulative += SHOP_ROOM_CHANCE;
+    if (roll <= cumulative) return RoomType::SHOP;
     
     cumulative += TRAP_ROOM_CHANCE;
     if (roll <= cumulative) return RoomType::TRAP;
