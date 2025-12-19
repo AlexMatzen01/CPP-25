@@ -52,13 +52,20 @@ constexpr int DEFAULT_MAP_WIDTH = 15;
 constexpr int DEFAULT_MAP_HEIGHT = 15;
 
 // Room generation probabilities (percentages)
-constexpr int TREASURE_ROOM_CHANCE = 15;
-constexpr int BOSS_ROOM_CHANCE = 15;
-constexpr int TRAP_ROOM_CHANCE = 12;
-constexpr int PUZZLE_ROOM_CHANCE = 10;
+constexpr int TREASURE_ROOM_CHANCE = 8;
+constexpr int BOSS_ROOM_CHANCE = 10;
+constexpr int TRAP_ROOM_CHANCE = 8;
+constexpr int PUZZLE_ROOM_CHANCE = 6;
 constexpr int SECRET_ROOM_CHANCE = 8;
-constexpr int SAFE_ROOM_CHANCE = 10;
-constexpr int SHOP_ROOM_CHANCE = 8;
+constexpr int SAFE_ROOM_CHANCE = 6;
+constexpr int SHOP_ROOM_CHANCE = 5;
+constexpr int LIBRARY_ROOM_CHANCE = 5;
+constexpr int FORGE_ROOM_CHANCE = 12;  // Increased for 3 total forges on map
+constexpr int SHRINE_ROOM_CHANCE = 5;
+constexpr int LABORATORY_ROOM_CHANCE = 5;
+constexpr int GRAVEYARD_ROOM_CHANCE = 6;
+constexpr int ARMORY_ROOM_CHANCE = 6;
+constexpr int PRISON_ROOM_CHANCE = 6;
 
 // Combat settings
 constexpr int BASE_CRIT_MULTIPLIER = 2;
@@ -148,6 +155,46 @@ constexpr int PALADIN_DODGE = 8;
 constexpr int PALADIN_SPEED = 10;
 constexpr int PALADIN_MAGIC = 22;
 constexpr int PALADIN_MAGRES = 16;
+
+// Ranger: High speed, high crit, medium HP
+constexpr int RANGER_HP = 160;
+constexpr int RANGER_ATK = 20;
+constexpr int RANGER_DEF = 10;
+constexpr int RANGER_CRIT = 25;
+constexpr int RANGER_DODGE = 15;
+constexpr int RANGER_SPEED = 20;
+constexpr int RANGER_MAGIC = 10;
+constexpr int RANGER_MAGRES = 10;
+
+// Necromancer: Low HP, high magic, medium magic resist
+constexpr int NECROMANCER_HP = 130;
+constexpr int NECROMANCER_ATK = 12;
+constexpr int NECROMANCER_DEF = 8;
+constexpr int NECROMANCER_CRIT = 15;
+constexpr int NECROMANCER_DODGE = 12;
+constexpr int NECROMANCER_SPEED = 12;
+constexpr int NECROMANCER_MAGIC = 32;
+constexpr int NECROMANCER_MAGRES = 18;
+
+// Barbarian: Very high HP and attack, very low defense
+constexpr int BARBARIAN_HP = 250;
+constexpr int BARBARIAN_ATK = 28;
+constexpr int BARBARIAN_DEF = 6;
+constexpr int BARBARIAN_CRIT = 15;
+constexpr int BARBARIAN_DODGE = 5;
+constexpr int BARBARIAN_SPEED = 12;
+constexpr int BARBARIAN_MAGIC = 5;
+constexpr int BARBARIAN_MAGRES = 5;
+
+// Monk: High dodge, high speed, balanced stats
+constexpr int MONK_HP = 170;
+constexpr int MONK_ATK = 16;
+constexpr int MONK_DEF = 12;
+constexpr int MONK_CRIT = 15;
+constexpr int MONK_DODGE = 25;
+constexpr int MONK_SPEED = 22;
+constexpr int MONK_MAGIC = 15;
+constexpr int MONK_MAGRES = 15;
 
 // ---
 // ASCII ART TEMPLATES
@@ -248,6 +295,56 @@ const std::string PALADIN_ART = R"(
     | |   | |
     | |___| |
     |_______|
+      /   \
+     /     \
+)";
+
+const std::string RANGER_ART = R"(
+      /|
+     / |
+    /  |
+   /   |
+  /    |
+ <-----|---->>
+  \    |
+   \   |
+    \  |
+     \ |
+      \|
+)";
+
+const std::string NECROMANCER_ART = R"(
+       ___
+      /   \
+     | X X |
+      \_^_/
+    ___| |___
+   /         \
+  |  /|   |\  |
+  |  \|___|/  |
+   \_________/
+)";
+
+const std::string BARBARIAN_ART = R"(
+      _____
+     /     \
+    |  O O  |
+     \  -  /
+    __| |__
+   /  \_/  \
+  |   | |   |
+  |   | |   |
+  |___|_|___|
+     |   |
+)";
+
+const std::string MONK_ART = R"(
+       ___
+      (   )
+       | |
+      /   \
+     |  Y  |
+      \___/
       /   \
      /     \
 )";

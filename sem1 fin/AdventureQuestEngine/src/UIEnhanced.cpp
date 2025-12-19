@@ -56,6 +56,10 @@ std::string UIManager::renderHealthBar(const HealthBar& bar) {
     std::stringstream ss;
     ss << bar.prefix;
     
+    if (bar.maximum <= 0) {
+        return bar.prefix + "[ERROR: Invalid maximum]";  // Safeguard against division by zero
+    }
+    
     int filled = (bar.current * bar.width) / bar.maximum;
     if (filled > bar.width) filled = bar.width;
     if (filled < 0) filled = 0;
@@ -972,6 +976,22 @@ std::string ASCIIArtLibrary::getPaladinEmblem() {
     return "  +---+\n  |   |\n  | + |\n  |   |\n  +---+\n";
 }
 
+std::string ASCIIArtLibrary::getRangerEmblem() {
+    return "     (\n      \\\n       )\n  ##-->>\n       )\n      /\n     (\n";
+}
+
+std::string ASCIIArtLibrary::getNecromancerEmblem() {
+    return "    ___\n   /   \\\n  | X X |\n   \\_^_/\n    | |\n";
+}
+
+std::string ASCIIArtLibrary::getBarbarianEmblem() {
+    return "   _  _\n  | \\/ |\n  |    |\n  |____|\n    ||\n    ||\n";
+}
+
+std::string ASCIIArtLibrary::getMonkEmblem() {
+    return "    _ \n   ( )\n  _|_|_\n |     |\n |_____|\n";
+}
+
 std::string ASCIIArtLibrary::getSwordSlash() {
     return "  /\n / \n/  ";
 }
@@ -1030,6 +1050,30 @@ std::string ASCIIArtLibrary::getCampfire() {
 
 std::string ASCIIArtLibrary::getShrine() {
     return "    /\\\n   /  \\\n  | <> |\n  |____|\n";
+}
+
+std::string ASCIIArtLibrary::getLibrary() {
+    return "   ______\n  |      |\n  | [][][] |\n  |______|\n";
+}
+
+std::string ASCIIArtLibrary::getForge() {
+    return "   ______\n  |  __  |\n  | |  | |\n  |_|__|_|\n   /|  |\\\n";
+}
+
+std::string ASCIIArtLibrary::getLaboratory() {
+    return "    _ \n   | |\n  /   \\\n | [V] |\n  \\___/\n";
+}
+
+std::string ASCIIArtLibrary::getGraveyard() {
+    return "    _ \n  _| |_ \n |_   _| \n   |_| \n  /   \\\n";
+}
+
+std::string ASCIIArtLibrary::getArmory() {
+    return "   _____\n  |  S  |\n  | /|\\ |\n  |_____|\n";
+}
+
+std::string ASCIIArtLibrary::getPrison() {
+    return "  | | | |\n  | | | |\n  |_|_|_|\n";
 }
 
 std::string ASCIIArtLibrary::getTrap() {

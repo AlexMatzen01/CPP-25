@@ -322,6 +322,10 @@ public:
     static std::string getMageEmblem();
     static std::string getRogueEmblem();
     static std::string getPaladinEmblem();
+    static std::string getRangerEmblem();
+    static std::string getNecromancerEmblem();
+    static std::string getBarbarianEmblem();
+    static std::string getMonkEmblem();
     
     // Combat effects
     static std::string getSwordSlash();
@@ -343,6 +347,12 @@ public:
     static std::string getDoorway();
     static std::string getCampfire();
     static std::string getShrine();
+    static std::string getLibrary();
+    static std::string getForge();
+    static std::string getLaboratory();
+    static std::string getGraveyard();
+    static std::string getArmory();
+    static std::string getPrison();
     static std::string getTrap();
     
     // Status icons

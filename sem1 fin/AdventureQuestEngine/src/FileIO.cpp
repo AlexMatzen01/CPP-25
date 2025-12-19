@@ -1613,6 +1613,111 @@ std::vector<Enemy> createDefaultEnemies() {
     orc.lootTable = {2, 11};
     orc.lootChances = {25, 15};
     enemies.push_back(orc);
+
+    // New basic enemies
+    Enemy slime;
+    slime.id = 6;
+    slime.name = "Green Slime";
+    slime.description = "A gelatinous blob that wobbles menacingly.";
+    slime.dialogue = "*Squish squish*";
+    slime.stats.maxHP = 15;
+    slime.stats.currentHP = 15;
+    slime.stats.attack = 4;
+    slime.stats.defense = 0;
+    slime.stats.critChance = 2;
+    slime.stats.dodgeChance = 30;
+    slime.stats.speed = 5;
+    slime.experienceReward = 15;
+    slime.goldReward = 5;
+    slime.lootTable = {1};
+    slime.lootChances = {20};
+    enemies.push_back(slime);
+
+    Enemy spider;
+    spider.id = 7;
+    spider.name = "Giant Spider";
+    spider.description = "A multi-eyed horror with dripping fangs.";
+    spider.dialogue = "*Chittering sounds*";
+    spider.stats.maxHP = 30;
+    spider.stats.currentHP = 30;
+    spider.stats.attack = 7;
+    spider.stats.defense = 2;
+    spider.stats.critChance = 10;
+    spider.stats.dodgeChance = 15;
+    spider.stats.speed = 16;
+    spider.experienceReward = 35;
+    spider.goldReward = 12;
+    
+    EnemyAbility venom;
+    venom.name = "Venomous Bite";
+    venom.description = "A bite that deals extra damage.";
+    venom.damage = 15;
+    venom.cooldown = 3;
+    venom.triggerChance = 0.3f;
+    spider.abilities.push_back(venom);
+    enemies.push_back(spider);
+
+    Enemy darkKnight;
+    darkKnight.id = 8;
+    darkKnight.name = "Dark Knight";
+    darkKnight.description = "A fallen warrior in black plate armor.";
+    darkKnight.dialogue = "None shall pass!";
+    darkKnight.stats.maxHP = 60;
+    darkKnight.stats.currentHP = 60;
+    darkKnight.stats.attack = 12;
+    darkKnight.stats.defense = 8;
+    darkKnight.stats.critChance = 10;
+    darkKnight.stats.dodgeChance = 2;
+    darkKnight.stats.speed = 7;
+    darkKnight.experienceReward = 75;
+    darkKnight.goldReward = 40;
+    darkKnight.lootTable = {16, 21}; // Steel Sword, Chainmail
+    darkKnight.lootChances = {20, 15};
+    enemies.push_back(darkKnight);
+
+    Enemy mimic;
+    mimic.id = 9;
+    mimic.name = "Mimic";
+    mimic.description = "A treasure chest that grew teeth.";
+    mimic.dialogue = "Surprise!";
+    mimic.stats.maxHP = 40;
+    mimic.stats.currentHP = 40;
+    mimic.stats.attack = 10;
+    mimic.stats.defense = 5;
+    mimic.stats.critChance = 20;
+    mimic.stats.dodgeChance = 5;
+    mimic.stats.speed = 10;
+    mimic.experienceReward = 100;
+    mimic.goldReward = 150;
+    mimic.lootTable = {3, 130}; // Greater Potion, Ring of Might
+    mimic.lootChances = {50, 30};
+    enemies.push_back(mimic);
+
+    Enemy vampire;
+    vampire.id = 10;
+    vampire.name = "Vampire Noble";
+    vampire.description = "An elegant but deadly bloodsucker.";
+    vampire.dialogue = "Your blood smells... exquisite.";
+    vampire.stats.maxHP = 55;
+    vampire.stats.currentHP = 55;
+    vampire.stats.attack = 10;
+    vampire.stats.defense = 4;
+    vampire.stats.critChance = 15;
+    vampire.stats.dodgeChance = 20;
+    vampire.stats.speed = 15;
+    vampire.experienceReward = 90;
+    vampire.goldReward = 60;
+
+    EnemyAbility bloodSuck;
+    bloodSuck.name = "Blood Drain";
+    bloodSuck.description = "Drains life from the victim.";
+    bloodSuck.damage = 14;
+    bloodSuck.heals = true;
+    bloodSuck.healAmount = 8;
+    bloodSuck.cooldown = 3;
+    bloodSuck.triggerChance = 0.4f;
+    vampire.abilities.push_back(bloodSuck);
+    enemies.push_back(vampire);
     
     Enemy wraith;
     wraith.id = 4;
@@ -1634,7 +1739,7 @@ std::vector<Enemy> createDefaultEnemies() {
     lifeDrain.description = "Drains health from the target.";
     lifeDrain.damage = 12;
     lifeDrain.heals = true;
-    lifeDrain.healAmount = 8;
+    lifeDrain.healAmount = 5;
     // Slightly increase enemy ability cooldowns to make skill pacing more punishing
     lifeDrain.cooldown = 4;
     lifeDrain.triggerChance = 0.25f;
@@ -1661,7 +1766,7 @@ std::vector<Enemy> createDefaultEnemies() {
     regen.name = "Regeneration";
     regen.description = "The troll regenerates health.";
     regen.heals = true;
-    regen.healAmount = 12;
+    regen.healAmount = 7;
     regen.cooldown = 4;
     regen.triggerChance = 0.4f;
     troll.abilities.push_back(regen);
@@ -1725,12 +1830,46 @@ std::vector<Enemy> createDefaultEnemies() {
     summon.name = "Raise Dead";
     summon.description = "The Lich heals itself with dark magic.";
     summon.heals = true;
-    summon.healAmount = 20;
+    summon.healAmount = 12;
     summon.cooldown = 6;
     summon.triggerChance = 0.20f;
     lich.abilities.push_back(summon);
     
     enemies.push_back(lich);
+
+    Enemy beholder;
+    beholder.id = 102;
+    beholder.name = "Eye Tyrant";
+    beholder.description = "A floating orb of eyes and madness.";
+    beholder.dialogue = "I see everything!";
+    beholder.stats.maxHP = 140;
+    beholder.stats.currentHP = 140;
+    beholder.stats.attack = 14;
+    beholder.stats.defense = 6;
+    beholder.stats.critChance = 20;
+    beholder.stats.dodgeChance = 15;
+    beholder.stats.speed = 11;
+    beholder.experienceReward = 450;
+    beholder.goldReward = 300;
+    beholder.isBoss = true;
+
+    EnemyAbility disintegration;
+    disintegration.name = "Disintegration Ray";
+    disintegration.description = "A beam of pure destructive energy!";
+    disintegration.damage = 35;
+    disintegration.cooldown = 6;
+    disintegration.triggerChance = 0.25f;
+    beholder.abilities.push_back(disintegration);
+
+    EnemyAbility sleepRay;
+    sleepRay.name = "Sleep Ray";
+    sleepRay.description = "The beholder's eye makes you drowsy.";
+    sleepRay.damage = 5;
+    sleepRay.cooldown = 4;
+    sleepRay.triggerChance = 0.3f;
+    beholder.abilities.push_back(sleepRay);
+
+    enemies.push_back(beholder);
     
     return enemies;
 }
@@ -1805,6 +1944,51 @@ void createDefaultDataFiles(const std::string& dataPath) {
         enemiesFile << "speed=8\n";
         enemiesFile << "experience=25\n";
         enemiesFile << "gold=10\n";
+        enemiesFile << "boss=false\n\n";
+
+        enemiesFile << "[ENEMY]\n";
+        enemiesFile << "id=2\n";
+        enemiesFile << "name=Goblin\n";
+        enemiesFile << "description=A sneaky green-skinned goblin.\n";
+        enemiesFile << "dialogue=Gimme your shinies!\n";
+        enemiesFile << "hp=20\n";
+        enemiesFile << "attack=5\n";
+        enemiesFile << "defense=1\n";
+        enemiesFile << "crit=12\n";
+        enemiesFile << "dodge=18\n";
+        enemiesFile << "speed=12\n";
+        enemiesFile << "experience=20\n";
+        enemiesFile << "gold=15\n";
+        enemiesFile << "boss=false\n\n";
+
+        enemiesFile << "[ENEMY]\n";
+        enemiesFile << "id=6\n";
+        enemiesFile << "name=Green Slime\n";
+        enemiesFile << "description=A gelatinous blob that wobbles menacingly.\n";
+        enemiesFile << "dialogue=*Squish squish*\n";
+        enemiesFile << "hp=15\n";
+        enemiesFile << "attack=4\n";
+        enemiesFile << "defense=0\n";
+        enemiesFile << "crit=2\n";
+        enemiesFile << "dodge=30\n";
+        enemiesFile << "speed=5\n";
+        enemiesFile << "experience=15\n";
+        enemiesFile << "gold=5\n";
+        enemiesFile << "boss=false\n\n";
+
+        enemiesFile << "[ENEMY]\n";
+        enemiesFile << "id=8\n";
+        enemiesFile << "name=Dark Knight\n";
+        enemiesFile << "description=A fallen warrior in black plate armor.\n";
+        enemiesFile << "dialogue=None shall pass!\n";
+        enemiesFile << "hp=60\n";
+        enemiesFile << "attack=12\n";
+        enemiesFile << "defense=8\n";
+        enemiesFile << "crit=10\n";
+        enemiesFile << "dodge=2\n";
+        enemiesFile << "speed=7\n";
+        enemiesFile << "experience=75\n";
+        enemiesFile << "gold=40\n";
         enemiesFile << "boss=false\n\n";
         
         enemiesFile << "[ENEMY]\n";

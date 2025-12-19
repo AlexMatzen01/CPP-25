@@ -82,6 +82,7 @@ private:
     int entranceId;
     int exitId;
     int nextRoomId;
+    int forgeCount;  // Track forge spawn count for balanced distribution
     
     //==========================================================================
     // PRIVATE METHODS - Core Generation
@@ -103,6 +104,18 @@ private:
      * @return ID of exit room
      */
     int placeExitRoom();
+
+    /**
+// Place a basic shop next to the entrance
+     * @return True if shop successfully placed
+     */
+    bool placeBasicShopNextToEntrance();
+
+    /**
+// Place a forge next to the entrance
+     * @return True if forge successfully placed
+     */
+    bool placeForgeNextToEntrance();
     
     /**
 // Generate the main path from entrance to exit

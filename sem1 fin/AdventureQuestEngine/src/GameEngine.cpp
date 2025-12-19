@@ -336,6 +336,15 @@ void GameEngine::gameLoop() {
         m_gameState.player.explorationTurns++;
         m_gameState.player.totalTurns = m_gameState.player.explorationTurns + m_gameState.player.combatTurns;
         
+        // CHECK FOR AUTOMATIC ROOM ENCOUNTERS FIRST (enemies, special rooms, etc.)
+        // This ensures enemies attack immediately when entering a room
+        checkRoomEvents();
+        
+        // Only continue if player is still alive
+        if (!m_gameState.player.isAlive) {
+            break;
+        }
+        
         // Display current room
         displayCurrentRoom();
         
@@ -347,9 +356,6 @@ void GameEngine::gameLoop() {
             std::cout << "\nInvalid action. Type 'help' for commands.\n";
             waitForEnter();
         }
-        
-        // Check for room events
-        checkRoomEvents();
     }
 }
 
@@ -461,9 +467,13 @@ CharacterClass GameEngine::chooseClass() {
     std::cout << "  ⚔  " << UIManager::colorize("1. Warrior", UIColor::BRIGHT_RED) << " - High HP and Attack\n";
     std::cout << "  ✨  " << UIManager::colorize("2. Mage", UIColor::BRIGHT_BLUE) << " - High Magic Power\n";
     std::cout << "  🗡  " << UIManager::colorize("3. Rogue", UIColor::BRIGHT_GREEN) << " - High Crit and Dodge\n";
-    std::cout << "  ✨  " << UIManager::colorize("4. Paladin", UIColor::BRIGHT_YELLOW) << " - Balanced Stats\n\n";
+    std::cout << "  ✨  " << UIManager::colorize("4. Paladin", UIColor::BRIGHT_YELLOW) << " - Balanced Stats\n";
+    std::cout << "  🏹  " << UIManager::colorize("5. Ranger", UIColor::BRIGHT_CYAN) << " - High Speed and Crit\n";
+    std::cout << "  💀  " << UIManager::colorize("6. Necromancer", UIColor::MAGENTA) << " - Dark Magic Specialist\n";
+    std::cout << "  🪓  " << UIManager::colorize("7. Barbarian", UIColor::RED) << " - High HP and Attack\n";
+    std::cout << "  👊  " << UIManager::colorize("8. Monk", UIColor::WHITE) << " - High Speed and Dodge\n\n";
     
-    int choice = getValidatedInt("Enter class choice (1-4): ", 1, 4);
+    int choice = getValidatedInt("Enter class choice (1-8): ", 1, 8);
     
     CharacterClass chosenClass = static_cast<CharacterClass>(choice - 1);
     
@@ -530,6 +540,58 @@ void GameEngine::applyClassStats(CharacterClass charClass) {
             m_gameState.player.stats.speed = PALADIN_SPEED;
             m_gameState.player.stats.magicPower = PALADIN_MAGIC;
             m_gameState.player.stats.magicResist = PALADIN_MAGRES;
+            break;
+        case CharacterClass::RANGER:
+            m_gameState.player.stats.maxHP = RANGER_HP;
+            m_gameState.player.stats.currentHP = RANGER_HP;
+            m_gameState.player.stats.maxMana = 50;
+            m_gameState.player.stats.currentMana = 50;
+            m_gameState.player.stats.attack = RANGER_ATK;
+            m_gameState.player.stats.defense = RANGER_DEF;
+            m_gameState.player.stats.critChance = RANGER_CRIT;
+            m_gameState.player.stats.dodgeChance = RANGER_DODGE;
+            m_gameState.player.stats.speed = RANGER_SPEED;
+            m_gameState.player.stats.magicPower = RANGER_MAGIC;
+            m_gameState.player.stats.magicResist = RANGER_MAGRES;
+            break;
+        case CharacterClass::NECROMANCER:
+            m_gameState.player.stats.maxHP = NECROMANCER_HP;
+            m_gameState.player.stats.currentHP = NECROMANCER_HP;
+            m_gameState.player.stats.maxMana = 90;
+            m_gameState.player.stats.currentMana = 90;
+            m_gameState.player.stats.attack = NECROMANCER_ATK;
+            m_gameState.player.stats.defense = NECROMANCER_DEF;
+            m_gameState.player.stats.critChance = NECROMANCER_CRIT;
+            m_gameState.player.stats.dodgeChance = NECROMANCER_DODGE;
+            m_gameState.player.stats.speed = NECROMANCER_SPEED;
+            m_gameState.player.stats.magicPower = NECROMANCER_MAGIC;
+            m_gameState.player.stats.magicResist = NECROMANCER_MAGRES;
+            break;
+        case CharacterClass::BARBARIAN:
+            m_gameState.player.stats.maxHP = BARBARIAN_HP;
+            m_gameState.player.stats.currentHP = BARBARIAN_HP;
+            m_gameState.player.stats.maxMana = 40;
+            m_gameState.player.stats.currentMana = 40;
+            m_gameState.player.stats.attack = BARBARIAN_ATK;
+            m_gameState.player.stats.defense = BARBARIAN_DEF;
+            m_gameState.player.stats.critChance = BARBARIAN_CRIT;
+            m_gameState.player.stats.dodgeChance = BARBARIAN_DODGE;
+            m_gameState.player.stats.speed = BARBARIAN_SPEED;
+            m_gameState.player.stats.magicPower = BARBARIAN_MAGIC;
+            m_gameState.player.stats.magicResist = BARBARIAN_MAGRES;
+            break;
+        case CharacterClass::MONK:
+            m_gameState.player.stats.maxHP = MONK_HP;
+            m_gameState.player.stats.currentHP = MONK_HP;
+            m_gameState.player.stats.maxMana = 60;
+            m_gameState.player.stats.currentMana = 60;
+            m_gameState.player.stats.attack = MONK_ATK;
+            m_gameState.player.stats.defense = MONK_DEF;
+            m_gameState.player.stats.critChance = MONK_CRIT;
+            m_gameState.player.stats.dodgeChance = MONK_DODGE;
+            m_gameState.player.stats.speed = MONK_SPEED;
+            m_gameState.player.stats.magicPower = MONK_MAGIC;
+            m_gameState.player.stats.magicResist = MONK_MAGRES;
             break;
     }
     
@@ -614,6 +676,74 @@ void GameEngine::applyClassStats(CharacterClass charClass) {
             skill.isMagical = true;
             m_gameState.player.skills.push_back(skill);
             break;
+        case CharacterClass::RANGER:
+            skill.name = "Aimed Shot";
+            skill.description = "A precise shot that deals 180% damage.";
+            skill.manaCost = 12;
+            skill.cooldown = 3;
+            skill.damageMultiplier = 1.8f;
+            m_gameState.player.skills.push_back(skill);
+            
+            skill = Skill();
+            skill.name = "Multi-Shot";
+            skill.description = "Fire multiple arrows at once.";
+            skill.manaCost = 20;
+            skill.cooldown = 5;
+            skill.damageMultiplier = 1.4f;
+            m_gameState.player.skills.push_back(skill);
+            break;
+        case CharacterClass::NECROMANCER:
+            skill.name = "Life Tap";
+            skill.description = "Drain life from the enemy.";
+            skill.manaCost = 15;
+            skill.cooldown = 4;
+            skill.damageMultiplier = 1.5f;
+            skill.isMagical = true;
+            skill.isHeal = true; // Heals based on damage
+            m_gameState.player.skills.push_back(skill);
+            
+            skill = Skill();
+            skill.name = "Bone Spear";
+            skill.description = "Launch a spear of bone.";
+            skill.manaCost = 25;
+            skill.cooldown = 5;
+            skill.damageMultiplier = 2.2f;
+            skill.isMagical = true;
+            m_gameState.player.skills.push_back(skill);
+            break;
+        case CharacterClass::BARBARIAN:
+            skill.name = "Whirlwind";
+            skill.description = "Spin with your weapon.";
+            skill.manaCost = 15;
+            skill.cooldown = 4;
+            skill.damageMultiplier = 1.6f;
+            m_gameState.player.skills.push_back(skill);
+            
+            skill = Skill();
+            skill.name = "Berserk";
+            skill.description = "A reckless attack.";
+            skill.manaCost = 10;
+            skill.cooldown = 3;
+            skill.damageMultiplier = 2.0f;
+            m_gameState.player.skills.push_back(skill);
+            break;
+        case CharacterClass::MONK:
+            skill.name = "Tiger Strike";
+            skill.description = "A powerful palm strike.";
+            skill.manaCost = 10;
+            skill.cooldown = 2;
+            skill.damageMultiplier = 1.4f;
+            m_gameState.player.skills.push_back(skill);
+            
+            skill = Skill();
+            skill.name = "Meditation";
+            skill.description = "Restore some mana and health.";
+            skill.manaCost = 0;
+            skill.cooldown = 8;
+            skill.damageMultiplier = 2.0f;
+            skill.isHeal = true;
+            m_gameState.player.skills.push_back(skill);
+            break;
     }
 }
 
@@ -641,6 +771,26 @@ void GameEngine::displayClassInfo(CharacterClass charClass) {
             std::cout << PALADIN_ART << std::endl;
             std::cout << "A holy warrior with balanced stats and self-healing.\n";
             std::cout << "Versatile and durable for long adventures.\n";
+            break;
+        case CharacterClass::RANGER:
+            std::cout << RANGER_ART << std::endl;
+            std::cout << "A master of the wilderness with high speed and critical hits.\n";
+            std::cout << "Excellent at striking from a distance and avoiding traps.\n";
+            break;
+        case CharacterClass::NECROMANCER:
+            std::cout << NECROMANCER_ART << std::endl;
+            std::cout << "A dark mage who commands the forces of death.\n";
+            std::cout << "Can drain life from enemies and summon undead allies.\n";
+            break;
+        case CharacterClass::BARBARIAN:
+            std::cout << BARBARIAN_ART << std::endl;
+            std::cout << "A fierce warrior with immense strength and health.\n";
+            std::cout << "Deals massive damage but lacks defensive finesse.\n";
+            break;
+        case CharacterClass::MONK:
+            std::cout << MONK_ART << std::endl;
+            std::cout << "A disciplined fighter who uses their body as a weapon.\n";
+            std::cout << "High dodge chance and fast, precise strikes.\n";
             break;
     }
 }
@@ -1638,6 +1788,10 @@ std::string GameEngine::getClassName(CharacterClass charClass) {
         case CharacterClass::MAGE: return "Mage";
         case CharacterClass::ROGUE: return "Rogue";
         case CharacterClass::PALADIN: return "Paladin";
+        case CharacterClass::RANGER: return "Ranger";
+        case CharacterClass::NECROMANCER: return "Necromancer";
+        case CharacterClass::BARBARIAN: return "Barbarian";
+        case CharacterClass::MONK: return "Monk";
         default: return "Unknown";
     }
 }
@@ -1651,6 +1805,14 @@ std::string GameEngine::getRoomTypeName(RoomType type) {
         case RoomType::PUZZLE: return "Puzzle Room";
         case RoomType::SECRET: return "Secret Room";
         case RoomType::SAFE: return "Safe Room";
+        case RoomType::SHOP: return "Shop";
+        case RoomType::LIBRARY: return "Library";
+        case RoomType::FORGE: return "Forge";
+        case RoomType::SHRINE: return "Shrine";
+        case RoomType::LABORATORY: return "Laboratory";
+        case RoomType::GRAVEYARD: return "Graveyard";
+        case RoomType::ARMORY: return "Armory";
+        case RoomType::PRISON: return "Prison";
         case RoomType::ENTRANCE: return "Entrance";
         case RoomType::EXIT: return "Exit";
         default: return "Unknown";
@@ -1698,14 +1860,84 @@ void GameEngine::initializeGame() {
 void GameEngine::checkRoomEvents() {
     Room& room = getCurrentRoom();
     
-    // Check for shop encounter
+    // PRIORITY 1: HANDLE COMBAT FIRST - Enemies attack immediately
+    if (!room.enemies.empty() && !room.isCleared) {
+        std::cout << "\nEnemies attack!\n";
+        waitForEnter();
+        
+        CombatResult result = m_combatSystem.startCombat(room.enemies);
+        
+        if (result.playerDied) {
+            m_gameState.player.isAlive = false;
+            return;  // Exit before processing special rooms/items
+        } else if (result.playerWon) {
+            room.isCleared = true;
+            room.enemies.clear();
+            m_gameState.player.experience += result.experienceGained;
+            m_gameState.player.gold += result.goldGained;
+            m_gameState.player.totalKills += result.experienceGained / 10;  // Rough estimate
+            
+            // Add loot to room
+            for (const auto& item : result.loot) {
+                room.items.push_back(item);
+            }
+            
+            std::cout << "\nYou gained " << result.experienceGained << " XP and " 
+                      << result.goldGained << " gold!\n";
+            waitForEnter();
+        }
+    }
+    
+    // PRIORITY 2: Check for special room encounters (only if no combat or combat won)
     if (room.type == RoomType::SHOP && !room.isCleared) {
         handleShopEncounter();
         room.isCleared = true;
         return;
     }
+
+    if (room.type == RoomType::LIBRARY && !room.isCleared) {
+        handleLibraryEncounter();
+        room.isCleared = true;
+        return;
+    }
+
+    if (room.type == RoomType::FORGE && !room.isCleared) {
+        handleForgeEncounter();
+        room.isCleared = true;
+        return;
+    }
+
+    if (room.type == RoomType::SHRINE && !room.isCleared) {
+        handleShrineEncounter();
+        room.isCleared = true;
+        return;
+    }
+
+    if (room.type == RoomType::LABORATORY && !room.isCleared) {
+        handleLaboratoryEncounter();
+        room.isCleared = true;
+        return;
+    }
+
+    if (room.type == RoomType::PRISON && !room.isCleared) {
+        handlePrisonEncounter();
+        room.isCleared = true;
+        return;
+    }
+
+    if (room.type == RoomType::GRAVEYARD && !room.isCleared) {
+        handleGraveyardEncounter();
+        room.isCleared = true;
+        return;
+    }
+
+    if (room.type == RoomType::ARMORY && !room.isCleared) {
+        handleArmoryEncounter();
+        room.isCleared = true;
+        return;
+    }
     
-    // Process room events
+    // PRIORITY 3: Process other room events
     if (!room.eventIds.empty()) {
         std::vector<EventResult> results = m_eventSystem.processRoomEvents(room);
         
@@ -1755,33 +1987,6 @@ void GameEngine::checkRoomEvents() {
             }
         }
     }
-    
-    // Start combat if enemies present
-    if (!room.enemies.empty() && !room.isCleared) {
-        std::cout << "\nEnemies attack!\n";
-        waitForEnter();
-        
-        CombatResult result = m_combatSystem.startCombat(room.enemies);
-        
-        if (result.playerDied) {
-            m_gameState.player.isAlive = false;
-        } else if (result.playerWon) {
-            room.isCleared = true;
-            room.enemies.clear();
-            m_gameState.player.experience += result.experienceGained;
-            m_gameState.player.gold += result.goldGained;
-            m_gameState.player.totalKills += result.experienceGained / 10;  // Rough estimate
-            
-            // Add loot to room
-            for (const auto& item : result.loot) {
-                room.items.push_back(item);
-            }
-            
-            std::cout << "\nYou gained " << result.experienceGained << " XP and " 
-                      << result.goldGained << " gold!\n";
-            waitForEnter();
-        }
-    }
 }
 
 void GameEngine::handleShopEncounter() {
@@ -1791,34 +1996,205 @@ void GameEngine::handleShopEncounter() {
     std::cout << UIManager::createTitle("🛍 YOU DISCOVERED A SHOP! 🛍", 70, UIColor::BRIGHT_YELLOW);
     std::cout << "\n";
     
-    // Determine vendor type based on dungeon level and randomness
+    Room& currentRoom = getCurrentRoom();
     VendorType vendorType;
-    int roll = randomInt(1, 100);
-    
-    if (roll <= 40) {
+    int dungeonLevel = m_gameState.player.level;
+
+    if (currentRoom.name == "Basic Equipment Shop") {
         vendorType = VendorType::GENERAL_STORE;
-    } else if (roll <= 60) {
-        vendorType = VendorType::APOTHECARY;
-    } else if (roll <= 75) {
-        vendorType = VendorType::WEAPONSMITH;
-    } else if (roll <= 85) {
-        vendorType = VendorType::ARMORER;
-    } else if (roll <= 93) {
-        vendorType = VendorType::ENCHANTER;
-    } else if (roll <= 97) {
-        vendorType = VendorType::TRAVELING;
+        dungeonLevel = 1; // Only basic equipment
     } else {
-        vendorType = VendorType::BLACK_MARKET;
+        // Determine vendor type based on dungeon level and randomness
+        int roll = randomInt(1, 100);
+        
+        if (roll <= 40) {
+            vendorType = VendorType::GENERAL_STORE;
+        } else if (roll <= 60) {
+            vendorType = VendorType::APOTHECARY;
+        } else if (roll <= 75) {
+            vendorType = VendorType::WEAPONSMITH;
+        } else if (roll <= 85) {
+            vendorType = VendorType::ARMORER;
+        } else if (roll <= 93) {
+            vendorType = VendorType::ENCHANTER;
+        } else if (roll <= 97) {
+            vendorType = VendorType::TRAVELING;
+        } else {
+            vendorType = VendorType::BLACK_MARKET;
+        }
     }
     
     // Create vendor inventory
-    int dungeonLevel = m_gameState.player.level;
     MerchantInventory merchant = m_merchantSystem.createVendor(vendorType, dungeonLevel);
     
     // Run shop menu
     m_merchantSystem.runShopMenu(merchant);
     
     clearScreen();
+}
+
+void GameEngine::handleLibraryEncounter() {
+    clearScreen();
+    displayDivider(80, '=');
+    std::cout << centerString("LIBRARY", 80) << std::endl;
+    displayDivider(80, '=');
+    
+    if (m_gameState.showAsciiArt) {
+        std::cout << ASCIIArtLibrary::getLibrary() << std::endl;
+    }
+    
+    std::cout << "\nYou spend some time reading ancient scrolls and books.\n";
+    std::cout << "You feel more knowledgeable!\n";
+    
+    int xpGain = 50 * m_gameState.player.level;
+    m_gameState.player.experience += xpGain;
+    std::cout << "Gained " << xpGain << " XP!\n";
+    
+    waitForEnter();
+}
+
+void GameEngine::handleForgeEncounter() {
+    clearScreen();
+    displayDivider(80, '=');
+    std::cout << centerString("FORGE", 80) << std::endl;
+    displayDivider(80, '=');
+    
+    if (m_gameState.showAsciiArt) {
+        std::cout << ASCIIArtLibrary::getForge() << std::endl;
+    }
+    
+    std::cout << "\nYou find a well-maintained forge. The heat is intense, but the tools are perfect for crafting.\n";
+    
+    std::cout << "1. Use the Forge (Crafting/Upgrading/Enchanting)\n";
+    std::cout << "2. Just sharpen your weapon (+2 Attack)\n";
+    std::cout << "3. Leave\n";
+    std::cout << "Choice: ";
+    
+    int choice;
+    std::cin >> choice;
+    
+    if (choice == 1) {
+        m_craftingSystem.runCraftingMenu();
+    } else if (choice == 2) {
+        m_gameState.player.stats.attack += 2;
+        std::cout << "Your attack power increased by 2!\n";
+        waitForEnter();
+    }
+}
+
+void GameEngine::handleShrineEncounter() {
+    clearScreen();
+    displayDivider(80, '=');
+    std::cout << centerString("SHRINE", 80) << std::endl;
+    displayDivider(80, '=');
+    
+    if (m_gameState.showAsciiArt) {
+        std::cout << ASCIIArtLibrary::getShrine() << std::endl;
+    }
+    
+    std::cout << "\nYou pray at the ancient shrine...\n";
+    
+    if (randomChance(70)) {
+        std::cout << "The gods smile upon you! You feel revitalized.\n";
+        m_gameState.player.stats.currentHP = m_gameState.player.stats.maxHP;
+        m_gameState.player.stats.currentMana = m_gameState.player.stats.maxMana;
+    } else {
+        std::cout << "The gods are indifferent. Nothing happens.\n";
+    }
+    
+    waitForEnter();
+}
+
+void GameEngine::handleLaboratoryEncounter() {
+    clearScreen();
+    displayDivider(80, '=');
+    std::cout << centerString("LABORATORY", 80) << std::endl;
+    displayDivider(80, '=');
+    
+    if (m_gameState.showAsciiArt) {
+        std::cout << ASCIIArtLibrary::getLaboratory() << std::endl;
+    }
+    
+    std::cout << "\nYou find some strange potions in the laboratory.\n";
+    
+    if (randomChance(50)) {
+        std::cout << "You find a Health Potion!\n";
+        m_gameState.player.stats.currentHP += 20;
+        if (m_gameState.player.stats.currentHP > m_gameState.player.stats.maxHP)
+            m_gameState.player.stats.currentHP = m_gameState.player.stats.maxHP;
+    } else {
+        std::cout << "The potions are all empty or broken.\n";
+    }
+    
+    waitForEnter();
+}
+
+void GameEngine::handlePrisonEncounter() {
+    clearScreen();
+    displayDivider(80, '=');
+    std::cout << centerString("PRISON", 80) << std::endl;
+    displayDivider(80, '=');
+    
+    if (m_gameState.showAsciiArt) {
+        std::cout << ASCIIArtLibrary::getPrison() << std::endl;
+    }
+    
+    std::cout << "\nYou find a prisoner locked in a cell. You set them free!\n";
+    std::cout << "They give you some gold as a reward.\n";
+    
+    int goldGain = randomInt(20, 100);
+    m_gameState.player.gold += goldGain;
+    std::cout << "Gained " << goldGain << " gold!\n";
+    
+    waitForEnter();
+}
+
+void GameEngine::handleGraveyardEncounter() {
+    clearScreen();
+    displayDivider(80, '=');
+    std::cout << centerString("GRAVEYARD", 80) << std::endl;
+    displayDivider(80, '=');
+    
+    if (m_gameState.showAsciiArt) {
+        std::cout << ASCIIArtLibrary::getGraveyard() << std::endl;
+    }
+    
+    std::cout << "\nYou enter a misty graveyard. The air is cold and you hear whispers.\n";
+    
+    if (randomChance(40)) {
+        std::cout << "A restless spirit attacks!\n";
+        waitForEnter();
+        int damage = randomInt(10, 20);
+        m_gameState.player.stats.currentHP -= damage;
+        std::cout << "You took " << damage << " damage from the spirit!\n";
+    } else {
+        std::cout << "You find a small pouch of gold among the graves.\n";
+        int gold = randomInt(50, 150);
+        m_gameState.player.gold += gold;
+        std::cout << "Gained " << gold << " gold!\n";
+    }
+    
+    waitForEnter();
+}
+
+void GameEngine::handleArmoryEncounter() {
+    clearScreen();
+    displayDivider(80, '=');
+    std::cout << centerString("ARMORY", 80) << std::endl;
+    displayDivider(80, '=');
+    
+    if (m_gameState.showAsciiArt) {
+        std::cout << ASCIIArtLibrary::getArmory() << std::endl;
+    }
+    
+    std::cout << "\nYou find an old armory filled with weapons and armor.\n";
+    std::cout << "You find a piece of high-quality gear!\n";
+    
+    m_gameState.player.stats.attack += 3;
+    m_gameState.player.stats.defense += 3;
+    std::cout << "Your attack and defense increased by 3!\n";
+    
+    waitForEnter();
 }
 
 void GameEngine::updateStatusEffects() {
@@ -1959,8 +2335,16 @@ Room& GameEngine::getCurrentRoom() {
         }
     }
     
-    // Fallback - should never happen
-    return m_gameState.dungeon[0];
+    // Fallback - should never happen, but handle gracefully
+    if (!m_gameState.dungeon.empty()) {
+        return m_gameState.dungeon[0];
+    }
+    
+    // This is a critical error - dungeon is empty
+    static Room emptyRoom;  // Static fallback to avoid reference to temporary
+    emptyRoom.id = -1;
+    emptyRoom.name = "NULL ROOM";
+    return emptyRoom;
 }
 
 const Room& GameEngine::getCurrentRoom() const {
@@ -1970,7 +2354,14 @@ const Room& GameEngine::getCurrentRoom() const {
         }
     }
     
-    return m_gameState.dungeon[0];
+    if (!m_gameState.dungeon.empty()) {
+        return m_gameState.dungeon[0];
+    }
+    
+    static Room emptyRoom;
+    emptyRoom.id = -1;
+    emptyRoom.name = "NULL ROOM";
+    return emptyRoom;
 }
 
 bool GameEngine::triggerFinalBoss() {

@@ -533,7 +533,7 @@ void CombatSystem::rollEnemyIntents(std::vector<Enemy>& enemies) {
             bool hasHeal = std::any_of(enemy.abilities.begin(), enemy.abilities.end(),
                 [](const EnemyAbility& a) { return a.heals; });
             if (hasHeal) {
-                if (randomChance(5)) {
+                if (randomChance(15)) {
                     enemy.nextIntent = EnemyIntent::HEAL;
                     enemy.intentStrength = 1;
                     continue;
@@ -552,8 +552,8 @@ void CombatSystem::rollEnemyIntents(std::vector<Enemy>& enemies) {
 
         if (readyAbility) {
             if (readyAbility->heals) {
-                // Healing abilities are rare: 5% chance to use heal intent
-                if (randomChance(5)) {
+                // Healing abilities are rare: 15% chance to use heal intent
+                if (randomChance(15)) {
                     enemy.nextIntent = EnemyIntent::HEAL;
                     enemy.intentStrength = readyAbility->damage;
                     continue;
@@ -934,6 +934,10 @@ int CombatSystem::applyShieldThenDamage(int incoming, std::vector<StatusEffect>&
 bool CombatSystem::attemptFlee(const std::vector<Enemy>& enemies) {
     // Calculate flee chance based on speed difference
     CombatStats pStats = getEffectivePlayerStats();
+    
+    if (enemies.empty()) {
+        return 50;  // Safe default if no enemies (shouldn't happen in normal gameplay)
+    }
     
     int totalEnemySpeed = 0;
     for (const Enemy& enemy : enemies) {

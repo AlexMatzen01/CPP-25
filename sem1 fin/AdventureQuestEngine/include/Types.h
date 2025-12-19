@@ -54,6 +54,13 @@ enum class RoomType {
     SECRET,       // Hidden room with rare items
     SAFE,         // Rest area, no enemies
     SHOP,         // Merchant/vendor room
+    LIBRARY,      // Knowledge/lore, stat boosts
+    FORGE,        // Equipment upgrades
+    SHRINE,       // Random blessings or curses
+    LABORATORY,   // Alchemy and potions
+    GRAVEYARD,    // Undead encounters
+    ARMORY,       // High chance of equipment
+    PRISON,       // Rescue NPCs
     ENTRANCE,     // Starting room
     EXIT          // Final destination
 };
@@ -107,7 +114,11 @@ enum class CharacterClass {
     WARRIOR,      // High HP, high attack
     MAGE,         // Low HP, high magic damage
     ROGUE,        // Medium HP, high crit/dodge
-    PALADIN       // Balanced with healing
+    PALADIN,      // Balanced with healing
+    RANGER,       // High speed, high crit, ranged focus
+    NECROMANCER,  // Low HP, high magic, life drain
+    BARBARIAN,    // Very high HP and attack, low defense
+    MONK          // High dodge, high speed, balanced stats
 };
 
 /**
@@ -214,10 +225,19 @@ struct Item {
     bool isUsable;               // Can be used from inventory?
     bool isStackable;            // Can stack with same items?
     
+    // Advanced Crafting Fields
+    int upgradeLevel;            // +0 to +10
+    int durability;              // Current durability
+    int maxDurability;           // Maximum durability
+    bool isEnchanted;            // Has magical properties?
+    std::string enchantmentName; // Name of the enchantment
+    
     Item() : id(0), type(ItemType::CONSUMABLE), rarity(ItemRarity::COMMON),
              value(0), quantity(1), healAmount(0), attackBonus(0),
              defenseBonus(0), critBonus(0), dodgeBonus(0), speedBonus(0),
-             duration(0), isEquipped(false), isUsable(true), isStackable(true) {}
+             duration(0), isEquipped(false), isUsable(true), isStackable(true),
+             upgradeLevel(0), durability(100), maxDurability(100),
+             isEnchanted(false), enchantmentName("") {}
 };
 
 // ---

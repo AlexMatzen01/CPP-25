@@ -149,10 +149,23 @@ bool CraftingSystem::craftItem(int recipeId) {
     
     // Create the item
     Item craftedItem;
+    // In a real system, we'd fetch the template for resultItemId
+    // For now, we'll synthesize it from the recipe
     craftedItem.id = recipe->resultItemId;
     craftedItem.name = recipe->name;
-    craftedItem.description = "Crafted item: " + recipe->description;
-    craftedItem.value = recipe->requiredGold * 2;
+    craftedItem.description = recipe->description;
+    craftedItem.value = recipe->requiredGold * 3;
+    craftedItem.durability = 100;
+    craftedItem.maxDurability = 100;
+    
+    // Set stats based on recipe ID ranges (simple heuristic for this demo)
+    if (recipeId >= 1000 && recipeId < 1100) { // Weapons
+        craftedItem.type = ItemType::WEAPON;
+        craftedItem.attackBonus = 5 + (recipeId % 10) * 5;
+    } else if (recipeId >= 1100 && recipeId < 1200) { // Armor
+        craftedItem.type = ItemType::ARMOR;
+        craftedItem.defenseBonus = 3 + (recipeId % 10) * 4;
+    }
     
     playerRef.inventory.push_back(craftedItem);
     playerRef.experience += recipe->experienceGained;
@@ -222,70 +235,100 @@ bool CraftingSystem::enchantItem(int itemId, EnchantmentType enchantType) {
         std::cout << "Item not found!\n";
         return false;
     }
+
+    if (item->isEnchanted) {
+        std::cout << "Item is already enchanted!\n";
+        return false;
+    }
     
     int cost = getEnchantCost(enchantType, 1);
     if (playerRef.gold < cost) {
         std::cout << "Not enough gold! Need " << cost << "\n";
         return false;
     }
+
+    // Check for required essence (Material ID 6)
+    if (getMaterialCount(6) < 2) {
+        std::cout << "Need 2 Magical Essence to enchant!\n";
+        return false;
+    }
     
     playerRef.gold -= cost;
+    consumeMaterials({{6, 2}});
     
-    // Create enchantment
-    Enchantment enchant;
-    enchant.type = enchantType;
-    enchant.level = 1;
+    item->isEnchanted = true;
     
     switch (enchantType) {
         case EnchantmentType::FIRE_DAMAGE:
-            enchant.displayName = "Fiery";
-            enchant.power = 10;
+            item->enchantmentName = "Fiery";
+            item->attackBonus += 10;
             break;
         case EnchantmentType::ICE_DAMAGE:
-            enchant.displayName = "Frozen";
-            enchant.power = 8;
+            item->enchantmentName = "Frozen";
+            item->attackBonus += 5;
+            item->speedBonus -= 2; // Slow effect
             break;
         case EnchantmentType::LIFESTEAL:
-            enchant.displayName = "Vampiric";
-            enchant.power = 5;
+            item->enchantmentName = "Vampiric";
+            item->healAmount += 5;
             break;
         case EnchantmentType::CRITICAL_STRIKE:
-            enchant.displayName = "Precise";
-            enchant.power = 5;
+            item->enchantmentName = "Precise";
+            item->critBonus += 10;
             break;
         case EnchantmentType::SHARPNESS:
-            enchant.displayName = "Sharp";
-            enchant.power = 10;
+            item->enchantmentName = "Sharp";
+            item->attackBonus += 15;
             break;
         case EnchantmentType::PROTECTION:
-            enchant.displayName = "Protected";
-            enchant.power = 8;
+            item->enchantmentName = "Warded";
+            item->defenseBonus += 10;
             break;
         default:
-            enchant.displayName = "Enchanted";
-            enchant.power = 5;
+            item->enchantmentName = "Enchanted";
+            item->value += 50;
     }
     
-    // Apply to item name
-    item->name = enchant.displayName + " " + item->name;
-    item->value += cost;
+    item->name = item->enchantmentName + " " + item->name;
+    item->value += cost * 2;
     
     std::cout << "Successfully enchanted: " << item->name << "!\n";
     return true;
 }
 
 bool CraftingSystem::upgradeItem(int itemId) {
-    // Find item in inventory
     for (auto& item : playerRef.inventory) {
         if (item.id == itemId) {
-            int upgradeCost = item.value / 2;
+            if (item.upgradeLevel >= 10) {
+                std::cout << "Item is already at maximum upgrade level (+10)!\n";
+                return false;
+            }
+
+            int upgradeCost = (item.upgradeLevel + 1) * 100;
             if (playerRef.gold < upgradeCost) {
                 std::cout << "Not enough gold! Need " << upgradeCost << "\n";
                 return false;
             }
+
+            // Require Metal (ID 1) for weapons/armor
+            if (getMaterialCount(1) < (item.upgradeLevel + 1) * 2) {
+                std::cout << "Not enough Iron Ore!\n";
+                return false;
+            }
             
             playerRef.gold -= upgradeCost;
-            item.name = item.name + " +1";
+            consumeMaterials({{1, (item.upgradeLevel + 1) * 2}});
+            
+            item.upgradeLevel++;
+            if (item.type == ItemType::WEAPON) item.attackBonus += 5;
+            if (item.type == ItemType::ARMOR) item.defenseBonus += 3;
+            
+            // Update name
+            size_t plusPos = item.name.find(" +");
+            if (plusPos != std::string::npos) {
+                item.name = item.name.substr(0, plusPos);
+            }
+            item.name += " +" + std::to_string(item.upgradeLevel);
             item.value += upgradeCost;
             
             std::cout << "Item upgraded to: " << item.name << "!\n";
@@ -298,97 +341,175 @@ bool CraftingSystem::upgradeItem(int itemId) {
 }
 
 bool CraftingSystem::repairItem(int itemId) {
-    // Find item in inventory
     for (auto& item : playerRef.inventory) {
         if (item.id == itemId) {
-            int repairCost = item.value / 4;
-            if (playerRef.gold < repairCost) {
-                std::cout << "Not enough gold! Need " << repairCost << "\n";
+            if (item.durability >= item.maxDurability) {
+                std::cout << "Item is already in perfect condition.\n";
                 return false;
             }
-            
+
+            int repairCost = (item.maxDurability - item.durability) * 2;
+            if (playerRef.gold < repairCost) {
+                std::cout << "Not enough gold to repair!\n";
+                return false;
+            }
+
             playerRef.gold -= repairCost;
-            std::cout << "Item repaired!\n";
+            item.durability = item.maxDurability;
+            std::cout << "Item repaired: " << item.name << "\n";
             return true;
         }
     }
-    
-    std::cout << "Item not found!\n";
     return false;
 }
 
 int CraftingSystem::getEnchantCost(EnchantmentType type, int level) const {
-    int baseCost = 100;
-    
+    int baseCost = 250;
     switch (type) {
-        case EnchantmentType::FIRE_DAMAGE:
-        case EnchantmentType::ICE_DAMAGE:
-        case EnchantmentType::LIGHTNING_DAMAGE:
-            baseCost = 150;
-            break;
-        case EnchantmentType::LIFESTEAL:
-            baseCost = 300;
-            break;
-        case EnchantmentType::CRITICAL_STRIKE:
-            baseCost = 200;
-            break;
-        case EnchantmentType::UNBREAKING:
-            baseCost = 250;
-            break;
-        default:
-            baseCost = 100;
+        case EnchantmentType::SHARPNESS: baseCost = 500; break;
+        case EnchantmentType::LIFESTEAL: baseCost = 750; break;
+        default: baseCost = 250;
     }
-    
     return baseCost * level;
 }
 
 void CraftingSystem::displayEnchantableItems() const {
     std::cout << "\n========================================\n";
-    std::cout << "       ENCHANTABLE ITEMS\n";
+    std::cout << "       ENCHANTABLE / UPGRADABLE ITEMS\n";
     std::cout << "========================================\n\n";
     
-    for (const auto& item : playerRef.inventory) {
+    for (size_t i = 0; i < playerRef.inventory.size(); ++i) {
+        const auto& item = playerRef.inventory[i];
         if (item.type == ItemType::WEAPON || item.type == ItemType::ARMOR) {
-            std::cout << "[" << item.id << "] " << item.name << "\n";
+            std::cout << "[" << i << "] " << item.name;
+            if (item.isEnchanted) std::cout << " (Enchanted: " << item.enchantmentName << ")";
+            std::cout << " | Durability: " << item.durability << "/" << item.maxDurability << "\n";
         }
     }
 }
 
 std::vector<CraftingMaterial> CraftingSystem::disenchantItem(int itemId) {
     std::vector<CraftingMaterial> result;
-    
-    // Find and remove item
     for (auto it = playerRef.inventory.begin(); it != playerRef.inventory.end(); ++it) {
         if (it->id == itemId) {
-            // Return some materials based on item value
-            CraftingMaterial mat;
-            mat.id = 1;
-            mat.name = "Essence";
-            mat.quantity = it->value / 50;
-            result.push_back(mat);
+            std::cout << "Disenchanting " << it->name << "...\n";
             
-            addMaterial(1, mat.quantity);
+            int matCount = 1 + static_cast<int>(it->rarity);
+            addMaterial(1, matCount * 2); // Iron
+            addMaterial(2, matCount);     // Wood
             
+            if (it->isEnchanted) {
+                addMaterial(6, 1); // Essence
+            }
+
             playerRef.inventory.erase(it);
-            std::cout << "Item disenchanted! Gained " << mat.quantity << " essence.\n";
             break;
         }
     }
-    
     return result;
 }
 
 bool CraftingSystem::convertMaterial(int fromId, int toId, int quantity) {
-    if (getMaterialCount(fromId) < quantity * 10) {
+    if (getMaterialCount(fromId) < quantity) {
         std::cout << "Not enough materials to convert!\n";
         return false;
     }
-    
-    materials[fromId].quantity -= quantity * 10;
-    addMaterial(toId, quantity);
-    
-    std::cout << "Converted materials successfully!\n";
+
+    if (quantity < 5) {
+        std::cout << "Minimum 5 materials required for conversion.\n";
+        return false;
+    }
+
+    consumeMaterials({{fromId, 5}});
+    addMaterial(toId, 1);
+    std::cout << "Converted 5 materials into 1 higher-tier material.\n";
     return true;
+}
+
+void CraftingSystem::runCraftingMenu() {
+    bool inMenu = true;
+    while (inMenu) {
+        std::cout << "\n========================================\n";
+        std::cout << "        ADVANCED CRAFTING SYSTEM\n";
+        std::cout << "========================================\n";
+        std::cout << "1. View Materials\n";
+        std::cout << "2. View Recipes & Craft\n";
+        std::cout << "3. Upgrade Item (+Stats)\n";
+        std::cout << "4. Enchant Item (Magic)\n";
+        std::cout << "5. Repair Item\n";
+        std::cout << "6. Disenchant Item (Break down)\n";
+        std::cout << "7. Material Conversion\n";
+        std::cout << "0. Exit Crafting\n";
+        std::cout << "Choice: ";
+
+        int choice;
+        if (!(std::cin >> choice)) {
+            std::cin.clear();
+            std::cin.ignore(1000, '\n');
+            continue;
+        }
+
+        switch (choice) {
+            case 1:
+                displayMaterials();
+                break;
+            case 2:
+                displayDiscoveredRecipes();
+                std::cout << "Enter Recipe ID to craft (0 to cancel): ";
+                int rid; std::cin >> rid;
+                if (rid != 0) craftItem(rid);
+                break;
+            case 3:
+                displayEnchantableItems();
+                std::cout << "Enter Item Index to upgrade (-1 to cancel): ";
+                int uidx; std::cin >> uidx;
+                if (uidx >= 0 && uidx < (int)playerRef.inventory.size()) {
+                    upgradeItem(playerRef.inventory[uidx].id);
+                }
+                break;
+            case 4:
+                displayEnchantableItems();
+                std::cout << "Enter Item Index to enchant (-1 to cancel): ";
+                int eidx; std::cin >> eidx;
+                if (eidx >= 0 && eidx < (int)playerRef.inventory.size()) {
+                    std::cout << "Select Enchantment:\n";
+                    std::cout << "1. Fire (+Attack)\n2. Ice (+Slow)\n3. Sharpness (++Attack)\n4. Protection (+Defense)\n";
+                    int etype; std::cin >> etype;
+                    EnchantmentType t = EnchantmentType::SHARPNESS;
+                    if (etype == 1) t = EnchantmentType::FIRE_DAMAGE;
+                    else if (etype == 2) t = EnchantmentType::ICE_DAMAGE;
+                    else if (etype == 4) t = EnchantmentType::PROTECTION;
+                    enchantItem(playerRef.inventory[eidx].id, t);
+                }
+                break;
+            case 5:
+                displayEnchantableItems();
+                std::cout << "Enter Item Index to repair (-1 to cancel): ";
+                int ridx; std::cin >> ridx;
+                if (ridx >= 0 && ridx < (int)playerRef.inventory.size()) {
+                    repairItem(playerRef.inventory[ridx].id);
+                }
+                break;
+            case 6:
+                displayEnchantableItems();
+                std::cout << "Enter Item Index to disenchant (-1 to cancel): ";
+                int didx; std::cin >> didx;
+                if (didx >= 0 && didx < (int)playerRef.inventory.size()) {
+                    disenchantItem(playerRef.inventory[didx].id);
+                }
+                break;
+            case 7:
+                std::cout << "Convert 5 Iron Ore (1) to 1 Magical Essence (6)? (y/n): ";
+                char c; std::cin >> c;
+                if (c == 'y') convertMaterial(1, 6, 5);
+                break;
+            case 0:
+                inMenu = false;
+                break;
+            default:
+                std::cout << "Invalid choice.\n";
+        }
+    }
 }
 
 std::string CraftingSystem::serializeCrafting() const {
@@ -1279,11 +1400,12 @@ void MerchantSystem::displayShop(const MerchantInventory& merchant) {
     std::cout << "Reputation Discount: " << static_cast<int>(getReputationDiscount() * 100) << "%\n\n";
     
     std::cout << "--- ITEMS FOR SALE ---\n";
-    std::cout << std::left << std::setw(5) << "ID" << std::setw(30) << "Item"
+    std::cout << std::left << std::setw(7) << "Slot" << std::setw(30) << "Item"
               << std::setw(10) << "Stock" << std::setw(10) << "Price" << "\n";
     std::cout << std::string(60, '-') << "\n";
     
-    for (const auto& item : merchant.items) {
+    for (size_t i = 0; i < merchant.items.size(); ++i) {
+        const auto& item = merchant.items[i];
         int price = calculateBuyPrice(item, merchant);
         
         // Get stock info
@@ -1293,20 +1415,24 @@ void MerchantSystem::displayShop(const MerchantInventory& merchant) {
             stockInfo = std::to_string(stockIt->second);
         }
         
-        std::cout << std::left << std::setw(5) << item.id
+        std::cout << std::left << std::setw(7) << (i + 1)
                   << std::setw(30) << item.name.substr(0, 28)
                   << std::setw(10) << stockInfo
                   << std::setw(10) << price << " g\n";
     }
 }
 
-bool MerchantSystem::buyItem(MerchantInventory& merchant, int itemId) {
-    // Find item in merchant's inventory
-    Item* item = findItemInVendorStock(merchant, itemId);
-    if (item == nullptr) {
-        std::cout << "Item not available!\n";
+bool MerchantSystem::buyItem(MerchantInventory& merchant, int slotIndex) {
+    // Adjust for 1-based indexing from UI
+    int index = slotIndex - 1;
+    
+    if (index < 0 || index >= static_cast<int>(merchant.items.size())) {
+        std::cout << "Invalid slot number!\n";
         return false;
     }
+    
+    Item& item = merchant.items[index];
+    int itemId = item.id;
     
     // Check stock
     if (!hasStock(merchant, itemId)) {
@@ -1314,7 +1440,7 @@ bool MerchantSystem::buyItem(MerchantInventory& merchant, int itemId) {
         return false;
     }
     
-    int price = calculateBuyPrice(*item, merchant);
+    int price = calculateBuyPrice(item, merchant);
     
     if (playerRef.gold < price) {
         std::cout << "Not enough gold! Need " << price << " gold.\n";
@@ -1326,35 +1452,39 @@ bool MerchantSystem::buyItem(MerchantInventory& merchant, int itemId) {
     merchant.merchantGold += price;
     
     // Add to player inventory
-    Item purchasedItem = *item;
+    Item purchasedItem = item;
     purchasedItem.quantity = 1;
     playerRef.inventory.push_back(purchasedItem);
     
     // Reduce stock
     reduceStock(merchant, itemId);
     
-    std::cout << "\nPurchased " << item->name << " for " << price << " gold!\n";
+    std::cout << "\nPurchased " << item.name << " for " << price << " gold!\n";
     updateDemand(itemId, 1);  // Increase demand
     increaseReputation(5);
     
     return true;
 }
 
-bool MerchantSystem::sellItem(MerchantInventory& merchant, int itemId) {
-    // Find item in player inventory
-    Item* item = findItemInPlayerInventory(itemId);
-    if (item == nullptr) {
-        std::cout << "You don't have that item!\n";
+bool MerchantSystem::sellItem(MerchantInventory& merchant, int slotIndex) {
+    // Adjust for 1-based indexing from UI
+    int index = slotIndex - 1;
+    
+    if (index < 0 || index >= static_cast<int>(playerRef.inventory.size())) {
+        std::cout << "Invalid slot number!\n";
         return false;
     }
     
+    Item& item = playerRef.inventory[index];
+    int itemId = item.id;
+    
     // Check if merchant accepts this item
-    if (!merchant.acceptsAllItems && item->type == ItemType::QUEST) {
+    if (!merchant.acceptsAllItems && item.type == ItemType::QUEST) {
         std::cout << "The merchant won't buy quest items.\n";
         return false;
     }
     
-    int price = calculateSellPrice(*item, merchant);
+    int price = calculateSellPrice(item, merchant);
     
     if (merchant.merchantGold < price) {
         std::cout << "Merchant doesn't have enough gold!\n";
@@ -1366,17 +1496,12 @@ bool MerchantSystem::sellItem(MerchantInventory& merchant, int itemId) {
     merchant.merchantGold -= price;
     
     // Add to merchant inventory
-    addItemToStock(merchant, *item, 1);
+    addItemToStock(merchant, item, 1);
     
     // Remove from player inventory
-    for (auto it = playerRef.inventory.begin(); it != playerRef.inventory.end(); ++it) {
-        if (it->id == itemId) {
-            playerRef.inventory.erase(it);
-            break;
-        }
-    }
+    std::cout << "\nSold " << item.name << " for " << price << " gold!\n";
+    playerRef.inventory.erase(playerRef.inventory.begin() + index);
     
-    std::cout << "\nSold " << item->name << " for " << price << " gold!\n";
     updateDemand(itemId, -1);  // Decrease demand
     increaseReputation(2);
     
@@ -1677,14 +1802,14 @@ void MerchantSystem::displayBuyMenu(MerchantInventory& merchant) {
     
     displayShop(merchant);
     
-    std::cout << "\nEnter item ID to buy (0 to cancel): ";
-    int itemId;
-    std::cin >> itemId;
+    std::cout << "\nEnter slot number to buy (0 to cancel): ";
+    int slotIndex;
+    std::cin >> slotIndex;
     std::cin.ignore(1000, '\n');
     
-    if (itemId == 0) return;
+    if (slotIndex == 0) return;
     
-    if (buyItem(merchant, itemId)) {
+    if (buyItem(merchant, slotIndex)) {
         std::cout << "\nPress Enter to continue...";
         std::cin.get();
     } else {
@@ -1702,25 +1827,26 @@ void MerchantSystem::displaySellMenu(MerchantInventory& merchant) {
     }
     
     std::cout << "\n--- YOUR INVENTORY ---\n";
-    std::cout << std::left << std::setw(5) << "ID" << std::setw(30) << "Item"
+    std::cout << std::left << std::setw(7) << "Slot" << std::setw(30) << "Item"
               << std::setw(10) << "Sell Price" << "\n";
     std::cout << std::string(50, '-') << "\n";
     
-    for (const auto& item : playerRef.inventory) {
+    for (size_t i = 0; i < playerRef.inventory.size(); ++i) {
+        const auto& item = playerRef.inventory[i];
         int sellPrice = calculateSellPrice(item, merchant);
-        std::cout << std::left << std::setw(5) << item.id
+        std::cout << std::left << std::setw(7) << (i + 1)
                   << std::setw(30) << item.name.substr(0, 28)
                   << std::setw(10) << sellPrice << " g\n";
     }
     
-    std::cout << "\nEnter item ID to sell (0 to cancel): ";
-    int itemId;
-    std::cin >> itemId;
+    std::cout << "\nEnter slot number to sell (0 to cancel): ";
+    int slotIndex;
+    std::cin >> slotIndex;
     std::cin.ignore(1000, '\n');
     
-    if (itemId == 0) return;
+    if (slotIndex == 0) return;
     
-    if (sellItem(merchant, itemId)) {
+    if (sellItem(merchant, slotIndex)) {
         std::cout << "\nPress Enter to continue...";
         std::cin.get();
     } else {

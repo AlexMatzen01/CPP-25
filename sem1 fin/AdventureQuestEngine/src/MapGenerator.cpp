@@ -20,7 +20,7 @@ namespace AQE {
 // ---
 
 MapGenerator::MapGenerator(int width, int height)
-    : mapWidth(width), mapHeight(height), entranceId(-1), exitId(-1), nextRoomId(0) {
+    : mapWidth(width), mapHeight(height), entranceId(-1), exitId(-1), nextRoomId(0), forgeCount(0) {
     // Clamp dimensions to valid range
     if (mapWidth < MIN_MAP_WIDTH) mapWidth = MIN_MAP_WIDTH;
     if (mapWidth > MAX_MAP_WIDTH) mapWidth = MAX_MAP_WIDTH;
@@ -40,10 +40,17 @@ bool MapGenerator::generateMap(GameState& gameState) {
     // Clear previous data
     rooms.clear();
     initializeGrid();
+    forgeCount = 0;  // Reset forge counter for this generation
     
     // Step 1: Place entrance at bottom-left area
     entranceId = placeEntranceRoom();
     if (entranceId < 0) return false;
+
+    // Step 1.5: Place a basic shop next to the entrance
+    if (!placeBasicShopNextToEntrance()) return false;
+    
+    // Step 1.6: Place a forge next to the entrance
+    if (!placeForgeNextToEntrance()) return false;
     
     // Step 2: Place exit at top-right area
     exitId = placeExitRoom();
@@ -196,6 +203,34 @@ void MapGenerator::printMap(int currentRoomId) const {
                             symbol = " ◘ ";
                             color = Color::BRIGHT_MAGENTA;
                             break;
+                        case RoomType::LIBRARY:
+                            symbol = " ▤ ";
+                            color = Color::BRIGHT_BLUE;
+                            break;
+                        case RoomType::FORGE:
+                            symbol = " ⚒ ";
+                            color = Color::BRIGHT_RED;
+                            break;
+                        case RoomType::SHRINE:
+                            symbol = " ⛩ ";
+                            color = Color::BRIGHT_YELLOW;
+                            break;
+                        case RoomType::LABORATORY:
+                            symbol = " ⚗ ";
+                            color = Color::BRIGHT_GREEN;
+                            break;
+                        case RoomType::GRAVEYARD:
+                            symbol = " ⚰ ";
+                            color = Color::DARK_GRAY;
+                            break;
+                        case RoomType::ARMORY:
+                            symbol = " ⛨ ";
+                            color = Color::BRIGHT_WHITE;
+                            break;
+                        case RoomType::PRISON:
+                            symbol = " ⛓ ";
+                            color = Color::RED;
+                            break;
                         default:
                             if (room->enemies.empty() && room->isCleared) {
                                 symbol = " · ";
@@ -261,9 +296,19 @@ void MapGenerator::printMap(int currentRoomId) const {
     std::cout << colorize("♥", Color::GREEN) << " Safe Rest Area        ";
     std::cout << colorize("◘", Color::BRIGHT_MAGENTA) << " Merchant Shop\n";
     
-    std::cout << "  " << colorize("•", Color::BRIGHT_WHITE) << " Room (Unexplored)     ";
-    std::cout << colorize("○", Color::WHITE) << " Room (Explored)       ";
-    std::cout << colorize("·", Color::DARK_GRAY) << " Room (Cleared)\n\n";
+    std::cout << "  " << colorize("▤", Color::BRIGHT_BLUE) << " Library (XP)          ";
+    std::cout << colorize("⚒", Color::BRIGHT_RED) << " Forge (Crafting)      ";
+    std::cout << colorize("⛩", Color::BRIGHT_YELLOW) << " Shrine (Blessing)\n";
+    
+    std::cout << "  " << colorize("⚗", Color::BRIGHT_GREEN) << " Laboratory (Potions)  ";
+    std::cout << colorize("⚰", Color::DARK_GRAY) << " Graveyard (Undead)    ";
+    std::cout << colorize("⛨", Color::BRIGHT_WHITE) << " Armory (Gear)\n";
+    
+    std::cout << "  " << colorize("⛓", Color::RED) << " Prison (Rescue)       ";
+    std::cout << colorize("•", Color::BRIGHT_WHITE) << " Room (Unexplored)     ";
+    std::cout << colorize("○", Color::WHITE) << " Room (Explored)\n";
+    
+    std::cout << "  " << colorize("·", Color::DARK_GRAY) << " Room (Cleared)\n\n";
     
     std::cout << "\n";
     displaySeparator(80, '=');
@@ -322,6 +367,81 @@ int MapGenerator::placeExitRoom() {
     grid[y][x] = exitRoom.id;
     
     return exitRoom.id;
+}
+
+bool MapGenerator::placeBasicShopNextToEntrance() {
+    // Find entrance position
+    int startX = -1, startY = -1;
+    for (const Room& room : rooms) {
+        if (room.id == entranceId) {
+            startX = room.x;
+            startY = room.y;
+            break;
+        }
+    }
+    
+    if (startX < 0) return false;
+    
+    // Try to find an empty adjacent spot
+    std::vector<std::pair<int, int>> directions = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
+    
+    // Simple shuffle using randomInt
+    for (int i = 0; i < 4; ++i) {
+        int j = randomInt(0, 3);
+        std::swap(directions[i], directions[j]);
+    }
+    
+    for (auto [dx, dy] : directions) {
+        int nx = startX + dx;
+        int ny = startY + dy;
+        
+        if (isValidPosition(nx, ny) && !hasRoom(nx, ny)) {
+            Room shop = createRoom(nx, ny, RoomType::SHOP);
+            shop.name = "Basic Equipment Shop";
+            shop.description = "A small, tidy shop stands here, conveniently located near the dungeon entrance. "
+                               "The merchant inside specializes in basic gear for new adventurers.";
+            rooms.push_back(shop);
+            grid[ny][nx] = shop.id;
+            return true;
+        }
+    }
+    
+    return false; // Should rarely happen
+}
+
+bool MapGenerator::placeForgeNextToEntrance() {
+    // Find entrance position
+    int startX = -1, startY = -1;
+    for (const Room& room : rooms) {
+        if (room.id == entranceId) {
+            startX = room.x;
+            startY = room.y;
+            break;
+        }
+    }
+    
+    if (startX < 0) return false;
+    
+    // Try to find an empty adjacent spot (prefer diagonal or farther from shop)
+    std::vector<std::pair<int, int>> directions = {{1, 1}, {-1, 1}, {1, -1}, {-1, -1}, {0, 1}, {0, -1}, {1, 0}, {-1, 0}};
+    
+    for (auto [dx, dy] : directions) {
+        int nx = startX + dx;
+        int ny = startY + dy;
+        
+        if (isValidPosition(nx, ny) && !hasRoom(nx, ny)) {
+            Room forge = createRoom(nx, ny, RoomType::FORGE);
+            forge.name = "Entrance Forge";
+            forge.description = "A well-maintained forge stands near the dungeon entrance. The blacksmith here "
+                                "offers essential weapon and armor upgrades for adventurers beginning their journey.";
+            rooms.push_back(forge);
+            grid[ny][nx] = forge.id;
+            forgeCount++;
+            return true;
+        }
+    }
+    
+    return false; // Should rarely happen
 }
 
 bool MapGenerator::generateMainPath() {
@@ -403,20 +523,57 @@ void MapGenerator::fillRemainingRooms() {
     // Random fill with decreasing probability based on distance from path
     int fillChance = 40;  // Base chance to fill empty cell
     
+    // Collect forge candidates for strategic placement
+    std::vector<std::pair<int, int>> forgeCandidates;
+    
     for (int y = 0; y < mapHeight; ++y) {
         for (int x = 0; x < mapWidth; ++x) {
             if (!hasRoom(x, y)) {
                 // Check if adjacent to existing room
                 std::vector<int> adjacent = getAdjacentRooms(x, y);
                 
-                if (!adjacent.empty() && randomChance(fillChance)) {
-                    RoomType type = determineRoomType(x, y);
-                    Room room = createRoom(x, y, type);
-                    rooms.push_back(room);
-                    grid[y][x] = room.id;
+                if (!adjacent.empty()) {
+                    forgeCandidates.push_back({x, y});
+                    
+                    if (randomChance(fillChance)) {
+                        RoomType type = determineRoomType(x, y);
+                        
+                        // Force forge generation if we don't have 3 yet and have candidates
+                        if (type == RoomType::FORGE && forgeCount < 3) {
+                            type = RoomType::FORGE;
+                        } else if (forgeCount < 3 && randomChance(25)) {
+                            // Extra 25% chance to override with forge if we need more
+                            type = RoomType::FORGE;
+                        }
+                        
+                        Room room = createRoom(x, y, type);
+                        if (type == RoomType::FORGE) {
+                            forgeCount++;
+                        }
+                        rooms.push_back(room);
+                        grid[y][x] = room.id;
+                    }
                 }
             }
         }
+    }
+    
+    // If we still don't have 3 forges, place them explicitly in remaining candidates
+    while (forgeCount < 3 && !forgeCandidates.empty()) {
+        int idx = randomInt(0, static_cast<int>(forgeCandidates.size()) - 1);
+        auto [x, y] = forgeCandidates[idx];
+        
+        if (!hasRoom(x, y)) {
+            Room forge = createRoom(x, y, RoomType::FORGE);
+            forge.name = "Hidden Forge";
+            forge.description = "A mastercraft forge stands here, created by legendary smiths. "
+                               "You can upgrade and enchant your equipment at this location.";
+            rooms.push_back(forge);
+            grid[y][x] = forge.id;
+            forgeCount++;
+        }
+        
+        forgeCandidates.erase(forgeCandidates.begin() + idx);
     }
 }
 
@@ -521,6 +678,20 @@ std::string MapGenerator::generateRoomName(RoomType type) {
             return "Hidden " + roomType;
         case RoomType::SAFE:
             return "Peaceful " + roomType;
+        case RoomType::LIBRARY:
+            return prefix + " Library of " + roomType;
+        case RoomType::FORGE:
+            return "The " + prefix + " Forge";
+        case RoomType::SHRINE:
+            return "Ancient Shrine of " + prefix;
+        case RoomType::LABORATORY:
+            return prefix + " Alchemical Laboratory";
+        case RoomType::GRAVEYARD:
+            return "The " + prefix + " Graveyard";
+        case RoomType::ARMORY:
+            return prefix + " Armory";
+        case RoomType::PRISON:
+            return "The " + prefix + " Prison";
         default:
             return prefix + " " + roomType;
     }
@@ -548,6 +719,27 @@ std::string MapGenerator::generateRoomDescription(RoomType type) {
             break;
         case RoomType::SAFE:
             extra = " A calm serenity fills the space. You feel safe here.";
+            break;
+        case RoomType::LIBRARY:
+            extra = " Towering bookshelves line the walls, filled with ancient knowledge.";
+            break;
+        case RoomType::FORGE:
+            extra = " The heat of a furnace and the sound of an anvil echo through the room.";
+            break;
+        case RoomType::SHRINE:
+            extra = " An ornate altar stands in the center, radiating a strange energy.";
+            break;
+        case RoomType::LABORATORY:
+            extra = " Bubbling beakers and strange smells suggest alchemical experiments.";
+            break;
+        case RoomType::GRAVEYARD:
+            extra = " Rows of weathered tombstones and a chilling mist fill the area.";
+            break;
+        case RoomType::ARMORY:
+            extra = " Racks of weapons and suits of armor are displayed along the walls.";
+            break;
+        case RoomType::PRISON:
+            extra = " Iron bars and heavy chains suggest this was a place of confinement.";
             break;
         default:
             extra = "";
@@ -582,6 +774,27 @@ RoomType MapGenerator::determineRoomType(int x, int y, bool isMainPath) {
     cumulative += SAFE_ROOM_CHANCE;
     if (roll <= cumulative) return RoomType::SAFE;
     
+    cumulative += LIBRARY_ROOM_CHANCE;
+    if (roll <= cumulative) return RoomType::LIBRARY;
+    
+    cumulative += FORGE_ROOM_CHANCE;
+    if (roll <= cumulative) return RoomType::FORGE;
+    
+    cumulative += SHRINE_ROOM_CHANCE;
+    if (roll <= cumulative) return RoomType::SHRINE;
+    
+    cumulative += LABORATORY_ROOM_CHANCE;
+    if (roll <= cumulative) return RoomType::LABORATORY;
+    
+    cumulative += GRAVEYARD_ROOM_CHANCE;
+    if (roll <= cumulative) return RoomType::GRAVEYARD;
+    
+    cumulative += ARMORY_ROOM_CHANCE;
+    if (roll <= cumulative) return RoomType::ARMORY;
+    
+    cumulative += PRISON_ROOM_CHANCE;
+    if (roll <= cumulative) return RoomType::PRISON;
+    
     return RoomType::NORMAL;
 }
 
@@ -592,7 +805,9 @@ RoomType MapGenerator::determineRoomType(int x, int y, bool isMainPath) {
 void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& templates) {
     // Skip certain room types
     if (room.type == RoomType::SAFE || room.type == RoomType::ENTRANCE || 
-        room.type == RoomType::EXIT || room.type == RoomType::TREASURE) {
+        room.type == RoomType::EXIT || room.type == RoomType::TREASURE ||
+        room.type == RoomType::SHOP || room.type == RoomType::LIBRARY ||
+        room.type == RoomType::FORGE || room.type == RoomType::SHRINE) {
         return;
     }
     
@@ -619,6 +834,20 @@ void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& tem
         case RoomType::SECRET:
             if (randomChance(30)) {
                 enemyCount = 1;  // Rare guardian
+            }
+            break;
+        case RoomType::GRAVEYARD:
+            enemyCount = randomInt(2, 4);
+            break;
+        case RoomType::PRISON:
+            enemyCount = randomInt(1, 3);
+            break;
+        case RoomType::ARMORY:
+            enemyCount = randomInt(1, 2);
+            break;
+        case RoomType::LABORATORY:
+            if (randomChance(50)) {
+                enemyCount = randomInt(1, 2);
             }
             break;
         default:
@@ -664,6 +893,15 @@ void MapGenerator::populateWithItems(Room& room, const std::vector<Item>& templa
         case RoomType::BOSS:
             // Boss loot handled in combat
             break;
+        case RoomType::ARMORY:
+            itemCount = randomInt(1, 3);
+            break;
+        case RoomType::LIBRARY:
+            if (randomChance(70)) itemCount = 1;
+            break;
+        case RoomType::LABORATORY:
+            if (randomChance(60)) itemCount = randomInt(1, 2);
+            break;
         default:
             if (randomChance(15)) {
                 itemCount = 1;
@@ -675,6 +913,8 @@ void MapGenerator::populateWithItems(Room& room, const std::vector<Item>& templa
     int rarityBoost = 0;
     if (room.type == RoomType::SECRET) rarityBoost = 2;
     if (room.type == RoomType::TREASURE) rarityBoost = 1;
+    if (room.type == RoomType::ARMORY) rarityBoost = 1;
+    if (room.type == RoomType::LIBRARY) rarityBoost = 1;
     
     for (int i = 0; i < itemCount; ++i) {
         // Weight by rarity

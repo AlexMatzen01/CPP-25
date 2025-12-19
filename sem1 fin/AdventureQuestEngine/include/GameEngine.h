@@ -403,6 +403,41 @@ private:
     void handleShopEncounter();
     
     /**
+// Handles library encounters
+     */
+    void handleLibraryEncounter();
+
+    /**
+// Handles forge encounters
+     */
+    void handleForgeEncounter();
+
+    /**
+// Handles shrine encounters
+     */
+    void handleShrineEncounter();
+
+    /**
+// Handles laboratory encounters
+     */
+    void handleLaboratoryEncounter();
+
+    /**
+// Handles prison encounters
+     */
+    void handlePrisonEncounter();
+
+    /**
+// Handles graveyard encounters
+     */
+    void handleGraveyardEncounter();
+
+    /**
+// Handles armory encounters
+     */
+    void handleArmoryEncounter();
+    
+    /**
 // Updates player status effects
      */
     void updateStatusEffects();

@@ -189,6 +189,9 @@ public:
     // Material conversion (e.g., 10 wood -> 1 refined wood)
     bool convertMaterial(int fromId, int toId, int quantity);
     
+    // Interactive Menu
+    void runCraftingMenu();
+    
     // Save/Load
     std::string serializeCrafting() const;
     void deserializeCrafting(const std::string& data);
@@ -215,8 +218,8 @@ public:
     
     // Shopping
     void displayShop(const MerchantInventory& merchant);
-    bool buyItem(MerchantInventory& merchant, int itemId);
-    bool sellItem(MerchantInventory& merchant, int itemId);
+    bool buyItem(MerchantInventory& merchant, int slotIndex);
+    bool sellItem(MerchantInventory& merchant, int slotIndex);
     int calculateBuyPrice(const Item& item, const MerchantInventory& merchant) const;
     int calculateSellPrice(const Item& item, const MerchantInventory& merchant) const;
     
