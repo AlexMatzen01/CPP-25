@@ -254,21 +254,43 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies) {
             
             if (isPlayer) {
                 // Player turn
-                // Regen Mana
-                int manaRegen = 5;
+                // Regen Mana (more for casters)
+                int manaRegen = (playerRef.learnedSpells.size() > 0) ? 8 : 5;
                 if (playerRef.stats.currentMana < playerRef.stats.maxMana) {
                     playerRef.stats.currentMana += manaRegen;
                     if (playerRef.stats.currentMana > playerRef.stats.maxMana) 
                         playerRef.stats.currentMana = playerRef.stats.maxMana;
                 }
                 
-                // Reduce cooldowns
+                // Reduce cooldowns for skills
                 for(auto& skill : playerRef.skills) {
                     if(skill.currentCooldown > 0) skill.currentCooldown--;
+                }
+                
+                // Reduce cooldowns for spells
+                for(auto& spell : playerRef.learnedSpells) {
+                    if(spell.currentCooldown > 0) spell.currentCooldown--;
                 }
 
                 std::cout << "\n--- YOUR TURN ---\n";
                 int action = getPlayerAction();
+                
+                // Adjust case numbers based on whether magic option is available
+                int caseAttack = 1;
+                int caseSkills = 2;
+                int caseCastSpell = -1;  // Set if available
+                int caseUseItem = -1;
+                int caseFlee = -1;
+                
+                // Count available options
+                if (playerRef.learnedSpells.size() > 0) {
+                    caseCastSpell = 3;
+                    caseUseItem = 4;
+                    caseFlee = 5;
+                } else {
+                    caseUseItem = 3;
+                    caseFlee = 4;
+                }
                 
                 switch (action) {
                     case 1: {  // Attack
@@ -312,36 +334,73 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies) {
                         }
                         break;
                     }
-                    case 3: {  // Use item
-                        auto combatItems = getCombatItemIndices(playerRef);
-                        if (combatItems.empty()) {
-                            std::cout << "No usable items!\n";
-                        } else {
-                            std::cout << "\nUsable items:\n";
-                            for (size_t i = 0; i < combatItems.size(); ++i) {
-                                const Item& item = playerRef.inventory[combatItems[i]];
-                                std::cout << "  " << (i + 1) << ". " << item.name;
-                                if (item.healAmount > 0) {
-                                    std::cout << " (Heals " << item.healAmount << " HP)";
+                    case 3: {  // Cast Spell (if available)
+                        if (caseCastSpell == 3) {
+                            if (playerRef.learnedSpells.empty()) {
+                                std::cout << "You have no spells learned!\n";
+                            } else {
+                                std::cout << "\nAvailable Spells:\n";
+                                for (size_t i = 0; i < playerRef.learnedSpells.size(); ++i) {
+                                    const struct Spell& spell = playerRef.learnedSpells[i];
+                                    std::string color = (playerRef.stats.currentMana >= spell.manaCost && spell.currentCooldown <= 0) 
+                                                        ? Color::BRIGHT_CYAN : Color::RED;
+                                    std::cout << "  " << (i + 1) << ". " << colorize(spell.name, color)
+                                              << " (MP: " << spell.manaCost << ")";
+                                    if (spell.currentCooldown > 0) std::cout << " [CD: " << spell.currentCooldown << "]";
+                                    std::cout << "\n";
                                 }
-                                std::cout << "\n";
+                                std::cout << "  0. Cancel\n";
+                                
+                                int spellChoice = getValidatedInt("Choose spell: ", 0, static_cast<int>(playerRef.learnedSpells.size()));
+                                
+                                if (spellChoice > 0) {
+                                    int targetIdx = 0;
+                                    if (!playerRef.learnedSpells[spellChoice-1].isHeal && !playerRef.learnedSpells[spellChoice-1].isAOE) {
+                                        targetIdx = (enemies.size() == 1) ? 0 : selectTarget(enemies);
+                                    }
+                                    SpellResult result = castSpellInCombat(spellChoice - 1, &enemies[targetIdx]);
+                                    displayMessage(result.message);
+                                }
                             }
-                            std::cout << "  0. Cancel\n";
-                            
-                            int choice = getValidatedInt("Choose item: ", 0, 
-                                static_cast<int>(combatItems.size()));
-                            if (choice > 0) {
-                                useItemInCombat(combatItems[choice - 1]);
-                            }
+                            break;
                         }
-                        break;
+                        // Fall through if no spells
                     }
-                    case 4: {  // Flee
-                        if (attemptFlee(enemies)) {
-                            combatEnded = true;
-                            return false;
+                    case 4: {  // Use item or remaining action
+                        if (caseUseItem == action) {
+                            auto combatItems = getCombatItemIndices(playerRef);
+                            if (combatItems.empty()) {
+                                std::cout << "No usable items!\n";
+                            } else {
+                                std::cout << "\nUsable items:\n";
+                                for (size_t i = 0; i < combatItems.size(); ++i) {
+                                    const Item& item = playerRef.inventory[combatItems[i]];
+                                    std::cout << "  " << (i + 1) << ". " << item.name;
+                                    if (item.healAmount > 0) {
+                                        std::cout << " (Heals " << item.healAmount << " HP)";
+                                    }
+                                    std::cout << "\n";
+                                }
+                                std::cout << "  0. Cancel\n";
+                                
+                                int choice = getValidatedInt("Choose item: ", 0, 
+                                    static_cast<int>(combatItems.size()));
+                                if (choice > 0) {
+                                    useItemInCombat(combatItems[choice - 1]);
+                                }
+                            }
+                            break;
                         }
-                        break;
+                        // Fall through if not item action
+                    }
+                    case 5: {  // Flee
+                        if (caseFlee == action) {
+                            if (attemptFlee(enemies)) {
+                                combatEnded = true;
+                                return false;
+                            }
+                            break;
+                        }
                     }
                 }
             } else {
@@ -470,12 +529,17 @@ void CombatSystem::displayCombatStatus(const std::vector<Enemy>& enemies) const 
 }
 
 int CombatSystem::getPlayerAction() const {
-    std::vector<std::string> options = {
-        "Attack",
-        "Skills",
-        "Use Item",
-        "Attempt to Flee"
-    };
+    std::vector<std::string> options;
+    options.push_back("Attack");
+    options.push_back("Skills");
+    
+    // Add magic option if player can cast
+    if (playerRef.learnedSpells.size() > 0) {
+        options.push_back("Cast Spell");
+    }
+    
+    options.push_back("Use Item");
+    options.push_back("Attempt to Flee");
     
     return displayMenu("Choose your action", options);
 }
@@ -782,6 +846,141 @@ AbilityResult CombatSystem::usePlayerAbility(int abilityIndex, Enemy* target) {
         if (skill.effect.turnsRemaining > 0) {
             target->activeEffects.push_back(skill.effect);
             result.message += "\n" + target->name + " is affected by " + skill.effect.name + "!";
+        }
+    }
+    
+    log(result.message);
+    return result;
+}
+
+SpellResult CombatSystem::castSpellInCombat(int spellIndex, Enemy* target) {
+    SpellResult result;
+    
+    if (spellIndex < 0 || spellIndex >= static_cast<int>(playerRef.learnedSpells.size())) {
+        result.cast = false;
+        result.message = "Invalid spell!";
+        return result;
+    }
+    
+    Spell& spell = playerRef.learnedSpells[spellIndex];
+    
+    // Check Cooldown
+    if (spell.currentCooldown > 0) {
+        result.cast = false;
+        result.message = spell.name + " is on cooldown! (" + std::to_string(spell.currentCooldown) + " turns)";
+        return result;
+    }
+    
+    // Check Mana
+    if (playerRef.stats.currentMana < spell.manaCost) {
+        result.cast = false;
+        result.message = "Not enough Mana! Need " + std::to_string(spell.manaCost);
+        return result;
+    }
+    
+    // Consume Mana
+    playerRef.stats.currentMana -= spell.manaCost;
+    spell.currentCooldown = spell.cooldown;
+    
+    result.cast = true;
+    
+    // Healing spell
+    if (spell.isHeal) {
+        int healAmount = static_cast<int>(playerRef.stats.magicPower * spell.healMultiplier);
+        int oldHP = playerRef.stats.currentHP;
+        playerRef.stats.currentHP += healAmount;
+        if (playerRef.stats.currentHP > playerRef.stats.maxHP) {
+            playerRef.stats.currentHP = playerRef.stats.maxHP;
+        }
+        result.healingDone = playerRef.stats.currentHP - oldHP;
+        result.message = "You cast " + colorize(spell.name, Color::BRIGHT_CYAN) + 
+                         " and heal for " + colorize(std::to_string(result.healingDone), Color::GREEN) + " HP!";
+        log(result.message);
+        return result;
+    }
+    
+    // Offensive spell - need target
+    if (target == nullptr && !spell.isAOE) {
+        result.cast = false;
+        result.message = "No target selected!";
+        return result;
+    }
+    
+    // Single target offensive spell
+    if (!spell.isAOE) {
+        CombatStats pStats = getEffectivePlayerStats();
+        CombatStats eStats = getEffectiveEnemyStats(*target);
+        
+        int baseDamage = static_cast<int>(pStats.magicPower * spell.damageMultiplier);
+        int defense = eStats.magicResist;
+        
+        int damage = baseDamage - defense;
+        if (damage < 1) damage = 1;
+        
+        // Apply Crit
+        if (randomChance(pStats.critChance)) {
+            damage *= BASE_CRIT_MULTIPLIER;
+            result.message = "CRITICAL SPELL! ";
+        }
+        
+        target->stats.currentHP -= damage;
+        if (target->stats.currentHP < 0) target->stats.currentHP = 0;
+        
+        result.damageDealt = damage;
+        result.affectedTargets.push_back(0);
+        result.message += "You cast " + colorize(spell.name, Color::BRIGHT_CYAN) + " on " + 
+                          colorize(target->name, Color::RED) + " for " + 
+                          colorize(std::to_string(damage), Color::BRIGHT_RED) + " damage!";
+        
+        // Apply Dot
+        if (spell.dotDamage > 0) {
+            StatusEffect dotEffect;
+            dotEffect.name = spell.name + " Dot";
+            dotEffect.dotDamage = spell.dotDamage;
+            dotEffect.dotIsMagic = true;
+            dotEffect.turnsRemaining = spell.dotTurns;
+            dotEffect.isDebuff = true;
+            target->activeEffects.push_back(dotEffect);
+            result.message += "\n" + target->name + " is burning!";
+        }
+        
+        // Apply effect
+        if (spell.appliedEffect.turnsRemaining > 0) {
+            target->activeEffects.push_back(spell.appliedEffect);
+            result.message += "\n" + target->name + " is " + spell.appliedEffect.name + "!";
+        }
+    } else {
+        // AOE spell - hit all enemies
+        CombatStats pStats = getEffectivePlayerStats();
+        int baseDamage = static_cast<int>(pStats.magicPower * spell.damageMultiplier);
+        
+        result.message = "You cast " + colorize(spell.name, Color::BRIGHT_CYAN) + " on all enemies!\n";
+        
+        for (size_t i = 0; i < playerRef.currentCombatEnemies.size(); ++i) {
+            Enemy& enemy = playerRef.currentCombatEnemies[i];
+            if (enemy.stats.currentHP <= 0) continue;
+            
+            CombatStats eStats = getEffectiveEnemyStats(enemy);
+            int defense = eStats.magicResist;
+            
+            int damage = baseDamage - defense;
+            if (damage < 1) damage = 1;
+            
+            if (randomChance(pStats.critChance)) {
+                damage *= BASE_CRIT_MULTIPLIER;
+            }
+            
+            enemy.stats.currentHP -= damage;
+            if (enemy.stats.currentHP < 0) enemy.stats.currentHP = 0;
+            
+            result.damageDealt += damage;
+            result.affectedTargets.push_back(i);
+            result.message += "  " + enemy.name + " takes " + std::to_string(damage) + " damage!\n";
+            
+            // Apply effect to all
+            if (spell.appliedEffect.turnsRemaining > 0) {
+                enemy.activeEffects.push_back(spell.appliedEffect);
+            }
         }
     }
     

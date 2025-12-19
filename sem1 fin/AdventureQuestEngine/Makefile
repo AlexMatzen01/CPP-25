@@ -29,6 +29,7 @@ SOURCES = $(SRC_DIR)/Combat.cpp \
           $(SRC_DIR)/Companion.cpp \
           $(SRC_DIR)/Achievement.cpp \
           $(SRC_DIR)/UIEnhanced.cpp \
+          $(SRC_DIR)/Magic.cpp \
           main.cpp
 
 # Object files

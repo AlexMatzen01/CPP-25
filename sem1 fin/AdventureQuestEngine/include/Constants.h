@@ -52,20 +52,21 @@ constexpr int DEFAULT_MAP_WIDTH = 15;
 constexpr int DEFAULT_MAP_HEIGHT = 15;
 
 // Room generation probabilities (percentages)
-constexpr int TREASURE_ROOM_CHANCE = 8;
-constexpr int BOSS_ROOM_CHANCE = 10;
-constexpr int TRAP_ROOM_CHANCE = 8;
-constexpr int PUZZLE_ROOM_CHANCE = 6;
-constexpr int SECRET_ROOM_CHANCE = 8;
-constexpr int SAFE_ROOM_CHANCE = 6;
-constexpr int SHOP_ROOM_CHANCE = 5;
-constexpr int LIBRARY_ROOM_CHANCE = 5;
-constexpr int FORGE_ROOM_CHANCE = 12;  // Increased for 3 total forges on map
-constexpr int SHRINE_ROOM_CHANCE = 5;
-constexpr int LABORATORY_ROOM_CHANCE = 5;
+// Adjusted for balanced distribution across the dungeon
+constexpr int TREASURE_ROOM_CHANCE = 12;
+constexpr int BOSS_ROOM_CHANCE = 8;
+constexpr int TRAP_ROOM_CHANCE = 10;
+constexpr int PUZZLE_ROOM_CHANCE = 8;
+constexpr int SECRET_ROOM_CHANCE = 5;
+constexpr int SAFE_ROOM_CHANCE = 8;
+constexpr int SHOP_ROOM_CHANCE = 4;
+constexpr int LIBRARY_ROOM_CHANCE = 8;
+constexpr int FORGE_ROOM_CHANCE = 4;
+constexpr int SHRINE_ROOM_CHANCE = 7;
+constexpr int LABORATORY_ROOM_CHANCE = 7;
 constexpr int GRAVEYARD_ROOM_CHANCE = 6;
 constexpr int ARMORY_ROOM_CHANCE = 6;
-constexpr int PRISON_ROOM_CHANCE = 6;
+constexpr int PRISON_ROOM_CHANCE = 5;
 
 // Combat settings
 constexpr int BASE_CRIT_MULTIPLIER = 2;
@@ -295,56 +296,6 @@ const std::string PALADIN_ART = R"(
     | |   | |
     | |___| |
     |_______|
-      /   \
-     /     \
-)";
-
-const std::string RANGER_ART = R"(
-      /|
-     / |
-    /  |
-   /   |
-  /    |
- <-----|---->>
-  \    |
-   \   |
-    \  |
-     \ |
-      \|
-)";
-
-const std::string NECROMANCER_ART = R"(
-       ___
-      /   \
-     | X X |
-      \_^_/
-    ___| |___
-   /         \
-  |  /|   |\  |
-  |  \|___|/  |
-   \_________/
-)";
-
-const std::string BARBARIAN_ART = R"(
-      _____
-     /     \
-    |  O O  |
-     \  -  /
-    __| |__
-   /  \_/  \
-  |   | |   |
-  |   | |   |
-  |___|_|___|
-     |   |
-)";
-
-const std::string MONK_ART = R"(
-       ___
-      (   )
-       | |
-      /   \
-     |  Y  |
-      \___/
       /   \
      /     \
 )";

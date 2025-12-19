@@ -862,8 +862,8 @@ std::vector<Item> createDefaultItems() {
     sword.description = "A sturdy iron sword.";
     sword.type = ItemType::WEAPON;
     sword.rarity = ItemRarity::COMMON;
-    sword.attackBonus = 5;
-    sword.value = 30;
+    sword.attackBonus = 2;
+    sword.value = 20;
     items.push_back(sword);
     
     Item axe;
@@ -872,9 +872,9 @@ std::vector<Item> createDefaultItems() {
     axe.description = "A heavy battle axe.";
     axe.type = ItemType::WEAPON;
     axe.rarity = ItemRarity::UNCOMMON;
-    axe.attackBonus = 8;
-    axe.critBonus = 5;
-    axe.value = 60;
+    axe.attackBonus = 12;
+    axe.critBonus = 6;
+    axe.value = 85;
     items.push_back(axe);
     
     Item staff;
@@ -883,9 +883,9 @@ std::vector<Item> createDefaultItems() {
     staff.description = "A staff imbued with magic.";
     staff.type = ItemType::WEAPON;
     staff.rarity = ItemRarity::RARE;
-    staff.attackBonus = 6;
-    staff.critBonus = 15;
-    staff.value = 100;
+    staff.attackBonus = 11;
+    staff.critBonus = 14;
+    staff.value = 180;
     items.push_back(staff);
     
     Item legendSword;
@@ -894,9 +894,9 @@ std::vector<Item> createDefaultItems() {
     legendSword.description = "A legendary blade forged to slay dragons.";
     legendSword.type = ItemType::WEAPON;
     legendSword.rarity = ItemRarity::LEGENDARY;
-    legendSword.attackBonus = 15;
-    legendSword.critBonus = 8;
-    legendSword.value = 500;
+    legendSword.attackBonus = 22;
+    legendSword.critBonus = 18;
+    legendSword.value = 800;
     items.push_back(legendSword);
 
     Item frostmourne;
@@ -905,10 +905,9 @@ std::vector<Item> createDefaultItems() {
     frostmourne.description = "A cursed blade that steals the souls of its victims.";
     frostmourne.type = ItemType::WEAPON;
     frostmourne.rarity = ItemRarity::LEGENDARY;
-    // Tone down extremely high legendary stats for better balance
-    frostmourne.attackBonus = 30;
-    frostmourne.critBonus = 10;
-    frostmourne.value = 1500;
+    frostmourne.attackBonus = 25;
+    frostmourne.critBonus = 12;
+    frostmourne.value = 1200;
     items.push_back(frostmourne);
     
     // Armor
@@ -918,8 +917,8 @@ std::vector<Item> createDefaultItems() {
     leather.description = "Basic protective leather armor.";
     leather.type = ItemType::ARMOR;
     leather.rarity = ItemRarity::COMMON;
-    leather.defenseBonus = 3;
-    leather.value = 25;
+    leather.defenseBonus = 2;
+    leather.value = 20;
     items.push_back(leather);
     
     Item chainmail;
@@ -928,9 +927,9 @@ std::vector<Item> createDefaultItems() {
     chainmail.description = "Interlocking metal rings provide good protection.";
     chainmail.type = ItemType::ARMOR;
     chainmail.rarity = ItemRarity::UNCOMMON;
-    chainmail.defenseBonus = 6;
+    chainmail.defenseBonus = 7;
     chainmail.speedBonus = -1;
-    chainmail.value = 75;
+    chainmail.value = 95;
     items.push_back(chainmail);
     
     Item plate;
@@ -939,9 +938,9 @@ std::vector<Item> createDefaultItems() {
     plate.description = "Heavy plate armor with excellent protection.";
     plate.type = ItemType::ARMOR;
     plate.rarity = ItemRarity::RARE;
-    plate.defenseBonus = 12;
+    plate.defenseBonus = 13;
     plate.speedBonus = -3;
-    plate.value = 200;
+    plate.value = 240;
     items.push_back(plate);
 
     Item demonsteel;
@@ -950,10 +949,9 @@ std::vector<Item> createDefaultItems() {
     demonsteel.description = "Armor forged in the bowels of Hell, offering divine defense.";
     demonsteel.type = ItemType::ARMOR;
     demonsteel.rarity = ItemRarity::LEGENDARY;
-    // Reduce excessive legendary defense to keep encounters reasonable
-    demonsteel.defenseBonus = 14;
+    demonsteel.defenseBonus = 16;
     demonsteel.speedBonus = -2;
-    demonsteel.value = 500;
+    demonsteel.value = 700;
     items.push_back(demonsteel);
 
     Item dominationhelm;
@@ -962,31 +960,32 @@ std::vector<Item> createDefaultItems() {
     dominationhelm.description = "A helm that grants control over death itself.";
     dominationhelm.type = ItemType::ARMOR;
     dominationhelm.rarity = ItemRarity::LEGENDARY;
-    dominationhelm.defenseBonus = 15;
-    dominationhelm.critBonus = 5;
-    dominationhelm.value = 3000;
+    dominationhelm.defenseBonus = 18;
+    dominationhelm.critBonus = 6;
+    dominationhelm.value = 1800;
     items.push_back(dominationhelm);
     
     // Accessories
     Item ring;
     ring.id = 30;
     ring.name = "Ring of Swiftness";
-    ring.description = "Increases movement and attack speed.";
+    ring.description = "Enchanted with wind magic, grants increased movement speed and reflexes. Particularly favors quick-footed rogues and rangers.";
     ring.type = ItemType::ACCESSORY;
     ring.rarity = ItemRarity::UNCOMMON;
-    ring.speedBonus = 5;
-    ring.dodgeBonus = 5;
-    ring.value = 80;
+    ring.speedBonus = 6;
+    ring.dodgeBonus = 6;
+    ring.value = 90;
     items.push_back(ring);
     
     Item amulet;
     amulet.id = 31;
     amulet.name = "Amulet of Fortune";
-    amulet.description = "Increases critical hit chance.";
+    amulet.description = "Blessed by the gods of luck, this amulet dramatically increases the likelihood of critical strikes. Worn by legendary assassins.";
     amulet.type = ItemType::ACCESSORY;
     amulet.rarity = ItemRarity::RARE;
-    amulet.critBonus = 15;
-    amulet.value = 150;
+    amulet.critBonus = 18;
+    amulet.attackBonus = 2;
+    amulet.value = 180;
     items.push_back(amulet);
     
     // Keys
@@ -1056,8 +1055,8 @@ std::vector<Item> createDefaultItems() {
     bronzeSword.description = "A basic bronze blade for beginners.";
     bronzeSword.type = ItemType::WEAPON;
     bronzeSword.rarity = ItemRarity::COMMON;
-    bronzeSword.attackBonus = 3;
-    bronzeSword.value = 15;
+    bronzeSword.attackBonus = 1;
+    bronzeSword.value = 10;
     items.push_back(bronzeSword);
     
     Item steelSword;
@@ -1066,9 +1065,9 @@ std::vector<Item> createDefaultItems() {
     steelSword.description = "A well-crafted steel blade.";
     steelSword.type = ItemType::WEAPON;
     steelSword.rarity = ItemRarity::UNCOMMON;
-    steelSword.attackBonus = 10;
-    steelSword.critBonus = 3;
-    steelSword.value = 80;
+    steelSword.attackBonus = 12;
+    steelSword.critBonus = 4;
+    steelSword.value = 110;
     items.push_back(steelSword);
     
     Item mithrilSword;
@@ -1077,10 +1076,10 @@ std::vector<Item> createDefaultItems() {
     mithrilSword.description = "A lightweight sword of superior craftsmanship.";
     mithrilSword.type = ItemType::WEAPON;
     mithrilSword.rarity = ItemRarity::RARE;
-    mithrilSword.attackBonus = 15;
-    mithrilSword.critBonus = 8;
-    mithrilSword.speedBonus = 2;
-    mithrilSword.value = 250;
+    mithrilSword.attackBonus = 17;
+    mithrilSword.critBonus = 10;
+    mithrilSword.speedBonus = 3;
+    mithrilSword.value = 320;
     items.push_back(mithrilSword);
     
     Item flamingSword;
@@ -1089,9 +1088,9 @@ std::vector<Item> createDefaultItems() {
     flamingSword.description = "A blade wreathed in eternal flames.";
     flamingSword.type = ItemType::WEAPON;
     flamingSword.rarity = ItemRarity::EPIC;
-    flamingSword.attackBonus = 18;
-    flamingSword.critBonus = 12;
-    flamingSword.value = 400;
+    flamingSword.attackBonus = 20;
+    flamingSword.critBonus = 14;
+    flamingSword.value = 520;
     items.push_back(flamingSword);
     
     Item vorpalBlade;
@@ -1100,9 +1099,9 @@ std::vector<Item> createDefaultItems() {
     vorpalBlade.description = "One, two! One, two! And through and through...";
     vorpalBlade.type = ItemType::WEAPON;
     vorpalBlade.rarity = ItemRarity::LEGENDARY;
-    vorpalBlade.attackBonus = 18;
-    vorpalBlade.critBonus = 20;
-    vorpalBlade.value = 1200;
+    vorpalBlade.attackBonus = 23;
+    vorpalBlade.critBonus = 22;
+    vorpalBlade.value = 1500;
     items.push_back(vorpalBlade);
     
     // Daggers
@@ -1112,10 +1111,10 @@ std::vector<Item> createDefaultItems() {
     rustyDagger.description = "A worn dagger, still sharp enough.";
     rustyDagger.type = ItemType::WEAPON;
     rustyDagger.rarity = ItemRarity::COMMON;
-    rustyDagger.attackBonus = 2;
-    rustyDagger.critBonus = 5;
-    rustyDagger.speedBonus = 3;
-    rustyDagger.value = 8;
+    rustyDagger.attackBonus = 1;
+    rustyDagger.critBonus = 6;
+    rustyDagger.speedBonus = 2;
+    rustyDagger.value = 5;
     items.push_back(rustyDagger);
     
     Item poisonDagger;
@@ -1124,10 +1123,10 @@ std::vector<Item> createDefaultItems() {
     poisonDagger.description = "Coated with deadly venom.";
     poisonDagger.type = ItemType::WEAPON;
     poisonDagger.rarity = ItemRarity::UNCOMMON;
-    poisonDagger.attackBonus = 5;
-    poisonDagger.critBonus = 15;
-    poisonDagger.speedBonus = 4;
-    poisonDagger.value = 90;
+    poisonDagger.attackBonus = 6;
+    poisonDagger.critBonus = 16;
+    poisonDagger.speedBonus = 5;
+    poisonDagger.value = 105;
     items.push_back(poisonDagger);
     
     Item shadowDagger;
@@ -1136,11 +1135,11 @@ std::vector<Item> createDefaultItems() {
     shadowDagger.description = "Forged in darkness, strikes from nowhere.";
     shadowDagger.type = ItemType::WEAPON;
     shadowDagger.rarity = ItemRarity::RARE;
-    shadowDagger.attackBonus = 8;
-    shadowDagger.critBonus = 25;
-    shadowDagger.speedBonus = 6;
-    shadowDagger.dodgeBonus = 5;
-    shadowDagger.value = 200;
+    shadowDagger.attackBonus = 10;
+    shadowDagger.critBonus = 28;
+    shadowDagger.speedBonus = 7;
+    shadowDagger.dodgeBonus = 6;
+    shadowDagger.value = 280;
     items.push_back(shadowDagger);
     
     // Axes
@@ -1150,9 +1149,9 @@ std::vector<Item> createDefaultItems() {
     woodcutterAxe.description = "Better for trees than combat, but it'll do.";
     woodcutterAxe.type = ItemType::WEAPON;
     woodcutterAxe.rarity = ItemRarity::COMMON;
-    woodcutterAxe.attackBonus = 4;
-    woodcutterAxe.critBonus = 3;
-    woodcutterAxe.value = 20;
+    woodcutterAxe.attackBonus = 3;
+    woodcutterAxe.critBonus = 2;
+    woodcutterAxe.value = 15;
     items.push_back(woodcutterAxe);
     
     Item warAxe;
@@ -1161,10 +1160,10 @@ std::vector<Item> createDefaultItems() {
     warAxe.description = "A brutal weapon designed for war.";
     warAxe.type = ItemType::WEAPON;
     warAxe.rarity = ItemRarity::UNCOMMON;
-    warAxe.attackBonus = 12;
-    warAxe.critBonus = 8;
+    warAxe.attackBonus = 13;
+    warAxe.critBonus = 7;
     warAxe.speedBonus = -1;
-    warAxe.value = 95;
+    warAxe.value = 115;
     items.push_back(warAxe);
     
     Item greatAxe;
@@ -1173,10 +1172,10 @@ std::vector<Item> createDefaultItems() {
     greatAxe.description = "A massive axe that cleaves through armor.";
     greatAxe.type = ItemType::WEAPON;
     greatAxe.rarity = ItemRarity::RARE;
-    greatAxe.attackBonus = 20;
-    greatAxe.critBonus = 15;
+    greatAxe.attackBonus = 21;
+    greatAxe.critBonus = 16;
     greatAxe.speedBonus = -3;
-    greatAxe.value = 280;
+    greatAxe.value = 380;
     items.push_back(greatAxe);
     
     // Spears
@@ -1186,8 +1185,8 @@ std::vector<Item> createDefaultItems() {
     woodenSpear.description = "A simple spear with reach advantage.";
     woodenSpear.type = ItemType::WEAPON;
     woodenSpear.rarity = ItemRarity::COMMON;
-    woodenSpear.attackBonus = 4;
-    woodenSpear.value = 12;
+    woodenSpear.attackBonus = 3;
+    woodenSpear.value = 10;
     items.push_back(woodenSpear);
     
     Item pike;
@@ -1196,9 +1195,9 @@ std::vector<Item> createDefaultItems() {
     pike.description = "A long pike for keeping enemies at bay.";
     pike.type = ItemType::WEAPON;
     pike.rarity = ItemRarity::UNCOMMON;
-    pike.attackBonus = 9;
-    pike.defenseBonus = 2;
-    pike.value = 70;
+    pike.attackBonus = 11;
+    pike.defenseBonus = 3;
+    pike.value = 95;
     items.push_back(pike);
     
     Item halberd;
@@ -1207,10 +1206,10 @@ std::vector<Item> createDefaultItems() {
     halberd.description = "A versatile polearm weapon.";
     halberd.type = ItemType::WEAPON;
     halberd.rarity = ItemRarity::RARE;
-    halberd.attackBonus = 14;
-    halberd.defenseBonus = 4;
-    halberd.critBonus = 5;
-    halberd.value = 180;
+    halberd.attackBonus = 16;
+    halberd.defenseBonus = 5;
+    halberd.critBonus = 6;
+    halberd.value = 280;
     items.push_back(halberd);
     
     // Staves and Wands
@@ -1220,9 +1219,9 @@ std::vector<Item> createDefaultItems() {
     apprenticeStaff.description = "A basic staff for novice mages.";
     apprenticeStaff.type = ItemType::WEAPON;
     apprenticeStaff.rarity = ItemRarity::COMMON;
-    apprenticeStaff.attackBonus = 3;
+    apprenticeStaff.attackBonus = 2;
     apprenticeStaff.critBonus = 8;
-    apprenticeStaff.value = 25;
+    apprenticeStaff.value = 20;
     items.push_back(apprenticeStaff);
     
     Item fireStaff;
@@ -1231,9 +1230,9 @@ std::vector<Item> createDefaultItems() {
     fireStaff.description = "Channels the power of fire.";
     fireStaff.type = ItemType::WEAPON;
     fireStaff.rarity = ItemRarity::UNCOMMON;
-    fireStaff.attackBonus = 7;
-    fireStaff.critBonus = 12;
-    fireStaff.value = 110;
+    fireStaff.attackBonus = 9;
+    fireStaff.critBonus = 13;
+    fireStaff.value = 135;
     items.push_back(fireStaff);
     
     Item frostStaff;
@@ -1242,10 +1241,10 @@ std::vector<Item> createDefaultItems() {
     frostStaff.description = "Freezes enemies with icy magic.";
     frostStaff.type = ItemType::WEAPON;
     frostStaff.rarity = ItemRarity::RARE;
-    frostStaff.attackBonus = 10;
-    frostStaff.critBonus = 18;
-    frostStaff.speedBonus = 1;
-    frostStaff.value = 220;
+    frostStaff.attackBonus = 12;
+    frostStaff.critBonus = 16;
+    frostStaff.speedBonus = 2;
+    frostStaff.value = 300;
     items.push_back(frostStaff);
     
     Item archmagusStaff;
@@ -1254,10 +1253,10 @@ std::vector<Item> createDefaultItems() {
     archmagusStaff.description = "The staff of a grand wizard.";
     archmagusStaff.type = ItemType::WEAPON;
     archmagusStaff.rarity = ItemRarity::EPIC;
-    archmagusStaff.attackBonus = 12;
-    archmagusStaff.critBonus = 25;
-    archmagusStaff.defenseBonus = 3;
-    archmagusStaff.value = 450;
+    archmagusStaff.attackBonus = 14;
+    archmagusStaff.critBonus = 20;
+    archmagusStaff.defenseBonus = 4;
+    archmagusStaff.value = 600;
     items.push_back(archmagusStaff);
     
     // Armor Sets - Light
@@ -1287,8 +1286,8 @@ std::vector<Item> createDefaultItems() {
     hideArmor.description = "Tough animal hide offers good flexibility.";
     hideArmor.type = ItemType::ARMOR;
     hideArmor.rarity = ItemRarity::COMMON;
-    hideArmor.defenseBonus = 4;
-    hideArmor.value = 35;
+    hideArmor.defenseBonus = 3;
+    hideArmor.value = 28;
     items.push_back(hideArmor);
     
     Item studdedLeather;
@@ -1297,9 +1296,9 @@ std::vector<Item> createDefaultItems() {
     studdedLeather.description = "Leather reinforced with metal studs.";
     studdedLeather.type = ItemType::ARMOR;
     studdedLeather.rarity = ItemRarity::UNCOMMON;
-    studdedLeather.defenseBonus = 5;
-    studdedLeather.dodgeBonus = 3;
-    studdedLeather.value = 60;
+    studdedLeather.defenseBonus = 6;
+    studdedLeather.dodgeBonus = 4;
+    studdedLeather.value = 85;
     items.push_back(studdedLeather);
     
     // Armor Sets - Medium
@@ -1309,9 +1308,9 @@ std::vector<Item> createDefaultItems() {
     scalemail.description = "Overlapping metal scales.";
     scalemail.type = ItemType::ARMOR;
     scalemail.rarity = ItemRarity::UNCOMMON;
-    scalemail.defenseBonus = 7;
+    scalemail.defenseBonus = 8;
     scalemail.speedBonus = -1;
-    scalemail.value = 90;
+    scalemail.value = 120;
     items.push_back(scalemail);
     
     Item breastplate;
@@ -1320,9 +1319,9 @@ std::vector<Item> createDefaultItems() {
     breastplate.description = "Solid chest protection.";
     breastplate.type = ItemType::ARMOR;
     breastplate.rarity = ItemRarity::UNCOMMON;
-    breastplate.defenseBonus = 8;
+    breastplate.defenseBonus = 9;
     breastplate.speedBonus = -1;
-    breastplate.value = 110;
+    breastplate.value = 135;
     items.push_back(breastplate);
     
     Item halfPlate;
@@ -1331,9 +1330,9 @@ std::vector<Item> createDefaultItems() {
     halfPlate.description = "Partial plate armor with good mobility.";
     halfPlate.type = ItemType::ARMOR;
     halfPlate.rarity = ItemRarity::RARE;
-    halfPlate.defenseBonus = 10;
+    halfPlate.defenseBonus = 11;
     halfPlate.speedBonus = -2;
-    halfPlate.value = 180;
+    halfPlate.value = 220;
     items.push_back(halfPlate);
     
     // Armor Sets - Heavy
@@ -1343,9 +1342,9 @@ std::vector<Item> createDefaultItems() {
     bandedArmor.description = "Strips of metal bound together.";
     bandedArmor.type = ItemType::ARMOR;
     bandedArmor.rarity = ItemRarity::UNCOMMON;
-    bandedArmor.defenseBonus = 9;
+    bandedArmor.defenseBonus = 10;
     bandedArmor.speedBonus = -2;
-    bandedArmor.value = 125;
+    bandedArmor.value = 150;
     items.push_back(bandedArmor);
     
     Item splintArmor;
@@ -1354,9 +1353,9 @@ std::vector<Item> createDefaultItems() {
     splintArmor.description = "Vertical metal strips over leather.";
     splintArmor.type = ItemType::ARMOR;
     splintArmor.rarity = ItemRarity::RARE;
-    splintArmor.defenseBonus = 11;
+    splintArmor.defenseBonus = 12;
     splintArmor.speedBonus = -2;
-    splintArmor.value = 195;
+    splintArmor.value = 260;
     items.push_back(splintArmor);
     
     Item fullPlate;
@@ -1365,9 +1364,9 @@ std::vector<Item> createDefaultItems() {
     fullPlate.description = "Complete heavy plate protection.";
     fullPlate.type = ItemType::ARMOR;
     fullPlate.rarity = ItemRarity::RARE;
-    fullPlate.defenseBonus = 15;
+    fullPlate.defenseBonus = 14;
     fullPlate.speedBonus = -4;
-    fullPlate.value = 350;
+    fullPlate.value = 420;
     items.push_back(fullPlate);
     
     Item dragonscale;
@@ -1376,10 +1375,10 @@ std::vector<Item> createDefaultItems() {
     dragonscale.description = "Crafted from genuine dragon scales.";
     dragonscale.type = ItemType::ARMOR;
     dragonscale.rarity = ItemRarity::EPIC;
-    dragonscale.defenseBonus = 14;
-    dragonscale.dodgeBonus = 5;
+    dragonscale.defenseBonus = 17;
+    dragonscale.dodgeBonus = 6;
     dragonscale.speedBonus = -1;
-    dragonscale.value = 600;
+    dragonscale.value = 800;
     items.push_back(dragonscale);
     
     Item celestialArmor;
@@ -1388,10 +1387,10 @@ std::vector<Item> createDefaultItems() {
     celestialArmor.description = "Blessed armor from the heavens.";
     celestialArmor.type = ItemType::ARMOR;
     celestialArmor.rarity = ItemRarity::LEGENDARY;
-    celestialArmor.defenseBonus = 18;
-    celestialArmor.dodgeBonus = 8;
-    celestialArmor.speedBonus = 1;
-    celestialArmor.value = 1500;
+    celestialArmor.defenseBonus = 20;
+    celestialArmor.dodgeBonus = 10;
+    celestialArmor.speedBonus = 2;
+    celestialArmor.value = 2000;
     items.push_back(celestialArmor);
     
     // Shields
@@ -1401,8 +1400,8 @@ std::vector<Item> createDefaultItems() {
     woodenShield.description = "A basic wooden shield.";
     woodenShield.type = ItemType::ARMOR;
     woodenShield.rarity = ItemRarity::COMMON;
-    woodenShield.defenseBonus = 2;
-    woodenShield.value = 15;
+    woodenShield.defenseBonus = 1;
+    woodenShield.value = 12;
     items.push_back(woodenShield);
     
     Item steelShield;
@@ -1411,8 +1410,8 @@ std::vector<Item> createDefaultItems() {
     steelShield.description = "Sturdy metal shield.";
     steelShield.type = ItemType::ARMOR;
     steelShield.rarity = ItemRarity::UNCOMMON;
-    steelShield.defenseBonus = 4;
-    steelShield.value = 55;
+    steelShield.defenseBonus = 5;
+    steelShield.value = 75;
     items.push_back(steelShield);
     
     Item towerShield;
@@ -1421,75 +1420,140 @@ std::vector<Item> createDefaultItems() {
     towerShield.description = "Massive shield offering great protection.";
     towerShield.type = ItemType::ARMOR;
     towerShield.rarity = ItemRarity::RARE;
-    towerShield.defenseBonus = 7;
+    towerShield.defenseBonus = 8;
     towerShield.speedBonus = -2;
-    towerShield.value = 160;
+    towerShield.value = 200;
     items.push_back(towerShield);
     
     // More Accessories
     Item strengthRing;
     strengthRing.id = 130;
     strengthRing.name = "Ring of Might";
-    strengthRing.description = "Increases physical strength.";
+    strengthRing.description = "Forged in the furnaces of mountain dwarves, this ring channels raw physical strength into every strike. Warriors favor this precious artifact.";
     strengthRing.type = ItemType::ACCESSORY;
     strengthRing.rarity = ItemRarity::UNCOMMON;
-    strengthRing.attackBonus = 5;
-    strengthRing.value = 85;
+    strengthRing.attackBonus = 8;
+    strengthRing.critBonus = 3;
+    strengthRing.value = 110;
     items.push_back(strengthRing);
     
     Item defenseRing;
     defenseRing.id = 131;
     defenseRing.name = "Ring of Protection";
-    defenseRing.description = "Enhances defensive capabilities.";
+    defenseRing.description = "A protective charm that shields the wearer from harm. Crafted by ancient mages to withstand the fiercest blows.";
     defenseRing.type = ItemType::ACCESSORY;
     defenseRing.rarity = ItemRarity::UNCOMMON;
-    defenseRing.defenseBonus = 4;
-    defenseRing.value = 75;
+    defenseRing.defenseBonus = 6;
+    defenseRing.dodgeBonus = 2;
+    defenseRing.value = 100;
     items.push_back(defenseRing);
     
     Item vitalityAmulet;
     vitalityAmulet.id = 132;
     vitalityAmulet.name = "Amulet of Vitality";
-    vitalityAmulet.description = "Increases maximum health.";
+    vitalityAmulet.description = "Pulses with life energy, enhancing the wearer's constitution and resilience. Grants both defensive prowess and regenerative vitality.";
     vitalityAmulet.type = ItemType::ACCESSORY;
     vitalityAmulet.rarity = ItemRarity::RARE;
-    vitalityAmulet.defenseBonus = 3;
-    vitalityAmulet.value = 140;
+    vitalityAmulet.defenseBonus = 5;
+    vitalityAmulet.dodgeBonus = 3;
+    vitalityAmulet.value = 170;
     items.push_back(vitalityAmulet);
     
     Item shadowCloak;
     shadowCloak.id = 133;
     shadowCloak.name = "Cloak of Shadows";
-    shadowCloak.description = "Enhances stealth and evasion.";
+    shadowCloak.description = "Woven from the essence of twilight itself, this cloak allows the wearer to slip between shadows. Masters of stealth seek this treasure.";
     shadowCloak.type = ItemType::ACCESSORY;
     shadowCloak.rarity = ItemRarity::RARE;
-    shadowCloak.dodgeBonus = 12;
-    shadowCloak.speedBonus = 3;
-    shadowCloak.value = 175;
+    shadowCloak.dodgeBonus = 14;
+    shadowCloak.speedBonus = 4;
+    shadowCloak.defenseBonus = 2;
+    shadowCloak.value = 220;
     items.push_back(shadowCloak);
     
     Item dragonHeart;
     dragonHeart.id = 134;
     dragonHeart.name = "Heart of the Dragon";
-    dragonHeart.description = "Contains the essence of a slain dragon.";
+    dragonHeart.description = "The crystallized heart of an ancient dragon, containing immense power. Grants both offensive fury and defensive scales to the wielder.";
     dragonHeart.type = ItemType::ACCESSORY;
     dragonHeart.rarity = ItemRarity::EPIC;
-    dragonHeart.attackBonus = 8;
-    dragonHeart.defenseBonus = 6;
-    dragonHeart.critBonus = 10;
-    dragonHeart.value = 500;
+    dragonHeart.attackBonus = 12;
+    dragonHeart.defenseBonus = 8;
+    dragonHeart.critBonus = 12;
+    dragonHeart.speedBonus = -1;
+    dragonHeart.value = 650;
     items.push_back(dragonHeart);
     
     Item phoenixFeather;
     phoenixFeather.id = 135;
     phoenixFeather.name = "Phoenix Feather";
-    phoenixFeather.description = "Grants regenerative powers.";
+    phoenixFeather.description = "A legendary feather from the eternal phoenix, granting near-immortal evasion and rapid regeneration. The ultimate accessory of champions.";
     phoenixFeather.type = ItemType::ACCESSORY;
     phoenixFeather.rarity = ItemRarity::LEGENDARY;
-    phoenixFeather.defenseBonus = 5;
-    phoenixFeather.dodgeBonus = 15;
-    phoenixFeather.value = 800;
+    phoenixFeather.defenseBonus = 8;
+    phoenixFeather.dodgeBonus = 20;
+    phoenixFeather.speedBonus = 3;
+    phoenixFeather.value = 1200;
     items.push_back(phoenixFeather);
+    
+    // More specialized accessories
+    Item ironSkinRing;
+    ironSkinRing.id = 136;
+    ironSkinRing.name = "Ring of Iron Skin";
+    ironSkinRing.description = "Hardens the wearer's flesh to the strength of iron, providing exceptional defense at the cost of minor agility.";
+    ironSkinRing.type = ItemType::ACCESSORY;
+    ironSkinRing.rarity = ItemRarity::UNCOMMON;
+    ironSkinRing.defenseBonus = 7;
+    ironSkinRing.speedBonus = -2;
+    ironSkinRing.value = 95;
+    items.push_back(ironSkinRing);
+    
+    Item assassinRing;
+    assassinRing.id = 137;
+    assassinRing.name = "Assassin's Ring";
+    assassinRing.description = "The hidden weapon of shadow guilds. Amplifies critical damage and speed for the perfect strike.";
+    assassinRing.type = ItemType::ACCESSORY;
+    assassinRing.rarity = ItemRarity::RARE;
+    assassinRing.critBonus = 12;
+    assassinRing.speedBonus = 5;
+    assassinRing.attackBonus = 4;
+    assassinRing.value = 200;
+    items.push_back(assassinRing);
+    
+    Item wisdomAmulet;
+    wisdomAmulet.id = 138;
+    wisdomAmulet.name = "Amulet of Wisdom";
+    wisdomAmulet.description = "Blessed by ancient scholars, this amulet provides balanced enhancements to both offense and defense through tactical insight.";
+    wisdomAmulet.type = ItemType::ACCESSORY;
+    wisdomAmulet.rarity = ItemRarity::RARE;
+    wisdomAmulet.attackBonus = 5;
+    wisdomAmulet.defenseBonus = 5;
+    wisdomAmulet.critBonus = 5;
+    wisdomAmulet.value = 210;
+    items.push_back(wisdomAmulet);
+    
+    Item vileBlackHand;
+    vileBlackHand.id = 139;
+    vileBlackHand.name = "Amulet of the Vile Black Hand";
+    vileBlackHand.description = "An artifact of dark power, granting tremendous attack at the cost of reduced defense. For the bold and aggressive.";
+    vileBlackHand.type = ItemType::ACCESSORY;
+    vileBlackHand.rarity = ItemRarity::EPIC;
+    vileBlackHand.attackBonus = 15;
+    vileBlackHand.critBonus = 8;
+    vileBlackHand.defenseBonus = -3;
+    vileBlackHand.value = 550;
+    items.push_back(vileBlackHand);
+    
+    Item silverPendant;
+    silverPendant.id = 145;
+    silverPendant.name = "Silver Pendant of Healing";
+    silverPendant.description = "Infused with holy silver, this pendant provides steady defensive protection and minor healing properties.";
+    silverPendant.type = ItemType::ACCESSORY;
+    silverPendant.rarity = ItemRarity::UNCOMMON;
+    silverPendant.defenseBonus = 4;
+    silverPendant.dodgeBonus = 4;
+    silverPendant.value = 105;
+    items.push_back(silverPendant);
     
     // Advanced Consumables
     Item supremePotion;

@@ -560,14 +560,14 @@ void UIManager::playAttackAnimation(DamageElement element) {
         case DamageElement::FIRE:
             effect = colorize("*** FIREBALL ***", UIColor::BRIGHT_RED);
             break;
-        case DamageElement::ICE:
+        case DamageElement::FROST:
             effect = colorize("*** ICE SHARD ***", UIColor::BRIGHT_CYAN);
             break;
         case DamageElement::LIGHTNING:
             effect = colorize("*** LIGHTNING ***", UIColor::BRIGHT_YELLOW);
             break;
-        case DamageElement::POISON:
-            effect = colorize("*** POISON ***", UIColor::GREEN);
+        case DamageElement::ARCANE:
+            effect = colorize("*** ARCANE ***", UIColor::BRIGHT_MAGENTA);
             break;
         case DamageElement::HOLY:
             effect = colorize("*** HOLY LIGHT ***", UIColor::BRIGHT_WHITE);
@@ -629,12 +629,13 @@ void UIManager::playAnimation(const Animation& anim) {
 std::string UIManager::getElementIcon(DamageElement element) {
     switch (element) {
         case DamageElement::FIRE: return "[F]";
-        case DamageElement::ICE: return "[I]";
+        case DamageElement::FROST: return "[I]";
         case DamageElement::LIGHTNING: return "[L]";
-        case DamageElement::POISON: return "[P]";
+        case DamageElement::ARCANE: return "[A]";
         case DamageElement::HOLY: return "[H]";
         case DamageElement::SHADOW: return "[S]";
-        case DamageElement::ARCANE: return "[A]";
+        case DamageElement::PHYSICAL: return "[P]";
+        case DamageElement::NATURE: return "[N]";
         default: return "[?]";
     }
 }

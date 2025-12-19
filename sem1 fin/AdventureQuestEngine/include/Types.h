@@ -54,15 +54,15 @@ enum class RoomType {
     SECRET,       // Hidden room with rare items
     SAFE,         // Rest area, no enemies
     SHOP,         // Merchant/vendor room
-    LIBRARY,      // Knowledge/lore, stat boosts
-    FORGE,        // Equipment upgrades
-    SHRINE,       // Random blessings or curses
-    LABORATORY,   // Alchemy and potions
-    GRAVEYARD,    // Undead encounters
-    ARMORY,       // High chance of equipment
-    PRISON,       // Rescue NPCs
     ENTRANCE,     // Starting room
-    EXIT          // Final destination
+    EXIT,         // Final destination
+    LIBRARY,      // Library with rare knowledge items
+    FORGE,        // Forge for crafting weapons/armor
+    SHRINE,       // Shrine with blessing/buff effects
+    LABORATORY,   // Laboratory with alchemical items
+    GRAVEYARD,    // Graveyard with undead enemies
+    ARMORY,       // Armory with weapon/armor loot
+    PRISON        // Prison with hostile NPCs
 };
 
 /**
@@ -119,6 +119,20 @@ enum class CharacterClass {
     NECROMANCER,  // Low HP, high magic, life drain
     BARBARIAN,    // Very high HP and attack, low defense
     MONK          // High dodge, high speed, balanced stats
+};
+
+/**
+// Elemental damage types
+ */
+enum class DamageElement {
+    PHYSICAL,     // Physical damage
+    FIRE,         // Fire magic
+    FROST,        // Ice/Frost magic
+    LIGHTNING,    // Lightning magic
+    ARCANE,       // Pure magical energy
+    HOLY,         // Holy/divine magic
+    SHADOW,       // Dark/shadow magic
+    NATURE        // Nature/primal magic
 };
 
 /**
@@ -225,19 +239,21 @@ struct Item {
     bool isUsable;               // Can be used from inventory?
     bool isStackable;            // Can stack with same items?
     
-    // Advanced Crafting Fields
-    int upgradeLevel;            // +0 to +10
-    int durability;              // Current durability
-    int maxDurability;           // Maximum durability
-    bool isEnchanted;            // Has magical properties?
+    // Durability and upgrade system
+    int durability;              // Current durability points
+    int maxDurability;           // Maximum durability points
+    int upgradeLevel;            // Current upgrade level (0-10)
+    
+    // Enchantment system
+    bool isEnchanted;            // Has enchantment applied?
     std::string enchantmentName; // Name of the enchantment
     
     Item() : id(0), type(ItemType::CONSUMABLE), rarity(ItemRarity::COMMON),
              value(0), quantity(1), healAmount(0), attackBonus(0),
              defenseBonus(0), critBonus(0), dodgeBonus(0), speedBonus(0),
              duration(0), isEquipped(false), isUsable(true), isStackable(true),
-             upgradeLevel(0), durability(100), maxDurability(100),
-             isEnchanted(false), enchantmentName("") {}
+             durability(100), maxDurability(100), upgradeLevel(0),
+             isEnchanted(false) {}
 };
 
 // ---
@@ -462,6 +478,47 @@ struct Skill {
               damageMultiplier(1.0f), isMagical(false), isHeal(false) {}
 };
 
+/**
+// Magic school categories for spells
+ */
+enum class MagicSchool {
+    EVOCATION,      // Damage spells (fire, ice, lightning)
+    ABJURATION,     // Defense/protection spells
+    TRANSMUTATION,  // Buff/debuff spells
+    NECROMANCY,     // Life drain, curses, undead summon
+    CONJURATION,    // Summons, temporary effects
+    DIVINATION,     // Utility, reveal hidden
+    RESTORATION,    // Healing, purge status effects
+    ENCHANTMENT     // Mind control, manipulation
+};
+
+/**
+// Spell definition (magic ability for certain classes)
+ */
+struct Spell {
+    int id;                          // Unique spell ID
+    std::string name;                // Spell name
+    std::string description;         // What does it do
+    MagicSchool school;              // School of magic
+    int manaCost;                    // Mana required
+    int cooldown;                    // Turn cooldown
+    int currentCooldown;             // Current cooldown
+    int level;                       // Minimum level to learn
+    float damageMultiplier;          // For offensive spells: damage * (magic_power * multiplier)
+    float healMultiplier;            // For healing spells: heal * (magic_power * multiplier)
+    int dotDamage;                   // Damage over time per turn
+    int dotTurns;                    // How many turns DoT lasts
+    bool isAOE;                      // Affects all enemies?
+    bool isHeal;                     // Is healing spell?
+    bool isDebuff;                   // Is debuff spell?
+    StatusEffect appliedEffect;      // Effect to apply (if any)
+    std::vector<CharacterClass> restrictedClasses;  // Classes that can learn this spell
+    
+    Spell() : id(0), school(MagicSchool::EVOCATION), manaCost(0), cooldown(0), 
+              currentCooldown(0), level(1), damageMultiplier(1.0f), healMultiplier(1.0f), 
+              dotDamage(0), dotTurns(0), isAOE(false), isHeal(false), isDebuff(false) {}
+};
+
 // ---
 // PLAYER STRUCTURE
 // ---
@@ -480,6 +537,12 @@ struct Player {
     
     // Skills
     std::vector<Skill> skills;       // Available skills
+    
+    // Magic System (restricted to certain classes)
+    // Note: Spells are stored dynamically; use caution with empty vector
+    std::vector<Spell> learnedSpells;  // Known spells
+    int spellsLearned;               // Total spells learned
+    std::vector<struct Enemy> currentCombatEnemies;  // Enemies in current combat (for AOE spells)
     
     // Inventory
     std::vector<Item> inventory;     // All carried items

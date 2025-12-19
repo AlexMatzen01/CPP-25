@@ -317,7 +317,9 @@ bool CraftingSystem::upgradeItem(int itemId) {
             }
             
             playerRef.gold -= upgradeCost;
-            consumeMaterials({{1, (item.upgradeLevel + 1) * 2}});
+            std::map<int, int> materials_needed;
+            materials_needed[1] = (item.upgradeLevel + 1) * 2;
+            consumeMaterials(materials_needed);
             
             item.upgradeLevel++;
             if (item.type == ItemType::WEAPON) item.attackBonus += 5;

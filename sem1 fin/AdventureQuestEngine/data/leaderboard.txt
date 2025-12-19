@@ -1,8 +1,9 @@
 # Adventure Quest Engine Leaderboard
 # Format: name|score|turns|class|ending|date
 
-Alex|24727|55|Paladin|Victory|
 Luke|1475|16|Mage|Speedrun|
 Hays|1379|75|Rogue|Victory|
 Luke|1235|28|Mage|Speedrun|
 Gage|1090|42|Rogue|Speedrun|
+test|1065|95|Necromancer|Victory|
+Alex|1060|83|Barbarian|Victory|

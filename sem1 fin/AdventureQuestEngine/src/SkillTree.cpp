@@ -510,7 +510,7 @@ void SkillTreeManager::buildMageTree() {
     frostNova.ability.cooldown = 4;
     frostNova.ability.damageMultiplier = 1.5f;
     frostNova.ability.isMagical = true;
-    frostNova.element = DamageElement::ICE;
+    frostNova.element = DamageElement::FROST;
     talentTree.push_back(frostNova);
     
     // Tier 3 - Specialization
@@ -605,7 +605,7 @@ void SkillTreeManager::buildRogueTree() {
     venomousBlade.tier = 3;
     venomousBlade.maxRank = 3;
     venomousBlade.prerequisites = {201};
-    venomousBlade.element = DamageElement::POISON;
+    venomousBlade.element = DamageElement::SHADOW;
     talentTree.push_back(venomousBlade);
     
     // Tier 4 - Ultimate

@@ -25,16 +25,8 @@ enum class TalentType {
     SYNERGY          // Unlocks combo interactions
 };
 
-enum class DamageElement {
-    PHYSICAL,        // Normal damage
-    FIRE,            // Burn DoT
-    ICE,             // Slow/freeze
-    LIGHTNING,       // Chain to nearby enemies
-    POISON,          // Strong DoT
-    HOLY,            // Extra vs undead
-    SHADOW,          // Lifesteal
-    ARCANE           // Pure magic damage
-};
+// DamageElement is now defined in Types.h
+// enum class DamageElement moved to Types.h to avoid duplication
 
 struct TalentNode {
     int id;

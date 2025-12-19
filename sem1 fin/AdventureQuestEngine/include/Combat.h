@@ -36,6 +36,7 @@ enum class CombatAction {
     HEAVY_ATTACK,        // +50% damage, -20% accuracy
     QUICK_ATTACK,        // -30% damage, +20% accuracy, +10% dodge next turn
     USE_SKILL,
+    CAST_SPELL,          // NEW: Use magic spell
     USE_ITEM,
     DEFEND,              // +50% defense, +30% dodge this turn
     CHANGE_POSITION,
@@ -145,6 +146,20 @@ struct AbilityResult {
     StatusEffect appliedEffect;  // Any status effect applied
     
     AbilityResult() : used(false), success(false), damageDealt(0), healingDone(0) {}
+};
+
+/**
+// Result of casting a spell
+ */
+struct SpellResult {
+    bool cast;                       // Was spell successfully cast?
+    std::string message;             // Result message
+    int damageDealt;                 // Total damage (if offensive)
+    int healingDone;                 // Total healing (if healing)
+    std::vector<int> affectedTargets; // Indices of affected enemies (for AOE)
+    StatusEffect appliedEffect;      // Effect applied (if any)
+    
+    SpellResult() : cast(false), damageDealt(0), healingDone(0) {}
 };
 
 /**
@@ -398,6 +413,14 @@ private:
      * @return True if item was used
      */
     bool useItemInCombat(int itemIndex);
+    
+    /**
+// Cast a spell during combat
+     * @param spellIndex Index of spell to cast
+     * @param target Target enemy (if applicable)
+     * @return Spell result
+     */
+    SpellResult castSpellInCombat(int spellIndex, Enemy* target);
     
     //==========================================================================
     // PRIVATE METHODS - Loot

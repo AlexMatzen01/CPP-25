@@ -520,60 +520,46 @@ bool MapGenerator::generateMainPath() {
 }
 
 void MapGenerator::fillRemainingRooms() {
-    // Random fill with decreasing probability based on distance from path
-    int fillChance = 40;  // Base chance to fill empty cell
+    // Random fill with higher probability to create denser maps
+    int fillChance = 65;  // Base chance to fill empty cell (increased from 40 for more density)
     
-    // Collect forge candidates for strategic placement
-    std::vector<std::pair<int, int>> forgeCandidates;
+    // Collect all candidates first
+    std::vector<std::pair<int, int>> allCandidates;
     
     for (int y = 0; y < mapHeight; ++y) {
         for (int x = 0; x < mapWidth; ++x) {
             if (!hasRoom(x, y)) {
-                // Check if adjacent to existing room
                 std::vector<int> adjacent = getAdjacentRooms(x, y);
-                
                 if (!adjacent.empty()) {
-                    forgeCandidates.push_back({x, y});
-                    
-                    if (randomChance(fillChance)) {
-                        RoomType type = determineRoomType(x, y);
-                        
-                        // Force forge generation if we don't have 3 yet and have candidates
-                        if (type == RoomType::FORGE && forgeCount < 3) {
-                            type = RoomType::FORGE;
-                        } else if (forgeCount < 3 && randomChance(25)) {
-                            // Extra 25% chance to override with forge if we need more
-                            type = RoomType::FORGE;
-                        }
-                        
-                        Room room = createRoom(x, y, type);
-                        if (type == RoomType::FORGE) {
-                            forgeCount++;
-                        }
-                        rooms.push_back(room);
-                        grid[y][x] = room.id;
-                    }
+                    allCandidates.push_back({x, y});
                 }
             }
         }
     }
     
-    // If we still don't have 3 forges, place them explicitly in remaining candidates
-    while (forgeCount < 3 && !forgeCandidates.empty()) {
-        int idx = randomInt(0, static_cast<int>(forgeCandidates.size()) - 1);
-        auto [x, y] = forgeCandidates[idx];
-        
-        if (!hasRoom(x, y)) {
-            Room forge = createRoom(x, y, RoomType::FORGE);
-            forge.name = "Hidden Forge";
-            forge.description = "A mastercraft forge stands here, created by legendary smiths. "
-                               "You can upgrade and enchant your equipment at this location.";
-            rooms.push_back(forge);
-            grid[y][x] = forge.id;
-            forgeCount++;
+    // Shuffle candidates for better distribution
+    for (size_t i = 0; i < allCandidates.size(); ++i) {
+        size_t j = randomInt(0, static_cast<int>(allCandidates.size()) - 1);
+        std::swap(allCandidates[i], allCandidates[j]);
+    }
+    
+    // Fill rooms with balanced distribution
+    for (auto [x, y] : allCandidates) {
+        if (!hasRoom(x, y) && randomChance(fillChance)) {
+            RoomType type = determineRoomType(x, y);
+            
+            // Don't place extra forges if we already have enough
+            if (type == RoomType::FORGE && forgeCount >= 4) {
+                type = RoomType::NORMAL;
+            }
+            
+            Room room = createRoom(x, y, type);
+            if (type == RoomType::FORGE) {
+                forgeCount++;
+            }
+            rooms.push_back(room);
+            grid[y][x] = room.id;
         }
-        
-        forgeCandidates.erase(forgeCandidates.begin() + idx);
     }
 }
 
@@ -749,21 +735,59 @@ std::string MapGenerator::generateRoomDescription(RoomType type) {
 }
 
 RoomType MapGenerator::determineRoomType(int x, int y, bool isMainPath) {
-    // Random determination based on probabilities
+    // Count existing rooms to balance distribution
+    std::map<RoomType, int> roomCounts;
+    for (const Room& room : rooms) {
+        roomCounts[room.type]++;
+    }
+    
+    int totalRooms = static_cast<int>(rooms.size());
+    int maxRoomTypeCount = std::max(3, totalRooms / 8);  // Limit any one type to ~12.5% of rooms
+    
+    // Reduce chance for room types that are already well-represented
     int roll = randomInt(1, 100);
     int cumulative = 0;
     
     // Boss rooms should not be on the main path to keep them "on the side"
-    if (!isMainPath) {
+    if (!isMainPath && roomCounts[RoomType::BOSS] < 2) {
         cumulative += BOSS_ROOM_CHANCE;
         if (roll <= cumulative) return RoomType::BOSS;
     }
     
     cumulative += TREASURE_ROOM_CHANCE;
-    if (roll <= cumulative) return RoomType::TREASURE;
+    if (roomCounts[RoomType::TREASURE] < maxRoomTypeCount && roll <= cumulative) {
+        return RoomType::TREASURE;
+    }
     
-    cumulative += SHOP_ROOM_CHANCE;
-    if (roll <= cumulative) return RoomType::SHOP;
+    cumulative += LIBRARY_ROOM_CHANCE;
+    if (roomCounts[RoomType::LIBRARY] < maxRoomTypeCount && roll <= cumulative) {
+        return RoomType::LIBRARY;
+    }
+    
+    cumulative += GRAVEYARD_ROOM_CHANCE;
+    if (roomCounts[RoomType::GRAVEYARD] < maxRoomTypeCount && roll <= cumulative) {
+        return RoomType::GRAVEYARD;
+    }
+    
+    cumulative += ARMORY_ROOM_CHANCE;
+    if (roomCounts[RoomType::ARMORY] < maxRoomTypeCount && roll <= cumulative) {
+        return RoomType::ARMORY;
+    }
+    
+    cumulative += LABORATORY_ROOM_CHANCE;
+    if (roomCounts[RoomType::LABORATORY] < maxRoomTypeCount && roll <= cumulative) {
+        return RoomType::LABORATORY;
+    }
+    
+    cumulative += SHRINE_ROOM_CHANCE;
+    if (roomCounts[RoomType::SHRINE] < maxRoomTypeCount && roll <= cumulative) {
+        return RoomType::SHRINE;
+    }
+    
+    cumulative += PRISON_ROOM_CHANCE;
+    if (roomCounts[RoomType::PRISON] < maxRoomTypeCount && roll <= cumulative) {
+        return RoomType::PRISON;
+    }
     
     cumulative += TRAP_ROOM_CHANCE;
     if (roll <= cumulative) return RoomType::TRAP;
@@ -774,26 +798,8 @@ RoomType MapGenerator::determineRoomType(int x, int y, bool isMainPath) {
     cumulative += SAFE_ROOM_CHANCE;
     if (roll <= cumulative) return RoomType::SAFE;
     
-    cumulative += LIBRARY_ROOM_CHANCE;
-    if (roll <= cumulative) return RoomType::LIBRARY;
-    
-    cumulative += FORGE_ROOM_CHANCE;
-    if (roll <= cumulative) return RoomType::FORGE;
-    
-    cumulative += SHRINE_ROOM_CHANCE;
-    if (roll <= cumulative) return RoomType::SHRINE;
-    
-    cumulative += LABORATORY_ROOM_CHANCE;
-    if (roll <= cumulative) return RoomType::LABORATORY;
-    
-    cumulative += GRAVEYARD_ROOM_CHANCE;
-    if (roll <= cumulative) return RoomType::GRAVEYARD;
-    
-    cumulative += ARMORY_ROOM_CHANCE;
-    if (roll <= cumulative) return RoomType::ARMORY;
-    
-    cumulative += PRISON_ROOM_CHANCE;
-    if (roll <= cumulative) return RoomType::PRISON;
+    cumulative += SECRET_ROOM_CHANCE;
+    if (roll <= cumulative) return RoomType::SECRET;
     
     return RoomType::NORMAL;
 }
@@ -902,6 +908,35 @@ void MapGenerator::populateWithItems(Room& room, const std::vector<Item>& templa
         case RoomType::LABORATORY:
             if (randomChance(60)) itemCount = randomInt(1, 2);
             break;
+        case RoomType::SHRINE:
+            if (randomChance(50)) itemCount = 1;
+            break;
+        case RoomType::FORGE:
+            if (randomChance(40)) itemCount = 1;
+            break;
+        case RoomType::GRAVEYARD:
+            if (randomChance(35)) itemCount = 1;
+            break;
+        case RoomType::PRISON:
+            if (randomChance(25)) itemCount = 1;
+            break;
+        case RoomType::PUZZLE:
+            if (randomChance(50)) itemCount = 1;
+            break;
+        case RoomType::TRAP:
+            if (randomChance(20)) itemCount = 1;
+            break;
+        case RoomType::SAFE:
+            // Safe room - minimal items, focus on rest
+            if (randomChance(10)) itemCount = 1;
+            break;
+        case RoomType::SHOP:
+            // Shop handled by merchant system
+            break;
+        case RoomType::ENTRANCE:
+        case RoomType::EXIT:
+            // No items at entrance/exit
+            break;
         default:
             if (randomChance(15)) {
                 itemCount = 1;
@@ -915,6 +950,8 @@ void MapGenerator::populateWithItems(Room& room, const std::vector<Item>& templa
     if (room.type == RoomType::TREASURE) rarityBoost = 1;
     if (room.type == RoomType::ARMORY) rarityBoost = 1;
     if (room.type == RoomType::LIBRARY) rarityBoost = 1;
+    if (room.type == RoomType::SHRINE) rarityBoost = 1;
+    if (room.type == RoomType::GRAVEYARD) rarityBoost = 1;
     
     for (int i = 0; i < itemCount; ++i) {
         // Weight by rarity
