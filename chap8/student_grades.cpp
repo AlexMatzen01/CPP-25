@@ -3,7 +3,7 @@
 //! Licensed under the MIT license
 
 // Student Grades Management System
-// A comprehensive program for managing student grades with sorting, searching, and analysis
+// A program for managing student grades with sorting, searching, and analysis
 
 #include <iostream>
 #include <fstream>

@@ -39,4 +39,4 @@ $(EXE5): student_grades.cpp
 	$(CXX) $(CXXFLAGS) -o $(EXE5) student_grades.cpp
 
 clean:
-	rm -f $(EXE1) $(EXE2) $(EXE3) $(EXE4) $(EXE5)
+	rm -f $(EXE1) $(EXE2) $(EXE3) $(EXE4) $(EXE5) *.exe
