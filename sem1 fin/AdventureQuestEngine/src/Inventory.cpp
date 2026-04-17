@@ -7,12 +7,147 @@
 #include "../include/Inventory.h"
 #include "../include/Utils.h"
 #include "../include/Constants.h"
+#include "../include/UIEnhanced.h"
 #include <iostream>
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
 
 namespace AQE {
+
+namespace {
+
+bool isEquippableItem(const Item& item) {
+    return item.type == ItemType::WEAPON ||
+           item.type == ItemType::ARMOR ||
+           item.type == ItemType::ACCESSORY;
+}
+
+std::string getSlotLabel(ItemType type) {
+    switch (type) {
+        case ItemType::WEAPON:
+            return "weapon";
+        case ItemType::ARMOR:
+            return "armor";
+        case ItemType::ACCESSORY:
+            return "accessory";
+        default:
+            return "item";
+    }
+}
+
+const Item* findEquippedItemForType(const Player& player, ItemType type) {
+    for (const Item& item : player.inventory) {
+        if (item.type == type && item.isEquipped) {
+            return &item;
+        }
+    }
+
+    int equippedId = -1;
+    switch (type) {
+        case ItemType::WEAPON:
+            equippedId = player.equippedWeaponId;
+            break;
+        case ItemType::ARMOR:
+            equippedId = player.equippedArmorId;
+            break;
+        case ItemType::ACCESSORY:
+            equippedId = player.equippedAccessoryId;
+            break;
+        default:
+            break;
+    }
+
+    if (equippedId >= 0) {
+        for (const Item& item : player.inventory) {
+            if (item.id == equippedId) {
+                return &item;
+            }
+        }
+    }
+
+    return nullptr;
+}
+
+int getComparisonScore(const Item& item) {
+    return item.attackBonus * 2 + item.defenseBonus * 2 +
+           item.critBonus + item.dodgeBonus + item.speedBonus;
+}
+
+const Item* findBestUnequippedAlternative(const Player& player, ItemType type) {
+    const Item* bestItem = nullptr;
+    int bestScore = 0;
+    bool foundAny = false;
+
+    for (const Item& item : player.inventory) {
+        if (item.type != type || item.isEquipped) {
+            continue;
+        }
+
+        int score = getComparisonScore(item);
+        if (!foundAny || score > bestScore ||
+            (score == bestScore && item.value > bestItem->value)) {
+            bestItem = &item;
+            bestScore = score;
+            foundAny = true;
+        }
+    }
+
+    return bestItem;
+}
+
+std::string formatSignedDelta(int value, const std::string& suffix = "") {
+    std::ostringstream ss;
+    if (value > 0) {
+        ss << "+";
+    }
+    ss << value << suffix;
+    return ss.str();
+}
+
+std::string buildComparisonSummary(const Item& candidate, const Item& baseline) {
+    std::vector<std::string> parts;
+
+    auto addPart = [&](const std::string& label, int delta, const std::string& suffix = "") {
+        if (delta != 0) {
+            parts.push_back(label + " " + formatSignedDelta(delta, suffix));
+        }
+    };
+
+    addPart("ATK", candidate.attackBonus - baseline.attackBonus);
+    addPart("DEF", candidate.defenseBonus - baseline.defenseBonus);
+    addPart("CRIT", candidate.critBonus - baseline.critBonus, "%");
+    addPart("DODGE", candidate.dodgeBonus - baseline.dodgeBonus, "%");
+    addPart("SPD", candidate.speedBonus - baseline.speedBonus);
+    addPart("VAL", candidate.value - baseline.value);
+
+    if (parts.empty()) {
+        return "No stat changes";
+    }
+
+    std::ostringstream ss;
+    for (size_t i = 0; i < parts.size(); ++i) {
+        if (i > 0) {
+            ss << ", ";
+        }
+        ss << parts[i];
+    }
+    return ss.str();
+}
+
+const Item* getComparisonBaseline(const Player& player, const Item& item) {
+    if (!isEquippableItem(item)) {
+        return nullptr;
+    }
+
+    if (item.isEquipped) {
+        return findBestUnequippedAlternative(player, item.type);
+    }
+
+    return findEquippedItemForType(player, item.type);
+}
+
+}  // namespace
 
 // ---
 // CONSTRUCTOR
@@ -186,6 +321,23 @@ void InventorySystem::displayItems() const {
                   << std::setw(8) << item.value
                   << std::setw(5) << item.quantity
                   << "\n";
+
+        if (isEquippableItem(item)) {
+            const Item* baseline = getComparisonBaseline(playerRef, item);
+            std::cout << "  " << (item.isEquipped ? "Best alternative" : "Compare vs equipped") << ": ";
+
+            if (baseline != nullptr) {
+                if (item.isEquipped) {
+                    std::cout << baseline->name << " (" << buildComparisonSummary(*baseline, item) << ")";
+                } else {
+                    std::cout << baseline->name << " (" << buildComparisonSummary(item, *baseline) << ")";
+                }
+            } else {
+                std::cout << "No " << getSlotLabel(item.type) << " comparison available";
+            }
+
+            std::cout << "\n";
+        }
     }
     displaySeparator(70, '-');
     std::cout << "Total Value: " << calculateTotalValue() << " gold\n";
@@ -225,6 +377,23 @@ void InventorySystem::displayItemDetails(int itemIndex) const {
     
     if (item.type == ItemType::CONSUMABLE && item.healAmount > 0) {
         std::cout << "  Heals: " << item.healAmount << " HP\n";
+    }
+
+    if (isEquippableItem(item)) {
+        const Item* baseline = getComparisonBaseline(playerRef, item);
+
+        std::cout << "  Comparison:  ";
+        if (baseline != nullptr) {
+            if (item.isEquipped) {
+                std::cout << "Best alternative -> " << baseline->name << "\n";
+                UIManager::displayItemComparison(*baseline, item);
+            } else {
+                std::cout << "Vs equipped -> " << baseline->name << "\n";
+                UIManager::displayItemComparison(item, *baseline);
+            }
+        } else {
+            std::cout << "No " << getSlotLabel(item.type) << " comparison available\n";
+        }
     }
     
     displaySeparator(50, '-');
@@ -276,6 +445,62 @@ void InventorySystem::displayEquipment() const {
     std::cout << "    Crit:    +" << totalCrit << "%\n";
     std::cout << "    Dodge:   +" << totalDodge << "%\n";
     std::cout << "    Speed:   +" << totalSpd << "\n";
+
+    std::cout << "\n  Upgrade Comparisons:\n";
+
+    auto printComparison = [&](ItemType type, const std::string& label, const Item& equippedItem) {
+        const Item* alternative = findBestUnequippedAlternative(playerRef, type);
+        std::cout << "    " << label << ": ";
+
+        if (alternative != nullptr) {
+            std::cout << alternative->name << " (" << buildComparisonSummary(*alternative, equippedItem) << ")\n";
+        } else {
+            std::cout << "No better " << getSlotLabel(type) << " found\n";
+        }
+    };
+
+    bool hasWeapon = false;
+    bool hasArmor = false;
+    bool hasAccessory = false;
+
+    for (const Item& item : playerRef.inventory) {
+        if (!item.isEquipped) {
+            continue;
+        }
+
+        switch (item.type) {
+            case ItemType::WEAPON:
+                if (!hasWeapon) {
+                    printComparison(ItemType::WEAPON, "Weapon", item);
+                    hasWeapon = true;
+                }
+                break;
+            case ItemType::ARMOR:
+                if (!hasArmor) {
+                    printComparison(ItemType::ARMOR, "Armor", item);
+                    hasArmor = true;
+                }
+                break;
+            case ItemType::ACCESSORY:
+                if (!hasAccessory) {
+                    printComparison(ItemType::ACCESSORY, "Accessory", item);
+                    hasAccessory = true;
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    if (!hasWeapon) {
+        std::cout << "    Weapon: No weapon equipped\n";
+    }
+    if (!hasArmor) {
+        std::cout << "    Armor: No armor equipped\n";
+    }
+    if (!hasAccessory) {
+        std::cout << "    Accessory: No accessory equipped\n";
+    }
     
     displaySeparator(50, '=');
 }

@@ -872,17 +872,63 @@ void UIManager::typewriterEffect(const std::string& text, int delayMs) {
 }
 
 void UIManager::displayItemComparison(const Item& item1, const Item& item2) {
-    std::cout << "\n=== Item Comparison ===\n\n";
-    
-    std::cout << std::setw(20) << std::left << "Stat";
-    std::cout << std::setw(15) << item1.name;
-    std::cout << std::setw(15) << item2.name << "\n";
-    
-    drawDivider(50, '-');
-    
-    std::cout << std::setw(20) << "Value:";
-    std::cout << std::setw(15) << item1.value;
-    std::cout << std::setw(15) << item2.value << "\n";
+    auto shorten = [](const std::string& text, size_t maxLength) {
+        if (text.length() <= maxLength) {
+            return text;
+        }
+        if (maxLength <= 3) {
+            return text.substr(0, maxLength);
+        }
+        return text.substr(0, maxLength - 3) + "...";
+    };
+
+    auto formatValue = [](int value, const std::string& suffix = "") {
+        return std::to_string(value) + suffix;
+    };
+
+    auto formatDelta = [](int delta, const std::string& suffix = "") {
+        std::stringstream ss;
+        if (delta > 0) {
+            ss << "+";
+        }
+        ss << delta << suffix;
+        return ss.str();
+    };
+
+    auto colorDelta = [&](int delta) {
+        if (delta > 0) {
+            return UIColor::BRIGHT_GREEN;
+        }
+        if (delta < 0) {
+            return UIColor::BRIGHT_RED;
+        }
+        return UIColor::WHITE;
+    };
+
+    std::cout << "\n=== Gear Comparison ===\n\n";
+
+    std::cout << std::left << std::setw(18) << "Stat"
+              << std::setw(18) << shorten(item1.name, 17)
+              << std::setw(18) << shorten(item2.name, 17)
+              << "Delta\n";
+
+    drawDivider(72, '-');
+
+    auto printRow = [&](const std::string& label, int leftValue, int rightValue, const std::string& suffix = "") {
+        const int delta = leftValue - rightValue;
+        std::cout << std::left << std::setw(18) << label
+                  << std::setw(18) << formatValue(leftValue, suffix)
+                  << std::setw(18) << formatValue(rightValue, suffix)
+                  << colorize(formatDelta(delta, suffix), colorDelta(delta)) << "\n";
+    };
+
+    printRow("Value", item1.value, item2.value, "g");
+    printRow("Attack", item1.attackBonus, item2.attackBonus);
+    printRow("Defense", item1.defenseBonus, item2.defenseBonus);
+    printRow("Crit", item1.critBonus, item2.critBonus, "%");
+    printRow("Dodge", item1.dodgeBonus, item2.dodgeBonus, "%");
+    printRow("Speed", item1.speedBonus, item2.speedBonus);
+    printRow("Upgrade", item1.upgradeLevel, item2.upgradeLevel);
 }
 
 void UIManager::displaySkillTree(const std::vector<std::string>& nodes) {

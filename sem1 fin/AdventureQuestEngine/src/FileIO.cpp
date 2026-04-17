@@ -184,6 +184,15 @@ std::vector<Item> FileIO::loadItems(const std::string& filename) {
     if (inItem) {
         items.push_back(current);
     }
+
+    for (Item& item : items) {
+        if (item.type == ItemType::WEAPON ||
+            item.type == ItemType::ARMOR ||
+            item.type == ItemType::ACCESSORY) {
+            item.isUsable = false;
+            item.isStackable = false;
+        }
+    }
     
     file.close();
     return items;
@@ -1643,6 +1652,15 @@ std::vector<Item> createDefaultItems() {
     invisPotion.value = 150;
     invisPotion.isUsable = true;
     items.push_back(invisPotion);
+
+    for (Item& item : items) {
+        if (item.type == ItemType::WEAPON ||
+            item.type == ItemType::ARMOR ||
+            item.type == ItemType::ACCESSORY) {
+            item.isUsable = false;
+            item.isStackable = false;
+        }
+    }
     
     return items;
 }

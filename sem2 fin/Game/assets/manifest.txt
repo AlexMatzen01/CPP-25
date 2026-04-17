@@ -1,0 +1,17 @@
+# Adventure Quest 3D asset manifest
+# Format:
+# version|<manifest-version>
+# texture|<asset-id>|<local-path-relative-to-assets>|<url1,url2,...>|<sha256-or-none>|<attribution>
+
+version|2026.04.14-procedural-v1
+
+texture|floor_forest|cache/floor_forest.png|https://raw.githubusercontent.com/raysan5/raylib/master/examples/textures/resources/patterns.png|none|raylib examples texture by raysan5 (zlib/libpng)
+texture|floor_stone|cache/floor_stone.png|https://raw.githubusercontent.com/raysan5/raylib/master/examples/textures/resources/road.png|none|raylib examples texture by raysan5 (zlib/libpng)
+texture|floor_ember|cache/floor_ember.png|https://raw.githubusercontent.com/raysan5/raylib/master/examples/textures/resources/cyberpunk_street_foreground.png|none|raylib examples texture by raysan5 (zlib/libpng)
+texture|floor_obsidian|cache/floor_obsidian.png|https://raw.githubusercontent.com/raysan5/raylib/master/examples/textures/resources/cat.png|none|raylib examples texture by raysan5 (zlib/libpng)
+texture|floor_arcane|cache/floor_arcane.png|https://raw.githubusercontent.com/raysan5/raylib/master/examples/textures/resources/raylib_logo.png|none|raylib examples texture by raysan5 (zlib/libpng)
+texture|wall_forest|cache/wall_forest.png|https://raw.githubusercontent.com/raysan5/raylib/master/examples/textures/resources/patterns.png|none|raylib examples texture by raysan5 (zlib/libpng)
+texture|wall_stone|cache/wall_stone.png|https://raw.githubusercontent.com/raysan5/raylib/master/examples/textures/resources/road.png|none|raylib examples texture by raysan5 (zlib/libpng)
+texture|wall_ember|cache/wall_ember.png|https://raw.githubusercontent.com/raysan5/raylib/master/examples/textures/resources/cyberpunk_street_midground.png|none|raylib examples texture by raysan5 (zlib/libpng)
+texture|wall_obsidian|cache/wall_obsidian.png|https://raw.githubusercontent.com/raysan5/raylib/master/examples/textures/resources/cyberpunk_street_background.png|none|raylib examples texture by raysan5 (zlib/libpng)
+texture|wall_arcane|cache/wall_arcane.png|https://raw.githubusercontent.com/raysan5/raylib/master/examples/textures/resources/fudesumi.png|none|raylib examples texture by raysan5 (zlib/libpng)

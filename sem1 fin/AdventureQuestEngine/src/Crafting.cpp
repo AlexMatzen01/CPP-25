@@ -14,6 +14,114 @@
 
 namespace AQE {
 
+namespace {
+
+void applyAccessoryStats(Item& item) {
+    if (item.type != ItemType::ACCESSORY) {
+        return;
+    }
+
+    item.isUsable = false;
+    item.isStackable = false;
+
+    const std::string lowerName = toLower(item.name);
+
+    if (lowerName.find("swiftness") != std::string::npos) {
+        item.speedBonus = 6;
+        item.dodgeBonus = 6;
+        return;
+    }
+
+    if (lowerName.find("fortune") != std::string::npos) {
+        item.critBonus = 18;
+        item.attackBonus = 2;
+        return;
+    }
+
+    if (lowerName.find("might") != std::string::npos) {
+        item.attackBonus = 8;
+        item.critBonus = 3;
+        return;
+    }
+
+    if (lowerName.find("protection") != std::string::npos) {
+        item.defenseBonus = 6;
+        item.dodgeBonus = 2;
+        return;
+    }
+
+    if (lowerName.find("vitality") != std::string::npos) {
+        item.defenseBonus = 5;
+        item.dodgeBonus = 3;
+        return;
+    }
+
+    if (lowerName.find("shadows") != std::string::npos) {
+        item.dodgeBonus = 14;
+        item.speedBonus = 4;
+        item.defenseBonus = 2;
+        return;
+    }
+
+    if (lowerName.find("dragon") != std::string::npos) {
+        item.attackBonus = 12;
+        item.defenseBonus = 8;
+        item.critBonus = 12;
+        item.speedBonus = -1;
+        return;
+    }
+
+    if (lowerName.find("iron skin") != std::string::npos) {
+        item.defenseBonus = 7;
+        item.speedBonus = -2;
+        return;
+    }
+
+    if (lowerName.find("assassin") != std::string::npos) {
+        item.attackBonus = 4;
+        item.critBonus = 12;
+        item.speedBonus = 5;
+        return;
+    }
+
+    if (lowerName.find("wisdom") != std::string::npos) {
+        item.attackBonus = 5;
+        item.defenseBonus = 5;
+        item.critBonus = 5;
+        return;
+    }
+
+    if (lowerName.find("pendant") != std::string::npos ||
+        lowerName.find("necklace") != std::string::npos) {
+        item.defenseBonus = 4;
+        item.dodgeBonus = 4;
+        item.critBonus = 2;
+        return;
+    }
+
+    if (lowerName.find("amulet") != std::string::npos ||
+        lowerName.find("charm") != std::string::npos ||
+        lowerName.find("talisman") != std::string::npos) {
+        item.defenseBonus = 5;
+        item.dodgeBonus = 3;
+        item.critBonus = 2;
+        return;
+    }
+
+    if (lowerName.find("cloak") != std::string::npos) {
+        item.dodgeBonus = 10;
+        item.speedBonus = 5;
+        item.defenseBonus = 2;
+        return;
+    }
+
+    item.defenseBonus = 3;
+    item.critBonus = 2;
+    item.dodgeBonus = 2;
+}
+
+}  // namespace
+
 // ---
 // CraftingSystem Implementation
 // ---
@@ -182,7 +290,7 @@ bool CraftingSystem::craftItem(int recipeId) {
     craftedItem.durability = 100;
     craftedItem.maxDurability = 100;
     
-    // Set stats based on recipe ID ranges (simple heuristic for this demo)
+    // Set stats based on recipe family (keeps accessory effects meaningful)
     if (recipeId >= 1000 && recipeId < 1100) { // Weapons
         craftedItem.type = ItemType::WEAPON;
         craftedItem.isUsable = false;
@@ -195,10 +303,7 @@ bool CraftingSystem::craftItem(int recipeId) {
         craftedItem.defenseBonus = 3 + (recipeId % 10) * 4;
     } else if (recipeId >= 1200 && recipeId < 1300) { // Accessories
         craftedItem.type = ItemType::ACCESSORY;
-        craftedItem.isUsable = false;
-        craftedItem.isStackable = false;
-        craftedItem.defenseBonus = 2 + (recipeId % 5) * 2;
-        craftedItem.critBonus = (recipeId % 3) * 2;
+        applyAccessoryStats(craftedItem);
     } else { // Consumables
         craftedItem.type = ItemType::CONSUMABLE;
         craftedItem.isUsable = true;
@@ -2084,8 +2189,10 @@ MerchantInventory MerchantSystem::createEnchanter(int level) {
     Item ring, amulet;
     ring.id = 30; ring.name = "Ring of Swiftness"; ring.value = 80;
     ring.type = ItemType::ACCESSORY; ring.rarity = ItemRarity::UNCOMMON;
+    applyAccessoryStats(ring);
     amulet.id = 31; amulet.name = "Amulet of Fortune"; amulet.value = 150;
     amulet.type = ItemType::ACCESSORY; amulet.rarity = ItemRarity::RARE;
+    applyAccessoryStats(amulet);
     
     if (level >= 2) shop.items.push_back(ring);
     if (level >= 4) shop.items.push_back(amulet);
@@ -2135,6 +2242,7 @@ MerchantInventory MerchantSystem::createTravelingMerchant(int level) {
     weapon.type = ItemType::WEAPON; weapon.rarity = ItemRarity::RARE;
     accessory.id = 31; accessory.name = "Amulet of Fortune"; accessory.value = 150;
     accessory.type = ItemType::ACCESSORY; accessory.rarity = ItemRarity::RARE;
+    applyAccessoryStats(accessory);
     
     shop.items.push_back(potion);
     shop.items.push_back(weapon);
