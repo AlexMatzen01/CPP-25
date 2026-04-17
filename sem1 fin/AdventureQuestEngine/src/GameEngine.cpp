@@ -12,6 +12,7 @@
 #include <iomanip>
 #include <sstream>
 #include <algorithm>
+#include <chrono>
 #include <ctime>
 #include <cmath>
 #include <cctype>
@@ -166,6 +167,13 @@ void GameEngine::startNewGame() {
     
     // Generate dungeon
     std::cout << "\nGenerating dungeon...\n";
+    m_gameState.randomSeed = static_cast<unsigned int>(
+        std::chrono::high_resolution_clock::now().time_since_epoch().count());
+    if (m_gameState.randomSeed == 0) {
+        m_gameState.randomSeed = 1;
+    }
+    initializeRandom(m_gameState.randomSeed);
+
     if (!m_mapGenerator.generateMap(m_gameState)) {
         std::cout << "ERROR: Failed to generate map!\n";
         waitForEnter();
@@ -1244,6 +1252,11 @@ void GameEngine::interactWithRoom() {
         return;
     }
 
+    if (room.type == RoomType::SHOP) {
+        handleShopEncounter();
+        return;
+    }
+
     if (room.type == RoomType::LIBRARY) {
         handleLibraryEncounter();
         return;
@@ -1914,21 +1927,18 @@ bool GameEngine::loadGame(const std::string& filename) {
         return false;
     }
 
-    // Saved files may only persist room status flags, so rebuild the dungeon layout
-    // when no rooms are currently present (e.g., loading from main menu after reboot).
-    if (m_gameState.dungeon.empty()) {
+    if (!m_gameState.dungeon.empty()) {
         const int width = (m_gameState.mapWidth > 0) ? m_gameState.mapWidth : DEFAULT_MAP_WIDTH;
         const int height = (m_gameState.mapHeight > 0) ? m_gameState.mapHeight : DEFAULT_MAP_HEIGHT;
 
         m_mapGenerator = MapGenerator(width, height);
+        m_mapGenerator.syncFromDungeon(m_gameState.dungeon);
 
-        if (m_gameState.randomSeed != 0) {
-            initializeRandom(m_gameState.randomSeed);
-        }
-
-        if (!m_mapGenerator.generateMap(m_gameState)) {
-            std::cerr << "Error: Failed to rebuild dungeon while loading save.\n";
-            return false;
+        if (m_gameState.roomMap.size() != m_gameState.dungeon.size()) {
+            m_gameState.roomMap.clear();
+            for (Room& room : m_gameState.dungeon) {
+                m_gameState.roomMap[room.id] = &room;
+            }
         }
     }
 

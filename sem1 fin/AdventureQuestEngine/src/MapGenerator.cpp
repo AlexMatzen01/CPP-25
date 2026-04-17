@@ -117,6 +117,32 @@ const std::vector<std::vector<int>>& MapGenerator::getGrid() const {
     return grid;
 }
 
+void MapGenerator::syncFromDungeon(const std::vector<Room>& dungeon) {
+    rooms = dungeon;
+
+    grid.assign(mapHeight, std::vector<int>(mapWidth, -1));
+    entranceId = -1;
+    exitId = -1;
+    nextRoomId = 0;
+    forgeCount = 0;
+
+    for (const Room& room : rooms) {
+        if (isValidPosition(room.x, room.y)) {
+            grid[room.y][room.x] = room.id;
+        }
+
+        nextRoomId = std::max(nextRoomId, room.id + 1);
+
+        if (room.type == RoomType::ENTRANCE) {
+            entranceId = room.id;
+        } else if (room.type == RoomType::EXIT) {
+            exitId = room.id;
+        } else if (room.type == RoomType::FORGE) {
+            ++forgeCount;
+        }
+    }
+}
+
 void MapGenerator::printMap(int currentRoomId) const {
     std::cout << "\n";
     displaySeparator(80, '=');

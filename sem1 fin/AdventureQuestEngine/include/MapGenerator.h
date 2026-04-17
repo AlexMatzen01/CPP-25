@@ -63,6 +63,12 @@ public:
      * @return 2D grid of room IDs
      */
     const std::vector<std::vector<int>>& getGrid() const;
+
+    /**
+// Sync the generator's internal map state from an existing dungeon
+     * @param dungeon Loaded dungeon rooms
+     */
+    void syncFromDungeon(const std::vector<Room>& dungeon);
     
     /**
 // Print ASCII representation of the map

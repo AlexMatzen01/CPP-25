@@ -5,6 +5,7 @@
 // File I/O implementation
 
 #include "../include/FileIO.h"
+#include "../include/MapGenerator.h"
 #include "../include/Utils.h"
 #include "../include/Constants.h"
 #include <iostream>
@@ -420,6 +421,15 @@ bool FileIO::loadGame(GameState& gameState, const std::string& filename) {
     }
     
     Player& p = gameState.player;
+    struct LoadedRoomState {
+        int roomId;
+        bool isExplored;
+        bool isCleared;
+        bool isTrapActive;
+        bool puzzleSolved;
+    };
+
+    std::vector<LoadedRoomState> loadedRoomStates;
     std::string line;
     std::string section;
     
@@ -489,22 +499,59 @@ bool FileIO::loadGame(GameState& gameState, const std::string& filename) {
             if (key == "room") {
                 std::vector<std::string> parts = split(value, ',');
                 if (parts.size() >= 5) {
-                    int roomId = std::stoi(parts[0]);
-                    for (Room& room : gameState.dungeon) {
-                        if (room.id == roomId) {
-                            room.isExplored = (parts[1] == "1");
-                            room.isCleared = (parts[2] == "1");
-                            room.isTrapActive = (parts[3] == "1");
-                            room.puzzleSolved = (parts[4] == "1");
-                            break;
-                        }
-                    }
+                    loadedRoomStates.push_back({
+                        std::stoi(parts[0]),
+                        parts[1] == "1",
+                        parts[2] == "1",
+                        parts[3] == "1",
+                        parts[4] == "1"
+                    });
                 }
             }
         }
     }
     
     file.close();
+
+    if (gameState.randomSeed == 0) {
+        gameState.randomSeed = static_cast<unsigned int>(
+            std::chrono::high_resolution_clock::now().time_since_epoch().count());
+        if (gameState.randomSeed == 0) {
+            gameState.randomSeed = 1;
+        }
+    }
+
+    if (gameState.dungeon.empty()) {
+        const int width = (gameState.mapWidth > 0) ? gameState.mapWidth : 8;
+        const int height = (gameState.mapHeight > 0) ? gameState.mapHeight : 8;
+
+        initRandom(gameState.randomSeed);
+
+        MapGenerator generator(width, height);
+        if (!generator.generateMap(gameState)) {
+            std::cerr << "Error: Failed to rebuild dungeon while loading save.\n";
+            return false;
+        }
+    }
+
+    if (!loadedRoomStates.empty()) {
+        for (Room& room : gameState.dungeon) {
+            for (const LoadedRoomState& savedRoom : loadedRoomStates) {
+                if (room.id == savedRoom.roomId) {
+                    room.isExplored = savedRoom.isExplored;
+                    room.isCleared = savedRoom.isCleared;
+                    room.isTrapActive = savedRoom.isTrapActive;
+                    room.puzzleSolved = savedRoom.puzzleSolved;
+                    break;
+                }
+            }
+        }
+    }
+
+    gameState.roomMap.clear();
+    for (Room& room : gameState.dungeon) {
+        gameState.roomMap[room.id] = &room;
+    }
     
     p.isAlive = (p.stats.currentHP > 0);
     
