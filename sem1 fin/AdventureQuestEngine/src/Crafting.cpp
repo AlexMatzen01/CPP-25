@@ -5,6 +5,7 @@
 // Crafting system implementation (partially implemented - many features scrapped)
 
 #include "../include/Crafting.h"
+#include "../include/Utils.h"
 #include <iostream>
 #include <sstream>
 #include <algorithm>
@@ -23,15 +24,18 @@ CraftingSystem::CraftingSystem(Player& player) : playerRef(player) {
 }
 
 void CraftingSystem::addMaterial(int materialId, int quantity) {
-    if (materials.find(materialId) != materials.end()) {
-        materials[materialId].quantity += quantity;
+    auto it = materials.find(materialId);
+    if (it != materials.end()) {
+        it->second.quantity += quantity;
+        std::cout << "Collected " << quantity << " x " << it->second.name << ".\n";
     } else {
         CraftingMaterial mat;
         mat.id = materialId;
+        mat.name = "Unknown Material";
         mat.quantity = quantity;
         materials[materialId] = mat;
+        std::cout << "Collected " << quantity << " crafting materials.\n";
     }
-    std::cout << "Added " << quantity << " materials.\n";
 }
 
 int CraftingSystem::getMaterialCount(int materialId) const {
@@ -108,6 +112,25 @@ void CraftingSystem::displayDiscoveredRecipes() const {
             std::cout << "  Station: " << recipe.craftingStation;
             std::cout << " | Level: " << recipe.requiredLevel;
             std::cout << " | Gold: " << recipe.requiredGold << "\n";
+            std::cout << "  Required Materials: ";
+            bool first = true;
+            for (const auto& req : recipe.requiredMaterials) {
+                if (!first) {
+                    std::cout << ", ";
+                }
+                const auto matIt = materials.find(req.first);
+                if (matIt != materials.end()) {
+                    std::cout << matIt->second.name << " x" << req.second;
+                } else {
+                    std::cout << "Material " << req.first << " x" << req.second;
+                }
+                first = false;
+            }
+            if (recipe.requiredMaterials.empty()) {
+                std::cout << "None";
+            }
+            std::cout << "\n";
+            std::cout << "  Success Chance: " << static_cast<int>(calculateSuccessChance(recipe) * 100.0f) << "%\n";
             std::cout << "  Can craft: " << (canCraft(recipe.id) ? "YES" : "NO") << "\n\n";
         }
     }
@@ -154,6 +177,7 @@ bool CraftingSystem::craftItem(int recipeId) {
     craftedItem.id = recipe->resultItemId;
     craftedItem.name = recipe->name;
     craftedItem.description = recipe->description;
+    craftedItem.quantity = recipe->resultQuantity;
     craftedItem.value = recipe->requiredGold * 3;
     craftedItem.durability = 100;
     craftedItem.maxDurability = 100;
@@ -161,16 +185,61 @@ bool CraftingSystem::craftItem(int recipeId) {
     // Set stats based on recipe ID ranges (simple heuristic for this demo)
     if (recipeId >= 1000 && recipeId < 1100) { // Weapons
         craftedItem.type = ItemType::WEAPON;
+        craftedItem.isUsable = false;
+        craftedItem.isStackable = false;
         craftedItem.attackBonus = 5 + (recipeId % 10) * 5;
     } else if (recipeId >= 1100 && recipeId < 1200) { // Armor
         craftedItem.type = ItemType::ARMOR;
+        craftedItem.isUsable = false;
+        craftedItem.isStackable = false;
         craftedItem.defenseBonus = 3 + (recipeId % 10) * 4;
+    } else if (recipeId >= 1200 && recipeId < 1300) { // Accessories
+        craftedItem.type = ItemType::ACCESSORY;
+        craftedItem.isUsable = false;
+        craftedItem.isStackable = false;
+        craftedItem.defenseBonus = 2 + (recipeId % 5) * 2;
+        craftedItem.critBonus = (recipeId % 3) * 2;
+    } else { // Consumables
+        craftedItem.type = ItemType::CONSUMABLE;
+        craftedItem.isUsable = true;
+        craftedItem.isStackable = true;
+        craftedItem.healAmount = 20 + (recipeId % 10) * 10;
     }
-    
-    playerRef.inventory.push_back(craftedItem);
+
+    if (recipe->requiredLevel >= 16) {
+        craftedItem.rarity = ItemRarity::LEGENDARY;
+    } else if (recipe->requiredLevel >= 12) {
+        craftedItem.rarity = ItemRarity::EPIC;
+    } else if (recipe->requiredLevel >= 8) {
+        craftedItem.rarity = ItemRarity::RARE;
+    } else if (recipe->requiredLevel >= 4) {
+        craftedItem.rarity = ItemRarity::UNCOMMON;
+    } else {
+        craftedItem.rarity = ItemRarity::COMMON;
+    }
+
+    bool stacked = false;
+    if (craftedItem.isStackable) {
+        for (Item& invItem : playerRef.inventory) {
+            if (invItem.id == craftedItem.id) {
+                invItem.quantity += craftedItem.quantity;
+                stacked = true;
+                break;
+            }
+        }
+    }
+
+    if (!stacked) {
+        playerRef.inventory.push_back(craftedItem);
+    }
+
     playerRef.experience += recipe->experienceGained;
     
-    std::cout << "Successfully crafted: " << recipe->name << "!\n";
+    std::cout << "Successfully crafted: " << recipe->name;
+    if (craftedItem.quantity > 1) {
+        std::cout << " x" << craftedItem.quantity;
+    }
+    std::cout << "!\n";
     std::cout << "Gained " << recipe->experienceGained << " XP.\n";
     
     return true;
@@ -383,7 +452,7 @@ void CraftingSystem::displayEnchantableItems() const {
     for (size_t i = 0; i < playerRef.inventory.size(); ++i) {
         const auto& item = playerRef.inventory[i];
         if (item.type == ItemType::WEAPON || item.type == ItemType::ARMOR) {
-            std::cout << "[" << i << "] " << item.name;
+            std::cout << "[" << (i + 1) << "] " << item.name;
             if (item.isEnchanted) std::cout << " (Enchanted: " << item.enchantmentName << ")";
             std::cout << " | Durability: " << item.durability << "/" << item.maxDurability << "\n";
         }
@@ -442,14 +511,8 @@ void CraftingSystem::runCraftingMenu() {
         std::cout << "6. Disenchant Item (Break down)\n";
         std::cout << "7. Material Conversion\n";
         std::cout << "0. Exit Crafting\n";
-        std::cout << "Choice: ";
 
-        int choice;
-        if (!(std::cin >> choice)) {
-            std::cin.clear();
-            std::cin.ignore(1000, '\n');
-            continue;
-        }
+        int choice = getValidatedInt("Choice: ", 0, 7);
 
         switch (choice) {
             case 1:
@@ -457,53 +520,62 @@ void CraftingSystem::runCraftingMenu() {
                 break;
             case 2:
                 displayDiscoveredRecipes();
-                std::cout << "Enter Recipe ID to craft (0 to cancel): ";
-                int rid; std::cin >> rid;
+                {
+                int rid = getValidatedInt("Enter Recipe ID to craft (0 to cancel): ", 0, 99999);
                 if (rid != 0) craftItem(rid);
+                }
                 break;
             case 3:
                 displayEnchantableItems();
-                std::cout << "Enter Item Index to upgrade (-1 to cancel): ";
-                int uidx; std::cin >> uidx;
-                if (uidx >= 0 && uidx < (int)playerRef.inventory.size()) {
-                    upgradeItem(playerRef.inventory[uidx].id);
+                {
+                int uidx = getValidatedInt("Enter Item Index to upgrade (0 to cancel): ", 0,
+                                           static_cast<int>(playerRef.inventory.size()));
+                if (uidx > 0 && uidx <= static_cast<int>(playerRef.inventory.size())) {
+                    upgradeItem(playerRef.inventory[uidx - 1].id);
+                }
                 }
                 break;
             case 4:
                 displayEnchantableItems();
-                std::cout << "Enter Item Index to enchant (-1 to cancel): ";
-                int eidx; std::cin >> eidx;
-                if (eidx >= 0 && eidx < (int)playerRef.inventory.size()) {
+                {
+                int eidx = getValidatedInt("Enter Item Index to enchant (0 to cancel): ", 0,
+                                           static_cast<int>(playerRef.inventory.size()));
+                if (eidx > 0 && eidx <= static_cast<int>(playerRef.inventory.size())) {
                     std::cout << "Select Enchantment:\n";
                     std::cout << "1. Fire (+Attack)\n2. Ice (+Slow)\n3. Sharpness (++Attack)\n4. Protection (+Defense)\n";
-                    int etype; std::cin >> etype;
+                    int etype = getValidatedInt("Choose enchantment: ", 1, 4);
                     EnchantmentType t = EnchantmentType::SHARPNESS;
                     if (etype == 1) t = EnchantmentType::FIRE_DAMAGE;
                     else if (etype == 2) t = EnchantmentType::ICE_DAMAGE;
                     else if (etype == 4) t = EnchantmentType::PROTECTION;
-                    enchantItem(playerRef.inventory[eidx].id, t);
+                    enchantItem(playerRef.inventory[eidx - 1].id, t);
+                }
                 }
                 break;
             case 5:
                 displayEnchantableItems();
-                std::cout << "Enter Item Index to repair (-1 to cancel): ";
-                int ridx; std::cin >> ridx;
-                if (ridx >= 0 && ridx < (int)playerRef.inventory.size()) {
-                    repairItem(playerRef.inventory[ridx].id);
+                {
+                int ridx = getValidatedInt("Enter Item Index to repair (0 to cancel): ", 0,
+                                           static_cast<int>(playerRef.inventory.size()));
+                if (ridx > 0 && ridx <= static_cast<int>(playerRef.inventory.size())) {
+                    repairItem(playerRef.inventory[ridx - 1].id);
+                }
                 }
                 break;
             case 6:
                 displayEnchantableItems();
-                std::cout << "Enter Item Index to disenchant (-1 to cancel): ";
-                int didx; std::cin >> didx;
-                if (didx >= 0 && didx < (int)playerRef.inventory.size()) {
-                    disenchantItem(playerRef.inventory[didx].id);
+                {
+                int didx = getValidatedInt("Enter Item Index to disenchant (0 to cancel): ", 0,
+                                           static_cast<int>(playerRef.inventory.size()));
+                if (didx > 0 && didx <= static_cast<int>(playerRef.inventory.size())) {
+                    disenchantItem(playerRef.inventory[didx - 1].id);
+                }
                 }
                 break;
             case 7:
-                std::cout << "Convert 5 Iron Ore (1) to 1 Magical Essence (6)? (y/n): ";
-                char c; std::cin >> c;
-                if (c == 'y') convertMaterial(1, 6, 5);
+                if (getYesNo("Convert 5 Iron Ore into 1 Magical Essence")) {
+                    convertMaterial(1, 6, 5);
+                }
                 break;
             case 0:
                 inMenu = false;

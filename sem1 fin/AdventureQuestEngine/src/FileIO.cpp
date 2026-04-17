@@ -13,6 +13,7 @@
 #include <iomanip>
 #include <ctime>
 #include <chrono>
+#include <filesystem>
 
 // Platform-specific includes for directory creation
 #ifdef _WIN32
@@ -513,14 +514,40 @@ bool FileIO::deleteSave(const std::string& filename) {
 
 std::vector<std::string> FileIO::listSaveFiles() const {
     std::vector<std::string> saveFiles;
-    
-    // Simple implementation - just return default save file if it exists
-    if (saveExists(dataPath + "savegame.txt")) {
+
+    // Legacy root save support.
+    if (saveExists("savegame.txt")) {
         saveFiles.push_back("savegame.txt");
     }
-    
-    // In a full implementation, this would scan the data directory
-    // for all .txt files matching save file patterns
+
+    try {
+        namespace fs = std::filesystem;
+        fs::path dataDir(dataPath);
+
+        if (fs::exists(dataDir) && fs::is_directory(dataDir)) {
+            for (const fs::directory_entry& entry : fs::directory_iterator(dataDir)) {
+                if (!entry.is_regular_file()) {
+                    continue;
+                }
+
+                const std::string name = entry.path().filename().string();
+                const std::string lowered = toLower(name);
+                const bool isLegacySave = (lowered == "savegame.txt");
+                const bool isSlotSave = (lowered.rfind("save_", 0) == 0 &&
+                    lowered.size() > 9 &&
+                    lowered.substr(lowered.size() - 4) == ".txt");
+
+                if (isLegacySave || isSlotSave) {
+                    saveFiles.push_back(entry.path().string());
+                }
+            }
+        }
+    } catch (...) {
+        // If directory iteration fails, continue with whatever was discovered.
+    }
+
+    std::sort(saveFiles.begin(), saveFiles.end());
+    saveFiles.erase(std::unique(saveFiles.begin(), saveFiles.end()), saveFiles.end());
     
     return saveFiles;
 }

@@ -4,6 +4,10 @@
 Luke|1475|16|Mage|Speedrun|
 Hays|1379|75|Rogue|Victory|
 Luke|1235|28|Mage|Speedrun|
+Alex|1145|1|Warrior|Neutral|
+Alex|1140|2|Warrior|Neutral|
+Alex|1140|2|Warrior|Neutral|
+test|1140|2|Warrior|Neutral|
 Gage|1090|42|Rogue|Speedrun|
 test|1065|95|Necromancer|Victory|
 Alex|1060|83|Barbarian|Victory|

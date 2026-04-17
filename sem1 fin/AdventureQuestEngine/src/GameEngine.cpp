@@ -14,8 +14,38 @@
 #include <algorithm>
 #include <ctime>
 #include <cmath>
+#include <cctype>
 
 namespace AQE {
+
+namespace {
+
+std::string getFileNameOnly(const std::string& path) {
+    const size_t pos = path.find_last_of("/\\");
+    if (pos == std::string::npos) {
+        return path;
+    }
+    return path.substr(pos + 1);
+}
+
+std::string getSaveDisplayName(const std::string& path) {
+    std::string name = getFileNameOnly(path);
+    const std::string prefix = "save_";
+    const std::string suffix = ".txt";
+
+    if (name.rfind(prefix, 0) == 0 && name.size() > prefix.size() + suffix.size() &&
+        name.substr(name.size() - suffix.size()) == suffix) {
+        return name.substr(prefix.size(), name.size() - prefix.size() - suffix.size());
+    }
+
+    if (name == "savegame.txt") {
+        return "legacy";
+    }
+
+    return name;
+}
+
+}
 
 // ---
 // CONSTRUCTOR / DESTRUCTOR
@@ -30,7 +60,8 @@ GameEngine::GameEngine()
       m_merchantSystem(m_gameState.player),
       m_craftingSystem(m_gameState.player),
       m_isRunning(false),
-      m_debugMode(false) {
+    m_debugMode(false),
+    m_activeSaveFile(SAVE_FILE) {
     
     initializeRandom(0);  // Use time-based seed
 }
@@ -58,14 +89,18 @@ int GameEngine::run() {
                 endGame();
                 break;
             case 2:  // Load Game
-                if (loadGame("savegame.txt")) {
+            {
+                std::string selectedFile = selectSaveFileForLoad();
+                if (!selectedFile.empty() && loadGame(selectedFile)) {
+                    m_activeSaveFile = selectedFile;
                     gameLoop();
                     endGame();
                 } else {
-                    std::cout << "\nNo save file found or load failed.\n";
+                    std::cout << "\nNo save selected or load failed.\n";
                     waitForEnter();
                 }
                 break;
+            }
             case 3:  // Settings
                 showSettings();
                 break;
@@ -933,6 +968,15 @@ bool GameEngine::processAction(const std::string& action) {
     } else if (action == "interact" || action == "i") {
         interactWithRoom();
         return true;
+    } else if (action == "craft" || action == "forge") {
+        Room& room = getCurrentRoom();
+        if (room.type == RoomType::FORGE || room.type == RoomType::LABORATORY) {
+            m_craftingSystem.runCraftingMenu();
+        } else {
+            std::cout << "\nYou need a forge or laboratory to craft here.\n";
+            waitForEnter();
+        }
+        return true;
     } else if (action.substr(0, 6) == "pickup" || action.substr(0, 4) == "take") {
         // Try to extract item number
         int itemNum = 1;
@@ -969,10 +1013,16 @@ bool GameEngine::processAction(const std::string& action) {
         int choice = showGameMenu();
         return choice != 0;
     } else if (action == "save") {
-        if (saveGame("savegame.txt")) {
-            std::cout << "\nGame saved!\n";
+        std::string saveFile = selectSaveFileForSave();
+        if (!saveFile.empty()) {
+            if (saveGame(saveFile)) {
+                m_activeSaveFile = saveFile;
+                std::cout << "\nGame saved to slot '" << getSaveDisplayName(saveFile) << "'.\n";
+            } else {
+                std::cout << "\nFailed to save game.\n";
+            }
         } else {
-            std::cout << "\nFailed to save game.\n";
+            std::cout << "\nSave cancelled.\n";
         }
         waitForEnter();
         return true;
@@ -1115,6 +1165,27 @@ void GameEngine::searchRoom() {
         m_gameState.player.secretsFound++;
         foundSomething = true;
     }
+
+    // Chance to gather crafting materials based on room type.
+    if (randomChance(45)) {
+        if (room.type == RoomType::FORGE || room.type == RoomType::ARMORY) {
+            m_craftingSystem.addMaterial(1, randomInt(1, 3));  // Iron Ore
+            if (randomChance(35)) {
+                m_craftingSystem.addMaterial(5, 1);  // Rough Gem
+            }
+        } else if (room.type == RoomType::LABORATORY || room.type == RoomType::SHRINE) {
+            m_craftingSystem.addMaterial(7, randomInt(1, 3));  // Herbs
+            if (randomChance(40)) {
+                m_craftingSystem.addMaterial(6, 1);  // Essence
+            }
+        } else {
+            m_craftingSystem.addMaterial(2, randomInt(1, 2));  // Wood
+            if (randomChance(30)) {
+                m_craftingSystem.addMaterial(3, 1);  // Leather
+            }
+        }
+        foundSomething = true;
+    }
     
     if (!foundSomething) {
         std::cout << "You didn't find anything special.\n";
@@ -1160,6 +1231,21 @@ void GameEngine::interactWithRoom() {
         }
         
         waitForEnter();
+        return;
+    }
+
+    if (room.type == RoomType::FORGE) {
+        handleForgeEncounter();
+        return;
+    }
+
+    if (room.type == RoomType::LABORATORY) {
+        handleLaboratoryEncounter();
+        return;
+    }
+
+    if (room.type == RoomType::LIBRARY) {
+        handleLibraryEncounter();
         return;
     }
     
@@ -1210,8 +1296,15 @@ int GameEngine::showGameMenu() {
     int choice = getValidatedInt("Choice: ", 1, 4);
     
     if (choice == 2) {
-        saveGame("savegame.txt");
-        std::cout << "\nGame saved!\n";
+        std::string saveFile = selectSaveFileForSave();
+        if (!saveFile.empty() && saveGame(saveFile)) {
+            m_activeSaveFile = saveFile;
+            std::cout << "\nGame saved to slot '" << getSaveDisplayName(saveFile) << "'.\n";
+        } else if (saveFile.empty()) {
+            std::cout << "\nSave cancelled.\n";
+        } else {
+            std::cout << "\nFailed to save game.\n";
+        }
         waitForEnter();
     } else if (choice == 3) {
         showSettings();
@@ -1315,6 +1408,7 @@ void GameEngine::showHelp() {
     std::cout << "  look         - Examine the current room in detail\n";
     std::cout << "  search       - Search for hidden items and secrets\n";
     std::cout << "  interact     - Interact with objects in the room\n";
+    std::cout << "  craft        - Open crafting at Forge/Laboratory\n";
     std::cout << "  pickup [#]   - Pick up a specific item by number\n\n";
     
     std::cout << Color::BRIGHT_WHITE << "MENU COMMANDS:" << Color::RESET << "\n";
@@ -1812,11 +1906,131 @@ bool GameEngine::saveGame(const std::string& filename) {
 }
 
 bool GameEngine::loadGame(const std::string& filename) {
-    return m_fileIO.loadGame(m_gameState, filename);
+    if (!loadGameData()) {
+        std::cerr << "Warning: Failed to load all game data before loading save.\n";
+    }
+
+    if (!m_fileIO.loadGame(m_gameState, filename)) {
+        return false;
+    }
+
+    // Saved files may only persist room status flags, so rebuild the dungeon layout
+    // when no rooms are currently present (e.g., loading from main menu after reboot).
+    if (m_gameState.dungeon.empty()) {
+        const int width = (m_gameState.mapWidth > 0) ? m_gameState.mapWidth : DEFAULT_MAP_WIDTH;
+        const int height = (m_gameState.mapHeight > 0) ? m_gameState.mapHeight : DEFAULT_MAP_HEIGHT;
+
+        m_mapGenerator = MapGenerator(width, height);
+
+        if (m_gameState.randomSeed != 0) {
+            initializeRandom(m_gameState.randomSeed);
+        }
+
+        if (!m_mapGenerator.generateMap(m_gameState)) {
+            std::cerr << "Error: Failed to rebuild dungeon while loading save.\n";
+            return false;
+        }
+    }
+
+    bool hasCurrentRoom = false;
+    for (const Room& room : m_gameState.dungeon) {
+        if (room.id == m_gameState.player.currentRoomId) {
+            hasCurrentRoom = true;
+            break;
+        }
+    }
+
+    if (!hasCurrentRoom && !m_gameState.dungeon.empty()) {
+        m_gameState.player.currentRoomId = m_mapGenerator.getEntranceRoomId();
+    }
+
+    return true;
 }
 
 std::vector<std::string> GameEngine::listSaveFiles() {
     return m_fileIO.listSaveFiles();
+}
+
+std::string GameEngine::selectSaveFileForLoad() {
+    std::vector<std::string> saveFiles = listSaveFiles();
+
+    if (saveFiles.empty()) {
+        std::cout << "\nNo save files found.\n";
+        return "";
+    }
+
+    std::cout << "\n=== Load Save ===\n\n";
+    for (size_t i = 0; i < saveFiles.size(); ++i) {
+        std::cout << (i + 1) << ". " << getSaveDisplayName(saveFiles[i])
+                  << " (" << saveFiles[i] << ")\n";
+    }
+    std::cout << (saveFiles.size() + 1) << ". Cancel\n\n";
+
+    int choice = getValidatedInt("Choose a save: ", 1, static_cast<int>(saveFiles.size() + 1));
+    if (choice == static_cast<int>(saveFiles.size() + 1)) {
+        return "";
+    }
+
+    return saveFiles[choice - 1];
+}
+
+std::string GameEngine::selectSaveFileForSave() {
+    std::vector<std::string> saveFiles = listSaveFiles();
+
+    std::cout << "\n=== Save Game ===\n";
+    std::cout << "Current slot: " << getSaveDisplayName(m_activeSaveFile)
+              << " (" << m_activeSaveFile << ")\n";
+
+    if (!saveFiles.empty()) {
+        std::cout << "\nExisting slots:\n";
+        for (size_t i = 0; i < saveFiles.size(); ++i) {
+            std::cout << "  - " << getSaveDisplayName(saveFiles[i]) << "\n";
+        }
+    }
+
+    std::cout << "\nEnter save slot name (blank = current, 'cancel' to abort): ";
+    std::string slotName;
+    std::getline(std::cin, slotName);
+    slotName = trim(slotName);
+
+    if (toLower(slotName) == "cancel") {
+        return "";
+    }
+
+    if (slotName.empty()) {
+        return m_activeSaveFile.empty() ? SAVE_FILE : m_activeSaveFile;
+    }
+
+    std::string targetFile = DATA_FOLDER + "save_" + sanitizeSaveSlotName(slotName) + ".txt";
+
+    if (m_fileIO.saveExists(targetFile)) {
+        std::cout << "Save slot already exists. Overwrite?\n";
+        if (!getYesNo("Confirm overwrite")) {
+            return "";
+        }
+    }
+
+    return targetFile;
+}
+
+std::string GameEngine::sanitizeSaveSlotName(const std::string& slotName) const {
+    std::string cleaned;
+    cleaned.reserve(slotName.size());
+
+    for (char ch : slotName) {
+        unsigned char c = static_cast<unsigned char>(ch);
+        if (std::isalnum(c) != 0 || ch == '_' || ch == '-') {
+            cleaned.push_back(static_cast<char>(std::tolower(c)));
+        } else if (std::isspace(c) != 0) {
+            cleaned.push_back('_');
+        }
+    }
+
+    if (cleaned.empty()) {
+        return "adventure";
+    }
+
+    return cleaned;
 }
 
 // ---
@@ -1910,6 +2124,24 @@ void GameEngine::checkRoomEvents() {
         room.isCleared = true;
         return;
     }
+
+    if (room.type == RoomType::FORGE && !room.isCleared) {
+        handleForgeEncounter();
+        room.isCleared = true;
+        return;
+    }
+
+    if (room.type == RoomType::LABORATORY && !room.isCleared) {
+        handleLaboratoryEncounter();
+        room.isCleared = true;
+        return;
+    }
+
+    if (room.type == RoomType::LIBRARY && !room.isCleared) {
+        handleLibraryEncounter();
+        room.isCleared = true;
+        return;
+    }
     
     // Process room events
     if (!room.eventIds.empty()) {
@@ -1977,6 +2209,15 @@ void GameEngine::checkRoomEvents() {
             m_gameState.player.experience += result.experienceGained;
             m_gameState.player.gold += result.goldGained;
             m_gameState.player.totalKills += result.experienceGained / 10;  // Rough estimate
+
+            // Reward crafting materials for cleared combat encounters.
+            m_craftingSystem.addMaterial(1, randomInt(1, 2));  // Iron Ore
+            if (randomChance(40)) {
+                m_craftingSystem.addMaterial(8, 1);  // Monster Bone
+            }
+            if (randomChance(20)) {
+                m_craftingSystem.addMaterial(6, 1);  // Magical Essence
+            }
             
             // Add loot to room
             for (const auto& item : result.loot) {
@@ -1988,6 +2229,51 @@ void GameEngine::checkRoomEvents() {
             waitForEnter();
         }
     }
+}
+
+void GameEngine::handleLibraryEncounter() {
+    clearScreen();
+    std::cout << "\n=== Ancient Library ===\n\n";
+    std::cout << "You scan dusty tomes filled with forgotten crafting techniques.\n";
+
+    std::vector<int> recipePool = {1003, 1011, 1021, 1031, 1041, 1103, 1110, 1131, 1302, 1310};
+    int recipeId = recipePool[randomInt(0, static_cast<int>(recipePool.size()) - 1)];
+    m_craftingSystem.discoverRecipe(recipeId);
+
+    m_craftingSystem.addMaterial(4, randomInt(1, 3));  // Cloth scraps
+    if (randomChance(35)) {
+        m_craftingSystem.addMaterial(6, 1);  // Essence
+    }
+
+    waitForEnter();
+}
+
+void GameEngine::handleForgeEncounter() {
+    clearScreen();
+    std::cout << "\n=== Ancient Forge ===\n\n";
+    std::cout << "The forge still burns. You salvage useful materials and prepare to craft.\n";
+
+    m_craftingSystem.addMaterial(1, randomInt(2, 5));  // Iron Ore
+    m_craftingSystem.addMaterial(2, randomInt(1, 3));  // Wood
+    if (randomChance(30)) {
+        m_craftingSystem.addMaterial(5, 1);  // Gem
+    }
+
+    m_craftingSystem.runCraftingMenu();
+}
+
+void GameEngine::handleLaboratoryEncounter() {
+    clearScreen();
+    std::cout << "\n=== Arcane Laboratory ===\n\n";
+    std::cout << "Shelves of herbs and reagents line the walls.\n";
+
+    m_craftingSystem.addMaterial(7, randomInt(2, 5));  // Herbs
+    if (randomChance(50)) {
+        m_craftingSystem.addMaterial(6, 1);  // Essence
+    }
+
+    m_craftingSystem.discoverRecipe(1302);  // Greater Health Potion
+    m_craftingSystem.runCraftingMenu();
 }
 
 void GameEngine::handleShopEncounter() {
@@ -2171,9 +2457,9 @@ Room& GameEngine::getCurrentRoom() {
             return room;
         }
     }
-    
-    // Fallback - should never happen
-    return m_gameState.dungeon[0];
+
+    static Room fallbackRoom;
+    return fallbackRoom;
 }
 
 const Room& GameEngine::getCurrentRoom() const {
@@ -2182,8 +2468,9 @@ const Room& GameEngine::getCurrentRoom() const {
             return room;
         }
     }
-    
-    return m_gameState.dungeon[0];
+
+    static Room fallbackRoom;
+    return fallbackRoom;
 }
 
 bool GameEngine::triggerFinalBoss() {

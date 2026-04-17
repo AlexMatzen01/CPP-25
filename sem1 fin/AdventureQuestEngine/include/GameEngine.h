@@ -300,6 +300,25 @@ public:
      * @return Vector of save file names
      */
     std::vector<std::string> listSaveFiles();
+
+    /**
+// Prompts player to choose which save to load
+     * @return Selected save file path, or empty string if cancelled/none
+     */
+    std::string selectSaveFileForLoad();
+
+    /**
+// Prompts player to choose where to save
+     * @return Selected save file path, or empty string if cancelled
+     */
+    std::string selectSaveFileForSave();
+
+    /**
+// Sanitizes a user-provided save slot name
+     * @param slotName Raw slot name
+     * @return Safe slot name for filesystem use
+     */
+    std::string sanitizeSaveSlotName(const std::string& slotName) const;
     
     //==========================================================================
     // UTILITY METHODS
@@ -376,6 +395,7 @@ private:
     
     bool m_isRunning;               // Game running flag
     bool m_debugMode;               // Debug mode flag
+    std::string m_activeSaveFile;   // Current save file path for quick saves
     
     //==========================================================================
     // PRIVATE HELPER METHODS
