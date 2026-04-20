@@ -1,0 +1,501 @@
+[
+    {
+        "abilities": [],
+        "activeEffects": [],
+        "asciiArt": "",
+        "description": "A reanimated skeleton warrior.",
+        "dialogue": "Clatter clatter...",
+        "experienceReward": 25,
+        "goldReward": 10,
+        "id": 1,
+        "intentStrength": 0,
+        "isBoss": false,
+        "lootChances": [
+            30,
+            10
+        ],
+        "lootTable": [
+            1,
+            10
+        ],
+        "name": "Skeleton",
+        "nextIntent": "UNKNOWN",
+        "stats": {
+            "attack": 6,
+            "critChance": 5,
+            "currentHP": 25,
+            "currentMana": 50,
+            "defense": 2,
+            "dodgeChance": 8,
+            "magicPower": 10,
+            "maxHP": 25,
+            "maxMana": 50,
+            "speed": 8
+        }
+    },
+    {
+        "abilities": [],
+        "activeEffects": [],
+        "asciiArt": "",
+        "description": "A sneaky green-skinned goblin.",
+        "dialogue": "Gimme your shinies!",
+        "experienceReward": 20,
+        "goldReward": 15,
+        "id": 2,
+        "intentStrength": 0,
+        "isBoss": false,
+        "lootChances": [
+            40
+        ],
+        "lootTable": [
+            1
+        ],
+        "name": "Goblin",
+        "nextIntent": "UNKNOWN",
+        "stats": {
+            "attack": 5,
+            "critChance": 12,
+            "currentHP": 20,
+            "currentMana": 50,
+            "defense": 1,
+            "dodgeChance": 18,
+            "magicPower": 10,
+            "maxHP": 20,
+            "maxMana": 50,
+            "speed": 12
+        }
+    },
+    {
+        "abilities": [],
+        "activeEffects": [],
+        "asciiArt": "",
+        "description": "A brutish orc with a massive club.",
+        "dialogue": "ORC SMASH!",
+        "experienceReward": 40,
+        "goldReward": 20,
+        "id": 3,
+        "intentStrength": 0,
+        "isBoss": false,
+        "lootChances": [
+            25,
+            15
+        ],
+        "lootTable": [
+            2,
+            11
+        ],
+        "name": "Orc Warrior",
+        "nextIntent": "UNKNOWN",
+        "stats": {
+            "attack": 9,
+            "critChance": 8,
+            "currentHP": 45,
+            "currentMana": 50,
+            "defense": 4,
+            "dodgeChance": 4,
+            "magicPower": 10,
+            "maxHP": 45,
+            "maxMana": 50,
+            "speed": 6
+        }
+    },
+    {
+        "abilities": [],
+        "activeEffects": [],
+        "asciiArt": "",
+        "description": "A gelatinous blob that wobbles menacingly.",
+        "dialogue": "*Squish squish*",
+        "experienceReward": 15,
+        "goldReward": 5,
+        "id": 6,
+        "intentStrength": 0,
+        "isBoss": false,
+        "lootChances": [
+            20
+        ],
+        "lootTable": [
+            1
+        ],
+        "name": "Green Slime",
+        "nextIntent": "UNKNOWN",
+        "stats": {
+            "attack": 4,
+            "critChance": 2,
+            "currentHP": 15,
+            "currentMana": 50,
+            "defense": 0,
+            "dodgeChance": 30,
+            "magicPower": 10,
+            "maxHP": 15,
+            "maxMana": 50,
+            "speed": 5
+        }
+    },
+    {
+        "abilities": [
+            {
+                "cooldown": 3,
+                "currentCooldown": 0,
+                "damage": 15,
+                "description": "A bite that deals extra damage.",
+                "healAmount": 0,
+                "heals": false,
+                "name": "Venomous Bite",
+                "triggerChance": 0.30000001192092896
+            }
+        ],
+        "activeEffects": [],
+        "asciiArt": "",
+        "description": "A multi-eyed horror with dripping fangs.",
+        "dialogue": "*Chittering sounds*",
+        "experienceReward": 35,
+        "goldReward": 12,
+        "id": 7,
+        "intentStrength": 0,
+        "isBoss": false,
+        "lootChances": [],
+        "lootTable": [],
+        "name": "Giant Spider",
+        "nextIntent": "UNKNOWN",
+        "stats": {
+            "attack": 7,
+            "critChance": 10,
+            "currentHP": 30,
+            "currentMana": 50,
+            "defense": 2,
+            "dodgeChance": 15,
+            "magicPower": 10,
+            "maxHP": 30,
+            "maxMana": 50,
+            "speed": 16
+        }
+    },
+    {
+        "abilities": [],
+        "activeEffects": [],
+        "asciiArt": "",
+        "description": "A fallen warrior in black plate armor.",
+        "dialogue": "None shall pass!",
+        "experienceReward": 75,
+        "goldReward": 40,
+        "id": 8,
+        "intentStrength": 0,
+        "isBoss": false,
+        "lootChances": [
+            20,
+            15
+        ],
+        "lootTable": [
+            16,
+            21
+        ],
+        "name": "Dark Knight",
+        "nextIntent": "UNKNOWN",
+        "stats": {
+            "attack": 12,
+            "critChance": 10,
+            "currentHP": 60,
+            "currentMana": 50,
+            "defense": 8,
+            "dodgeChance": 2,
+            "magicPower": 10,
+            "maxHP": 60,
+            "maxMana": 50,
+            "speed": 7
+        }
+    },
+    {
+        "abilities": [],
+        "activeEffects": [],
+        "asciiArt": "",
+        "description": "A treasure chest that grew teeth.",
+        "dialogue": "Surprise!",
+        "experienceReward": 100,
+        "goldReward": 150,
+        "id": 9,
+        "intentStrength": 0,
+        "isBoss": false,
+        "lootChances": [
+            50,
+            30
+        ],
+        "lootTable": [
+            3,
+            130
+        ],
+        "name": "Mimic",
+        "nextIntent": "UNKNOWN",
+        "stats": {
+            "attack": 10,
+            "critChance": 20,
+            "currentHP": 40,
+            "currentMana": 50,
+            "defense": 5,
+            "dodgeChance": 5,
+            "magicPower": 10,
+            "maxHP": 40,
+            "maxMana": 50,
+            "speed": 10
+        }
+    },
+    {
+        "abilities": [
+            {
+                "cooldown": 3,
+                "currentCooldown": 0,
+                "damage": 14,
+                "description": "Drains life from the victim.",
+                "healAmount": 8,
+                "heals": true,
+                "name": "Blood Drain",
+                "triggerChance": 0.4000000059604645
+            }
+        ],
+        "activeEffects": [],
+        "asciiArt": "",
+        "description": "An elegant but deadly bloodsucker.",
+        "dialogue": "Your blood smells... exquisite.",
+        "experienceReward": 90,
+        "goldReward": 60,
+        "id": 10,
+        "intentStrength": 0,
+        "isBoss": false,
+        "lootChances": [],
+        "lootTable": [],
+        "name": "Vampire Noble",
+        "nextIntent": "UNKNOWN",
+        "stats": {
+            "attack": 10,
+            "critChance": 15,
+            "currentHP": 55,
+            "currentMana": 50,
+            "defense": 4,
+            "dodgeChance": 20,
+            "magicPower": 10,
+            "maxHP": 55,
+            "maxMana": 50,
+            "speed": 15
+        }
+    },
+    {
+        "abilities": [
+            {
+                "cooldown": 4,
+                "currentCooldown": 0,
+                "damage": 12,
+                "description": "Drains health from the target.",
+                "healAmount": 5,
+                "heals": true,
+                "name": "Life Drain",
+                "triggerChance": 0.25
+            }
+        ],
+        "activeEffects": [],
+        "asciiArt": "",
+        "description": "A ghostly apparition that drains life.",
+        "dialogue": "Join usss...",
+        "experienceReward": 50,
+        "goldReward": 25,
+        "id": 4,
+        "intentStrength": 0,
+        "isBoss": false,
+        "lootChances": [],
+        "lootTable": [],
+        "name": "Wraith",
+        "nextIntent": "UNKNOWN",
+        "stats": {
+            "attack": 8,
+            "critChance": 15,
+            "currentHP": 32,
+            "currentMana": 50,
+            "defense": 1,
+            "dodgeChance": 25,
+            "magicPower": 10,
+            "maxHP": 32,
+            "maxMana": 50,
+            "speed": 14
+        }
+    },
+    {
+        "abilities": [
+            {
+                "cooldown": 4,
+                "currentCooldown": 0,
+                "damage": 0,
+                "description": "The troll regenerates health.",
+                "healAmount": 7,
+                "heals": true,
+                "name": "Regeneration",
+                "triggerChance": 0.4000000059604645
+            }
+        ],
+        "activeEffects": [],
+        "asciiArt": "",
+        "description": "A massive troll that regenerates health.",
+        "dialogue": "RAAAWR!",
+        "experienceReward": 60,
+        "goldReward": 30,
+        "id": 5,
+        "intentStrength": 0,
+        "isBoss": false,
+        "lootChances": [],
+        "lootTable": [],
+        "name": "Cave Troll",
+        "nextIntent": "UNKNOWN",
+        "stats": {
+            "attack": 11,
+            "critChance": 5,
+            "currentHP": 65,
+            "currentMana": 50,
+            "defense": 6,
+            "dodgeChance": 3,
+            "magicPower": 10,
+            "maxHP": 65,
+            "maxMana": 50,
+            "speed": 4
+        }
+    },
+    {
+        "abilities": [
+            {
+                "cooldown": 5,
+                "currentCooldown": 0,
+                "damage": 24,
+                "description": "The dragon breathes devastating fire!",
+                "healAmount": 0,
+                "heals": false,
+                "name": "Fire Breath",
+                "triggerChance": 0.3499999940395355
+            }
+        ],
+        "activeEffects": [],
+        "asciiArt": "",
+        "description": "A terrifying ancient dragon guards the exit.",
+        "dialogue": "You dare challenge me, mortal?!",
+        "experienceReward": 500,
+        "goldReward": 200,
+        "id": 100,
+        "intentStrength": 0,
+        "isBoss": true,
+        "lootChances": [
+            50,
+            25
+        ],
+        "lootTable": [
+            13,
+            50
+        ],
+        "name": "Ancient Dragon",
+        "nextIntent": "UNKNOWN",
+        "stats": {
+            "attack": 16,
+            "critChance": 12,
+            "currentHP": 180,
+            "currentMana": 50,
+            "defense": 10,
+            "dodgeChance": 8,
+            "magicPower": 10,
+            "maxHP": 180,
+            "maxMana": 50,
+            "speed": 12
+        }
+    },
+    {
+        "abilities": [
+            {
+                "cooldown": 4,
+                "currentCooldown": 0,
+                "damage": 18,
+                "description": "A bolt of dark energy!",
+                "healAmount": 0,
+                "heals": false,
+                "name": "Dark Bolt",
+                "triggerChance": 0.30000001192092896
+            },
+            {
+                "cooldown": 6,
+                "currentCooldown": 0,
+                "damage": 0,
+                "description": "The Lich heals itself with dark magic.",
+                "healAmount": 12,
+                "heals": true,
+                "name": "Raise Dead",
+                "triggerChance": 0.20000000298023224
+            }
+        ],
+        "activeEffects": [],
+        "asciiArt": "",
+        "description": "An undead sorcerer of immense power.",
+        "dialogue": "Death is only the beginning!",
+        "experienceReward": 400,
+        "goldReward": 150,
+        "id": 101,
+        "intentStrength": 0,
+        "isBoss": true,
+        "lootChances": [],
+        "lootTable": [],
+        "name": "The Lich King",
+        "nextIntent": "UNKNOWN",
+        "stats": {
+            "attack": 8,
+            "critChance": 5,
+            "currentHP": 100,
+            "currentMana": 50,
+            "defense": 5,
+            "dodgeChance": 5,
+            "magicPower": 10,
+            "maxHP": 100,
+            "maxMana": 50,
+            "speed": 10
+        }
+    },
+    {
+        "abilities": [
+            {
+                "cooldown": 6,
+                "currentCooldown": 0,
+                "damage": 35,
+                "description": "A beam of pure destructive energy!",
+                "healAmount": 0,
+                "heals": false,
+                "name": "Disintegration Ray",
+                "triggerChance": 0.25
+            },
+            {
+                "cooldown": 4,
+                "currentCooldown": 0,
+                "damage": 5,
+                "description": "The beholder's eye makes you drowsy.",
+                "healAmount": 0,
+                "heals": false,
+                "name": "Sleep Ray",
+                "triggerChance": 0.30000001192092896
+            }
+        ],
+        "activeEffects": [],
+        "asciiArt": "",
+        "description": "A floating orb of eyes and madness.",
+        "dialogue": "I see everything!",
+        "experienceReward": 450,
+        "goldReward": 300,
+        "id": 102,
+        "intentStrength": 0,
+        "isBoss": true,
+        "lootChances": [],
+        "lootTable": [],
+        "name": "Eye Tyrant",
+        "nextIntent": "UNKNOWN",
+        "stats": {
+            "attack": 14,
+            "critChance": 20,
+            "currentHP": 140,
+            "currentMana": 50,
+            "defense": 6,
+            "dodgeChance": 15,
+            "magicPower": 10,
+            "maxHP": 140,
+            "maxMana": 50,
+            "speed": 11
+        }
+    }
+]
