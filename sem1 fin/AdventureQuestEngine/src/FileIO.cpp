@@ -6,6 +6,7 @@
 
 #include "../include/FileIO.h"
 #include "../include/Types.h"
+#include "../include/Utils.h"
 #include "../include/json.hpp"
 
 
@@ -52,6 +53,9 @@ namespace AQE {
         if (j.contains("durability")) j.at("durability").get_to(i.durability);
         if (j.contains("maxDurability")) j.at("maxDurability").get_to(i.maxDurability);
         if (j.contains("upgradeLevel")) j.at("upgradeLevel").get_to(i.upgradeLevel);
+        if (j.contains("itemLevel")) j.at("itemLevel").get_to(i.itemLevel);
+        if (j.contains("hasUniquePerk")) j.at("hasUniquePerk").get_to(i.hasUniquePerk);
+        if (j.contains("uniquePerkName")) j.at("uniquePerkName").get_to(i.uniquePerkName);
         if (j.contains("isEnchanted")) j.at("isEnchanted").get_to(i.isEnchanted);
         if (j.contains("enchantmentName")) j.at("enchantmentName").get_to(i.enchantmentName);
     }
@@ -133,6 +137,7 @@ namespace AQE {
 #include <ctime>
 #include <chrono>
 #include <filesystem>
+#include <stdexcept>
 
 // Platform-specific includes for directory creation
 #ifdef _WIN32
@@ -250,7 +255,21 @@ std::vector<Item> FileIO::loadItems(const std::string& filename) {
     try {
         nlohmann::json j;
         file >> j;
-        items = j.get<std::vector<Item>>();
+        if (!j.is_array()) {
+            throw std::runtime_error("Items JSON root must be an array");
+        }
+
+        items.reserve(j.size());
+        for (const auto& entry : j) {
+            Item item = entry.get<Item>();
+
+            if (!entry.contains("itemLevel") || item.itemLevel <= 0) {
+                item.itemLevel = estimateItemLevelFromLegacyStats(item);
+            }
+
+            rebuildItemStatsFromLevel(item);
+            items.push_back(item);
+        }
     } catch (const std::exception& e) {
         std::cerr << "Error parsing items JSON: " << e.what() << "\nUsing defaults instead.\n";
         return createDefaultItems();
@@ -395,15 +414,27 @@ bool FileIO::saveGame(const GameState& gameState, const std::string& filename) {
     file << "secrets=" << p.secretsFound << "\n";
     file << "puzzles=" << p.puzzlesSolved << "\n";
     file << "bosses=" << p.bossesDefeated << "\n";
+    file << "averageItemLevel=" << p.averageItemLevel << "\n";
     
     // Save inventory
     file << "\n[INVENTORY]\n";
     file << "count=" << p.inventory.size() << "\n";
     for (const Item& item : p.inventory) {
+           const std::string perkName = item.uniquePerkName.empty() ? "-" : item.uniquePerkName;
+           const std::string enchantName = item.enchantmentName.empty() ? "-" : item.enchantmentName;
         file << "item=" << item.id << "," << item.name << "," 
              << static_cast<int>(item.type) << ","
              << static_cast<int>(item.rarity) << ","
-             << item.quantity << "," << item.isEquipped << "\n";
+               << item.quantity << "," << (item.isEquipped ? 1 : 0) << ","
+               << item.itemLevel << "," << (item.hasUniquePerk ? 1 : 0) << ","
+               << perkName << ","
+               << item.attackBonus << "," << item.defenseBonus << ","
+               << item.healAmount << "," << item.critBonus << ","
+               << item.dodgeBonus << "," << item.speedBonus << ","
+               << item.value << "," << item.upgradeLevel << ","
+               << (item.isEnchanted ? 1 : 0) << "," << enchantName << ","
+               << item.durability << "," << item.maxDurability
+               << "\n";
     }
     
     // Save visited rooms
@@ -488,10 +519,11 @@ bool FileIO::loadGame(GameState& gameState, const std::string& filename) {
             else if (key == "secrets") p.secretsFound = std::stoi(value);
             else if (key == "puzzles") p.puzzlesSolved = std::stoi(value);
             else if (key == "bosses") p.bossesDefeated = std::stoi(value);
+            else if (key == "averageItemLevel") p.averageItemLevel = std::max(0, std::stoi(value));
         }
         else if (section == "[INVENTORY]") {
             if (key == "item") {
-                // Parse item: id,name,type,rarity,quantity,equipped
+                // Parse item: id,name,type,rarity,quantity,equipped and optional extended fields
                 std::vector<std::string> parts = split(value, ',');
                 if (parts.size() >= 6) {
                     Item item;
@@ -501,6 +533,23 @@ bool FileIO::loadGame(GameState& gameState, const std::string& filename) {
                     item.rarity = static_cast<ItemRarity>(std::stoi(parts[3]));
                     item.quantity = std::stoi(parts[4]);
                     item.isEquipped = (parts[5] == "1");
+
+                    if (parts.size() >= 7) item.itemLevel = std::max(1, std::stoi(parts[6]));
+                    if (parts.size() >= 8) item.hasUniquePerk = (parts[7] == "1");
+                    if (parts.size() >= 9 && parts[8] != "-") item.uniquePerkName = parts[8];
+                    if (parts.size() >= 10) item.attackBonus = std::stoi(parts[9]);
+                    if (parts.size() >= 11) item.defenseBonus = std::stoi(parts[10]);
+                    if (parts.size() >= 12) item.healAmount = std::stoi(parts[11]);
+                    if (parts.size() >= 13) item.critBonus = std::stoi(parts[12]);
+                    if (parts.size() >= 14) item.dodgeBonus = std::stoi(parts[13]);
+                    if (parts.size() >= 15) item.speedBonus = std::stoi(parts[14]);
+                    if (parts.size() >= 16) item.value = std::stoi(parts[15]);
+                    if (parts.size() >= 17) item.upgradeLevel = std::stoi(parts[16]);
+                    if (parts.size() >= 18) item.isEnchanted = (parts[17] == "1");
+                    if (parts.size() >= 19 && parts[18] != "-") item.enchantmentName = parts[18];
+                    if (parts.size() >= 20) item.durability = std::stoi(parts[19]);
+                    if (parts.size() >= 21) item.maxDurability = std::stoi(parts[20]);
+
                     p.inventory.push_back(item);
                 }
             }
@@ -574,6 +623,24 @@ bool FileIO::loadGame(GameState& gameState, const std::string& filename) {
     for (Room& room : gameState.dungeon) {
         gameState.roomMap[room.id] = &room;
     }
+
+    p.equippedWeaponId = -1;
+    p.equippedArmorId = -1;
+    p.equippedAccessoryId = -1;
+    for (const Item& item : p.inventory) {
+        if (!item.isEquipped) {
+            continue;
+        }
+        if (item.type == ItemType::WEAPON) {
+            p.equippedWeaponId = item.id;
+        } else if (item.type == ItemType::ARMOR) {
+            p.equippedArmorId = item.id;
+        } else if (item.type == ItemType::ACCESSORY) {
+            p.equippedAccessoryId = item.id;
+        }
+    }
+
+    refreshAverageItemLevel(p);
     
     p.isAlive = (p.stats.currentHP > 0);
     
@@ -1723,12 +1790,10 @@ std::vector<Item> createDefaultItems() {
     items.push_back(invisPotion);
 
     for (Item& item : items) {
-        if (item.type == ItemType::WEAPON ||
-            item.type == ItemType::ARMOR ||
-            item.type == ItemType::ACCESSORY) {
-            item.isUsable = false;
-            item.isStackable = false;
+        if (item.itemLevel <= 0) {
+            item.itemLevel = estimateItemLevelFromLegacyStats(item);
         }
+        rebuildItemStatsFromLevel(item);
     }
     
     return items;

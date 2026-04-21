@@ -100,7 +100,10 @@ EventResult EventSystem::processEvent(Event& event) {
             for (int itemId : event.itemsGiven) {
                 Item item;
                 if (!fetchTemplateItem(itemId, gameRef.itemTemplates, item)) {
-                    item = generateRandomItem(ItemRarity::UNCOMMON);
+                    item = generateRandomItem(ItemRarity::UNCOMMON, std::max(1, playerRef.level));
+                } else {
+                    int rolledLevel = rollItemLevel(std::max(1, playerRef.level), item.rarity, false);
+                    applyItemLevelScaling(item, rolledLevel, true);
                 }
                 result.itemsGained.push_back(item);
             }
@@ -125,7 +128,10 @@ EventResult EventSystem::processEvent(Event& event) {
                 if (event.riddleRewardId > 0) {
                     Item reward;
                     if (!fetchTemplateItem(event.riddleRewardId, gameRef.itemTemplates, reward)) {
-                        reward = generateRandomItem(ItemRarity::RARE);
+                        reward = generateRandomItem(ItemRarity::RARE, std::max(1, playerRef.level));
+                    } else {
+                        int rolledLevel = rollItemLevel(std::max(1, playerRef.level), reward.rarity, false);
+                        applyItemLevelScaling(reward, rolledLevel, true);
                     }
                     result.itemsGained.push_back(reward);
                 }
@@ -286,7 +292,10 @@ EventResult EventSystem::processChoiceEvent(Event& event) {
     if (choice.itemRewardId > 0) {
         Item reward;
         if (!fetchTemplateItem(choice.itemRewardId, gameRef.itemTemplates, reward)) {
-            reward = generateRandomItem(ItemRarity::UNCOMMON);
+            reward = generateRandomItem(ItemRarity::UNCOMMON, std::max(1, playerRef.level));
+        } else {
+            int rolledLevel = rollItemLevel(std::max(1, playerRef.level), reward.rarity, false);
+            applyItemLevelScaling(reward, rolledLevel, true);
         }
         result.itemsGained.push_back(reward);
     }
@@ -442,7 +451,7 @@ PuzzleResult EventSystem::presentPuzzle(Room& room) {
         playerRef.puzzlesSolved++;
         
         result.message = "Correct! The puzzle is solved!";
-        result.reward = generateRandomItem(ItemRarity::RARE);
+        result.reward = generateRandomItem(ItemRarity::RARE, std::max(1, playerRef.level));
         
         std::cout << "\n*** PUZZLE SOLVED! ***\n";
         std::cout << "You receive: " << result.reward.name << "\n";
@@ -616,10 +625,12 @@ EventResult EventSystem::completeQuest(int questId) {
     for (int itemId : quest->itemRewards) {
         Item reward;
         if (fetchTemplateItem(itemId, gameRef.itemTemplates, reward)) {
+            int rolledLevel = rollItemLevel(std::max(1, playerRef.level), reward.rarity, false);
+            applyItemLevelScaling(reward, rolledLevel, true);
             result.itemsGained.push_back(reward);
         } else {
             // Fallback to generating a random item if template missing
-            result.itemsGained.push_back(generateRandomItem(ItemRarity::RARE));
+            result.itemsGained.push_back(generateRandomItem(ItemRarity::RARE, std::max(1, playerRef.level)));
         }
     }
     
@@ -758,7 +769,7 @@ EventResult EventSystem::generateMerchantEvent() {
     std::vector<Item> forSale;
     for (int i = 0; i < 3; ++i) {
         ItemRarity rarity = static_cast<ItemRarity>(randomInt(0, 2));
-        forSale.push_back(generateRandomItem(rarity));
+        forSale.push_back(generateRandomItem(rarity, std::max(1, playerRef.level)));
     }
     
     bool shopping = true;
@@ -831,7 +842,7 @@ EventResult EventSystem::generateTreasureEvent() {
     // Chance for item
     if (randomChance(60)) {
         ItemRarity rarity = static_cast<ItemRarity>(randomInt(1, 3));
-        Item treasure = generateRandomItem(rarity);
+        Item treasure = generateRandomItem(rarity, std::max(1, playerRef.level));
         result.itemsGained.push_back(treasure);
         
         InventorySystem inv(playerRef);

@@ -71,7 +71,8 @@ const Item* findEquippedItemForType(const Player& player, ItemType type) {
 
 int getComparisonScore(const Item& item) {
     return item.attackBonus * 2 + item.defenseBonus * 2 +
-           item.critBonus + item.dodgeBonus + item.speedBonus;
+           item.critBonus + item.dodgeBonus + item.speedBonus +
+           (item.itemLevel * 2) + (item.hasUniquePerk ? 15 : 0);
 }
 
 const Item* findBestUnequippedAlternative(const Player& player, ItemType type) {
@@ -116,6 +117,7 @@ std::string buildComparisonSummary(const Item& candidate, const Item& baseline) 
 
     addPart("ATK", candidate.attackBonus - baseline.attackBonus);
     addPart("DEF", candidate.defenseBonus - baseline.defenseBonus);
+    addPart("iLvl", candidate.itemLevel - baseline.itemLevel);
     addPart("CRIT", candidate.critBonus - baseline.critBonus, "%");
     addPart("DODGE", candidate.dodgeBonus - baseline.dodgeBonus, "%");
     addPart("SPD", candidate.speedBonus - baseline.speedBonus);
@@ -291,19 +293,20 @@ void InventorySystem::displayInventoryMenu() {
 
 void InventorySystem::displayItems() const {
     std::cout << "\n";
-    displaySeparator(70, '-');
+    displaySeparator(80, '-');
     std::cout << std::left << std::setw(5) << "#"
-              << std::setw(25) << "Name"
+              << std::setw(23) << "Name"
               << std::setw(12) << "Type"
-              << std::setw(12) << "Rarity"
+              << std::setw(10) << "Rarity"
+              << std::setw(8) << "iLvl"
               << std::setw(8) << "Value"
               << std::setw(5) << "Qty"
               << "\n";
-    displaySeparator(70, '-');
+    displaySeparator(80, '-');
     
     if (playerRef.inventory.empty()) {
         std::cout << "  Your inventory is empty.\n";
-        displaySeparator(70, '-');
+        displaySeparator(80, '-');
         return;
     }
     
@@ -315,9 +318,10 @@ void InventorySystem::displayItems() const {
         if (name.length() > 24) name = name.substr(0, 21) + "...";
         
         std::cout << std::left << std::setw(5) << (i + 1)
-                  << std::setw(25) << name
+                  << std::setw(23) << name
                   << std::setw(12) << itemTypeToString(item.type)
-                  << std::setw(12) << rarityToString(item.rarity)
+                  << std::setw(10) << rarityToString(item.rarity)
+                  << std::setw(8) << item.itemLevel
                   << std::setw(8) << item.value
                   << std::setw(5) << item.quantity
                   << "\n";
@@ -339,7 +343,7 @@ void InventorySystem::displayItems() const {
             std::cout << "\n";
         }
     }
-    displaySeparator(70, '-');
+    displaySeparator(80, '-');
     std::cout << "Total Value: " << calculateTotalValue() << " gold\n";
 }
 
@@ -360,8 +364,13 @@ void InventorySystem::displayItemDetails(int itemIndex) const {
     
     std::cout << "  Type:        " << itemTypeToString(item.type) << "\n";
     std::cout << "  Rarity:      " << rarityToString(item.rarity) << "\n";
+    std::cout << "  Item Level:  " << item.itemLevel << " ("
+              << itemLevelTierToString(item.itemLevel) << ")\n";
     std::cout << "  Value:       " << item.value << " gold\n";
     std::cout << "  Quantity:    " << item.quantity << "\n";
+    if (item.hasUniquePerk && !item.uniquePerkName.empty()) {
+        std::cout << "  Perk:        " << item.uniquePerkName << "\n";
+    }
     std::cout << "  Description: " << wrapText(item.description, 40) << "\n";
     
     // Show stats if applicable
@@ -438,6 +447,7 @@ void InventorySystem::displayEquipment() const {
     std::cout << "\n  Weapon:    " << weapon << "\n";
     std::cout << "  Armor:     " << armor << "\n";
     std::cout << "  Accessory: " << accessory << "\n";
+    std::cout << "  Average Item Level: " << playerRef.averageItemLevel << "\n";
     
     std::cout << "\n  Total Equipment Bonuses:\n";
     std::cout << "    Attack:  +" << totalAtk << "\n";
@@ -858,6 +868,8 @@ bool InventorySystem::equipItem(int itemIndex) {
         default:
             break;
     }
+
+    refreshAverageItemLevel(playerRef);
     
     return true;
 }
@@ -890,6 +902,8 @@ bool InventorySystem::unequipItem(int itemIndex) {
         default:
             break;
     }
+
+    refreshAverageItemLevel(playerRef);
     
     std::cout << "Unequipped " << item.name << ".\n";
     return true;
@@ -1073,7 +1087,7 @@ std::vector<Item> createStartingItems(CharacterClass charClass) {
     return items;
 }
 
-Item generateRandomItem(ItemRarity rarity) {
+Item generateRandomItem(ItemRarity rarity, int targetLevel) {
     Item item;
     item.id = randomInt(1000, 9999);
     item.rarity = rarity;
@@ -1146,21 +1160,32 @@ Item generateRandomItem(ItemRarity rarity) {
         default:
             break;
     }
+
+    const int contextLevel = std::max(1, targetLevel);
+    const int rolledItemLevel = rollItemLevel(contextLevel, rarity, false);
+    applyItemLevelScaling(item, rolledItemLevel, true);
     
     return item;
 }
 
-Item generateItemFromTemplate(const Item& templateItem) {
+Item generateItemFromTemplate(const Item& templateItem, int targetLevel, bool rollPerk) {
     Item item = templateItem;
     
     // Add some randomization
     item.id = randomInt(10000, 99999);
     item.value += randomInt(-5, 10);
     if (item.value < 1) item.value = 1;
+
+    const int contextLevel = std::max(1, targetLevel);
+    const int rolledItemLevel = rollItemLevel(contextLevel, item.rarity, false);
+    applyItemLevelScaling(item, rolledItemLevel, rollPerk);
     
     // Small stat variance
     if (item.attackBonus > 0) item.attackBonus += randomInt(-1, 2);
     if (item.defenseBonus > 0) item.defenseBonus += randomInt(-1, 2);
+    if (item.healAmount > 0) item.healAmount += randomInt(0, 4);
+
+    if (item.value < 1) item.value = 1;
     
     return item;
 }

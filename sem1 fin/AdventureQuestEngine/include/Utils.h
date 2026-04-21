@@ -271,6 +271,57 @@ int calculateDamage(int rawDamage, int defense);
 int calculateExpForLevel(int level);
 
 /**
+// Estimate an enemy's power level for loot scaling
+ * @param enemy Enemy to evaluate
+ * @return Estimated combat level (minimum 1)
+ */
+int estimateEnemyPowerLevel(const Enemy& enemy);
+
+/**
+// Roll a target item level from context and rarity
+ * @param contextLevel Source level (player, floor, or enemy level)
+ * @param rarity Item rarity
+ * @param isBoss True when source is a boss encounter
+ * @return Rolled item level
+ */
+int rollItemLevel(int contextLevel, ItemRarity rarity, bool isBoss = false);
+
+/**
+// Get iLvl tier bucket (1-4)
+ * @param itemLevel Item level
+ * @return Tier number
+ */
+int getItemLevelTier(int itemLevel);
+
+/**
+// Convert iLvl to tier label
+ * @param itemLevel Item level
+ * @return Tier text
+ */
+std::string itemLevelTierToString(int itemLevel);
+
+/**
+// Scale an item's core stats up to a target iLvl and roll tier bonuses/perks
+ * @param item Item to mutate
+ * @param targetItemLevel Desired iLvl
+ * @param rollPerk If true, tier/perk roll logic is applied
+ */
+void applyItemLevelScaling(Item& item, int targetItemLevel, bool rollPerk = true);
+
+/**
+// Estimate an item level from legacy stat-authored templates
+ * @param item Item template with explicit stat fields
+ * @return Estimated item level (minimum 1)
+ */
+int estimateItemLevelFromLegacyStats(const Item& item);
+
+/**
+// Rebuild item primary stats from item level and archetype
+ * @param item Item template to normalize
+ */
+void rebuildItemStatsFromLevel(Item& item);
+
+/**
 // Calculate item sell value
  * @param item The item to sell
  * @return Gold value
@@ -283,6 +334,19 @@ int calculateSellValue(const Item& item);
  * @return Total score
  */
 int calculateScore(const Player& player);
+
+/**
+// Calculate average iLvl of currently equipped gear
+ * @param player Player to evaluate
+ * @return Rounded average item level of equipped equipment
+ */
+int calculateAverageItemLevel(const Player& player);
+
+/**
+// Refresh the cached average item level on a player
+ * @param player Player to update
+ */
+void refreshAverageItemLevel(Player& player);
 
 // ---
 // TEMPLATE IMPLEMENTATIONS

@@ -293,16 +293,20 @@ std::vector<Item> createStartingItems(CharacterClass charClass);
 /**
 // Generate random item based on rarity
  * @param rarity Desired rarity
+ * @param targetLevel Context level for iLvl scaling
  * @return Generated item
  */
-Item generateRandomItem(ItemRarity rarity);
+Item generateRandomItem(ItemRarity rarity, int targetLevel = 1);
 
 /**
 // Generate item from template with randomization
  * @param templateItem Base item template
+ * @param targetLevel Context level for iLvl scaling
+ * @param rollPerk If true, tier/perk rolls are allowed
  * @return Randomized item
  */
-Item generateItemFromTemplate(const Item& templateItem);
+Item generateItemFromTemplate(const Item& templateItem, int targetLevel = 1,
+                              bool rollPerk = true);
 
 /**
 // Check if item can be used in current context

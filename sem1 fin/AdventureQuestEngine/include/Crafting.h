@@ -179,6 +179,7 @@ public:
     // Enchanting
     bool enchantItem(int itemId, EnchantmentType enchantType);
     bool upgradeItem(int itemId);                    // +1 upgrade level
+    bool reforgeItem(int itemId, int targetItemLevel);  // Raise iLvl for aging legendary gear
     bool repairItem(int itemId);
     int getEnchantCost(EnchantmentType type, int level) const;
     void displayEnchantableItems() const;

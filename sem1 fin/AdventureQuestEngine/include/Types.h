@@ -243,6 +243,11 @@ struct Item {
     int durability;              // Current durability points
     int maxDurability;           // Maximum durability points
     int upgradeLevel;            // Current upgrade level (0-10)
+
+    // Replayability progression
+    int itemLevel;               // Dynamic item level (iLvl)
+    bool hasUniquePerk;          // High-tier roll with special bonus
+    std::string uniquePerkName;  // Display name for rolled perk
     
     // Enchantment system
     bool isEnchanted;            // Has enchantment applied?
@@ -253,6 +258,7 @@ struct Item {
              defenseBonus(0), critBonus(0), dodgeBonus(0), speedBonus(0),
              duration(0), isEquipped(false), isUsable(true), isStackable(true),
              durability(100), maxDurability(100), upgradeLevel(0),
+             itemLevel(1), hasUniquePerk(false),
              isEnchanted(false) {}
 };
 
@@ -552,6 +558,7 @@ struct Player {
     int equippedWeaponId;            // ID of equipped weapon (-1 = none)
     int equippedArmorId;             // ID of equipped armor
     int equippedAccessoryId;         // ID of equipped accessory
+    int averageItemLevel;            // Average iLvl of equipped gear
     
     // Status
     std::vector<StatusEffect> activeEffects;  // Active buffs/debuffs
@@ -582,6 +589,7 @@ struct Player {
     Player() : charClass(CharacterClass::WARRIOR), level(1), experience(0),
                experienceToLevel(100), gold(50), maxInventorySize(30),
                equippedWeaponId(-1), equippedArmorId(-1), equippedAccessoryId(-1),
+               averageItemLevel(0),
                currentRoomId(0), moralityScore(0), totalKills(0), explorationTurns(0),
                combatTurns(0), totalTurns(0), secretsFound(0), puzzlesSolved(0),
                bossesDefeated(0), deathCount(0), hasWon(false), isAlive(true),

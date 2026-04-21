@@ -7,6 +7,7 @@
 #include "../include/Combat.h"
 #include "../include/Utils.h"
 #include "../include/Constants.h"
+#include "../include/Inventory.h"
 #include <iostream>
 #include <algorithm>
 #include <sstream>
@@ -146,7 +147,12 @@ CombatResult CombatSystem::startCombat(std::vector<Enemy>& enemies) {
             std::cout << "Items found:\n";
             for (const Item& item : result.loot) {
                 std::cout << "  - " << item.name << " [" 
-                          << rarityToString(item.rarity) << "]\n";
+                          << rarityToString(item.rarity) << "]"
+                          << " (iLvl " << item.itemLevel;
+                if (item.hasUniquePerk && !item.uniquePerkName.empty()) {
+                    std::cout << ", Perk: " << item.uniquePerkName;
+                }
+                std::cout << ")\n";
             }
         }
     } else if (!playerRef.isAlive) {
@@ -1233,34 +1239,38 @@ std::vector<Item> CombatSystem::generateLoot(const std::vector<Enemy>& enemies) 
 
 std::vector<Item> CombatSystem::rollLootTable(const Enemy& enemy) {
     std::vector<Item> drops;
+    const int enemyPowerLevel = estimateEnemyPowerLevel(enemy);
+    const int contextLevel = std::max(playerRef.level, enemyPowerLevel);
     
     // Use enemy's loot table if available
     for (size_t i = 0; i < enemy.lootTable.size() && i < enemy.lootChances.size(); ++i) {
         if (randomChance(enemy.lootChances[i])) {
-            // Create a basic loot item (would normally look up from item templates)
-            Item drop;
-            drop.id = enemy.lootTable[i];
-            drop.name = "Loot Item #" + std::to_string(drop.id);
-            drop.quantity = 1;
+            ItemRarity rolledRarity = ItemRarity::COMMON;
             
             // Determine rarity based on enemy
             if (enemy.isBoss) {
                 if (randomChance(LEGENDARY_DROP_RATE * 5)) {
-                    drop.rarity = ItemRarity::LEGENDARY;
+                    rolledRarity = ItemRarity::LEGENDARY;
                 } else if (randomChance(EPIC_DROP_RATE * 5)) {
-                    drop.rarity = ItemRarity::EPIC;
+                    rolledRarity = ItemRarity::EPIC;
                 } else {
-                    drop.rarity = ItemRarity::RARE;
+                    rolledRarity = ItemRarity::RARE;
                 }
             } else {
                 int roll = randomInt(1, 100);
-                if (roll <= LEGENDARY_DROP_RATE) drop.rarity = ItemRarity::LEGENDARY;
-                else if (roll <= LEGENDARY_DROP_RATE + EPIC_DROP_RATE) drop.rarity = ItemRarity::EPIC;
+                if (roll <= LEGENDARY_DROP_RATE) rolledRarity = ItemRarity::LEGENDARY;
+                else if (roll <= LEGENDARY_DROP_RATE + EPIC_DROP_RATE) rolledRarity = ItemRarity::EPIC;
                 else if (roll <= LEGENDARY_DROP_RATE + EPIC_DROP_RATE + RARE_DROP_RATE) 
-                    drop.rarity = ItemRarity::RARE;
+                    rolledRarity = ItemRarity::RARE;
                 else if (roll <= LEGENDARY_DROP_RATE + EPIC_DROP_RATE + RARE_DROP_RATE + UNCOMMON_DROP_RATE)
-                    drop.rarity = ItemRarity::UNCOMMON;
-                else drop.rarity = ItemRarity::COMMON;
+                    rolledRarity = ItemRarity::UNCOMMON;
+                else rolledRarity = ItemRarity::COMMON;
+            }
+
+            const int dropContextLevel = contextLevel + (enemy.isBoss ? 3 : 0);
+            Item drop = generateRandomItem(rolledRarity, std::max(1, dropContextLevel));
+            if (enemy.lootTable[i] > 0) {
+                drop.id = enemy.lootTable[i];
             }
             
             drops.push_back(drop);
@@ -1278,6 +1288,8 @@ std::vector<Item> CombatSystem::rollLootTable(const Enemy& enemy) {
         potion.healAmount = 20;
         potion.quantity = 1;
         potion.value = 10;
+        const int potionItemLevel = rollItemLevel(contextLevel, potion.rarity, enemy.isBoss);
+        applyItemLevelScaling(potion, potionItemLevel, true);
         drops.push_back(potion);
     }
     

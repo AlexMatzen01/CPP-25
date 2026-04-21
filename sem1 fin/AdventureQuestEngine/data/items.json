@@ -8,7 +8,7 @@
         "durability": 100,
         "duration": 0,
         "enchantmentName": "",
-        "healAmount": 25,
+        "healAmount": 0,
         "id": 1,
         "isEnchanted": false,
         "isEquipped": false,
@@ -22,7 +22,8 @@
         "speedBonus": 0,
         "type": "CONSUMABLE",
         "upgradeLevel": 0,
-        "value": 10
+        "value": 10,
+        "itemLevel": 1
     },
     {
         "attackBonus": 0,
@@ -33,7 +34,7 @@
         "durability": 100,
         "duration": 0,
         "enchantmentName": "",
-        "healAmount": 50,
+        "healAmount": 0,
         "id": 2,
         "isEnchanted": false,
         "isEquipped": false,
@@ -47,7 +48,8 @@
         "speedBonus": 0,
         "type": "CONSUMABLE",
         "upgradeLevel": 0,
-        "value": 25
+        "value": 25,
+        "itemLevel": 3
     },
     {
         "attackBonus": 0,
@@ -58,7 +60,7 @@
         "durability": 100,
         "duration": 0,
         "enchantmentName": "",
-        "healAmount": 100,
+        "healAmount": 0,
         "id": 3,
         "isEnchanted": false,
         "isEquipped": false,
@@ -72,10 +74,11 @@
         "speedBonus": 0,
         "type": "CONSUMABLE",
         "upgradeLevel": 0,
-        "value": 50
+        "value": 50,
+        "itemLevel": 6
     },
     {
-        "attackBonus": 2,
+        "attackBonus": 0,
         "critBonus": 0,
         "defenseBonus": 0,
         "description": "A sturdy iron sword.",
@@ -97,11 +100,12 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 20
+        "value": 20,
+        "itemLevel": 2
     },
     {
-        "attackBonus": 12,
-        "critBonus": 6,
+        "attackBonus": 0,
+        "critBonus": 0,
         "defenseBonus": 0,
         "description": "A heavy battle axe.",
         "dodgeBonus": 0,
@@ -122,11 +126,12 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 85
+        "value": 85,
+        "itemLevel": 4
     },
     {
-        "attackBonus": 11,
-        "critBonus": 14,
+        "attackBonus": 0,
+        "critBonus": 0,
         "defenseBonus": 0,
         "description": "A staff imbued with magic.",
         "dodgeBonus": 0,
@@ -147,11 +152,12 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 180
+        "value": 180,
+        "itemLevel": 7
     },
     {
-        "attackBonus": 22,
-        "critBonus": 18,
+        "attackBonus": 0,
+        "critBonus": 0,
         "defenseBonus": 0,
         "description": "A legendary blade forged to slay dragons.",
         "dodgeBonus": 0,
@@ -172,11 +178,12 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 800
+        "value": 800,
+        "itemLevel": 15
     },
     {
-        "attackBonus": 25,
-        "critBonus": 12,
+        "attackBonus": 0,
+        "critBonus": 0,
         "defenseBonus": 0,
         "description": "A cursed blade that steals the souls of its victims.",
         "dodgeBonus": 0,
@@ -197,12 +204,13 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 1200
+        "value": 1200,
+        "itemLevel": 16
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 2,
+        "defenseBonus": 0,
         "description": "Basic protective leather armor.",
         "dodgeBonus": 0,
         "durability": 100,
@@ -222,12 +230,13 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 20
+        "value": 20,
+        "itemLevel": 3
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 7,
+        "defenseBonus": 0,
         "description": "Interlocking metal rings provide good protection.",
         "dodgeBonus": 0,
         "durability": 100,
@@ -244,15 +253,16 @@
         "quantity": 1,
         "questId": "",
         "rarity": "UNCOMMON",
-        "speedBonus": -1,
+        "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 95
+        "value": 95,
+        "itemLevel": 4
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 13,
+        "defenseBonus": 0,
         "description": "Heavy plate armor with excellent protection.",
         "dodgeBonus": 0,
         "durability": 100,
@@ -269,15 +279,16 @@
         "quantity": 1,
         "questId": "",
         "rarity": "RARE",
-        "speedBonus": -3,
+        "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 240
+        "value": 240,
+        "itemLevel": 9
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 16,
+        "defenseBonus": 0,
         "description": "Armor forged in the bowels of Hell, offering divine defense.",
         "dodgeBonus": 0,
         "durability": 100,
@@ -294,15 +305,16 @@
         "quantity": 1,
         "questId": "",
         "rarity": "LEGENDARY",
-        "speedBonus": -2,
+        "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 700
+        "value": 700,
+        "itemLevel": 15
     },
     {
         "attackBonus": 0,
-        "critBonus": 6,
-        "defenseBonus": 18,
+        "critBonus": 0,
+        "defenseBonus": 0,
         "description": "A helm that grants control over death itself.",
         "dodgeBonus": 0,
         "durability": 100,
@@ -322,14 +334,15 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 1800
+        "value": 1800,
+        "itemLevel": 18
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
         "defenseBonus": 0,
         "description": "Enchanted with wind magic, grants increased movement speed and reflexes. Particularly favors quick-footed rogues and rangers.",
-        "dodgeBonus": 6,
+        "dodgeBonus": 0,
         "durability": 100,
         "duration": 0,
         "enchantmentName": "",
@@ -344,14 +357,15 @@
         "quantity": 1,
         "questId": "",
         "rarity": "UNCOMMON",
-        "speedBonus": 6,
+        "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 90
+        "value": 90,
+        "itemLevel": 4
     },
     {
-        "attackBonus": 2,
-        "critBonus": 18,
+        "attackBonus": 0,
+        "critBonus": 0,
         "defenseBonus": 0,
         "description": "Blessed by the gods of luck, this amulet dramatically increases the likelihood of critical strikes. Worn by legendary assassins.",
         "dodgeBonus": 0,
@@ -372,7 +386,8 @@
         "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 180
+        "value": 180,
+        "itemLevel": 7
     },
     {
         "attackBonus": 0,
@@ -397,7 +412,8 @@
         "speedBonus": 0,
         "type": "KEY",
         "upgradeLevel": 0,
-        "value": 0
+        "value": 0,
+        "itemLevel": 6
     },
     {
         "attackBonus": 0,
@@ -422,10 +438,11 @@
         "speedBonus": 0,
         "type": "SPECIAL",
         "upgradeLevel": 0,
-        "value": 1000
+        "value": 1000,
+        "itemLevel": 16
     },
     {
-        "attackBonus": 10,
+        "attackBonus": 0,
         "critBonus": 0,
         "defenseBonus": 0,
         "description": "Temporarily increases attack power.",
@@ -447,12 +464,13 @@
         "speedBonus": 0,
         "type": "CONSUMABLE",
         "upgradeLevel": 0,
-        "value": 40
+        "value": 40,
+        "itemLevel": 3
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 8,
+        "defenseBonus": 0,
         "description": "Temporarily increases defense.",
         "dodgeBonus": 0,
         "durability": 100,
@@ -472,14 +490,15 @@
         "speedBonus": 0,
         "type": "CONSUMABLE",
         "upgradeLevel": 0,
-        "value": 40
+        "value": 40,
+        "itemLevel": 3
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
         "defenseBonus": 0,
         "description": "Temporarily increases speed and dodge chance.",
-        "dodgeBonus": 10,
+        "dodgeBonus": 0,
         "durability": 100,
         "duration": 5,
         "enchantmentName": "",
@@ -494,13 +513,14 @@
         "quantity": 1,
         "questId": "",
         "rarity": "RARE",
-        "speedBonus": 7,
+        "speedBonus": 0,
         "type": "CONSUMABLE",
         "upgradeLevel": 0,
-        "value": 60
+        "value": 60,
+        "itemLevel": 6
     },
     {
-        "attackBonus": 1,
+        "attackBonus": 0,
         "critBonus": 0,
         "defenseBonus": 0,
         "description": "A basic bronze blade for beginners.",
@@ -522,11 +542,12 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 10
+        "value": 10,
+        "itemLevel": 1
     },
     {
-        "attackBonus": 12,
-        "critBonus": 4,
+        "attackBonus": 0,
+        "critBonus": 0,
         "defenseBonus": 0,
         "description": "A well-crafted steel blade.",
         "dodgeBonus": 0,
@@ -547,11 +568,12 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 110
+        "value": 110,
+        "itemLevel": 5
     },
     {
-        "attackBonus": 17,
-        "critBonus": 10,
+        "attackBonus": 0,
+        "critBonus": 0,
         "defenseBonus": 0,
         "description": "A lightweight sword of superior craftsmanship.",
         "dodgeBonus": 0,
@@ -569,14 +591,15 @@
         "quantity": 1,
         "questId": "",
         "rarity": "RARE",
-        "speedBonus": 3,
+        "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 320
+        "value": 320,
+        "itemLevel": 10
     },
     {
-        "attackBonus": 20,
-        "critBonus": 14,
+        "attackBonus": 0,
+        "critBonus": 0,
         "defenseBonus": 0,
         "description": "A blade wreathed in eternal flames.",
         "dodgeBonus": 0,
@@ -597,11 +620,12 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 520
+        "value": 520,
+        "itemLevel": 11
     },
     {
-        "attackBonus": 23,
-        "critBonus": 22,
+        "attackBonus": 0,
+        "critBonus": 0,
         "defenseBonus": 0,
         "description": "One, two! One, two! And through and through...",
         "dodgeBonus": 0,
@@ -622,11 +646,12 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 1500
+        "value": 1500,
+        "itemLevel": 17
     },
     {
-        "attackBonus": 1,
-        "critBonus": 6,
+        "attackBonus": 0,
+        "critBonus": 0,
         "defenseBonus": 0,
         "description": "A worn dagger, still sharp enough.",
         "dodgeBonus": 0,
@@ -644,14 +669,15 @@
         "quantity": 1,
         "questId": "",
         "rarity": "COMMON",
-        "speedBonus": 2,
+        "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 5
+        "value": 5,
+        "itemLevel": 1
     },
     {
-        "attackBonus": 6,
-        "critBonus": 16,
+        "attackBonus": 0,
+        "critBonus": 0,
         "defenseBonus": 0,
         "description": "Coated with deadly venom.",
         "dodgeBonus": 0,
@@ -669,17 +695,18 @@
         "quantity": 1,
         "questId": "",
         "rarity": "UNCOMMON",
-        "speedBonus": 5,
+        "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 105
+        "value": 105,
+        "itemLevel": 5
     },
     {
-        "attackBonus": 10,
-        "critBonus": 28,
+        "attackBonus": 0,
+        "critBonus": 0,
         "defenseBonus": 0,
         "description": "Forged in darkness, strikes from nowhere.",
-        "dodgeBonus": 6,
+        "dodgeBonus": 0,
         "durability": 100,
         "duration": 0,
         "enchantmentName": "",
@@ -694,14 +721,15 @@
         "quantity": 1,
         "questId": "",
         "rarity": "RARE",
-        "speedBonus": 7,
+        "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 280
+        "value": 280,
+        "itemLevel": 9
     },
     {
-        "attackBonus": 3,
-        "critBonus": 2,
+        "attackBonus": 0,
+        "critBonus": 0,
         "defenseBonus": 0,
         "description": "Better for trees than combat, but it'll do.",
         "dodgeBonus": 0,
@@ -722,11 +750,12 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 15
+        "value": 15,
+        "itemLevel": 2
     },
     {
-        "attackBonus": 13,
-        "critBonus": 7,
+        "attackBonus": 0,
+        "critBonus": 0,
         "defenseBonus": 0,
         "description": "A brutal weapon designed for war.",
         "dodgeBonus": 0,
@@ -744,14 +773,15 @@
         "quantity": 1,
         "questId": "",
         "rarity": "UNCOMMON",
-        "speedBonus": -1,
+        "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 115
+        "value": 115,
+        "itemLevel": 5
     },
     {
-        "attackBonus": 21,
-        "critBonus": 16,
+        "attackBonus": 0,
+        "critBonus": 0,
         "defenseBonus": 0,
         "description": "A massive axe that cleaves through armor.",
         "dodgeBonus": 0,
@@ -769,13 +799,14 @@
         "quantity": 1,
         "questId": "",
         "rarity": "RARE",
-        "speedBonus": -3,
+        "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 380
+        "value": 380,
+        "itemLevel": 10
     },
     {
-        "attackBonus": 3,
+        "attackBonus": 0,
         "critBonus": 0,
         "defenseBonus": 0,
         "description": "A simple spear with reach advantage.",
@@ -797,12 +828,13 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 10
+        "value": 10,
+        "itemLevel": 2
     },
     {
-        "attackBonus": 11,
+        "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 3,
+        "defenseBonus": 0,
         "description": "A long pike for keeping enemies at bay.",
         "dodgeBonus": 0,
         "durability": 100,
@@ -822,12 +854,13 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 95
+        "value": 95,
+        "itemLevel": 4
     },
     {
-        "attackBonus": 16,
-        "critBonus": 6,
-        "defenseBonus": 5,
+        "attackBonus": 0,
+        "critBonus": 0,
+        "defenseBonus": 0,
         "description": "A versatile polearm weapon.",
         "dodgeBonus": 0,
         "durability": 100,
@@ -847,11 +880,12 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 280
+        "value": 280,
+        "itemLevel": 9
     },
     {
-        "attackBonus": 2,
-        "critBonus": 8,
+        "attackBonus": 0,
+        "critBonus": 0,
         "defenseBonus": 0,
         "description": "A basic staff for novice mages.",
         "dodgeBonus": 0,
@@ -872,11 +906,12 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 20
+        "value": 20,
+        "itemLevel": 3
     },
     {
-        "attackBonus": 9,
-        "critBonus": 13,
+        "attackBonus": 0,
+        "critBonus": 0,
         "defenseBonus": 0,
         "description": "Channels the power of fire.",
         "dodgeBonus": 0,
@@ -897,11 +932,12 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 135
+        "value": 135,
+        "itemLevel": 6
     },
     {
-        "attackBonus": 12,
-        "critBonus": 16,
+        "attackBonus": 0,
+        "critBonus": 0,
         "defenseBonus": 0,
         "description": "Freezes enemies with icy magic.",
         "dodgeBonus": 0,
@@ -919,15 +955,16 @@
         "quantity": 1,
         "questId": "",
         "rarity": "RARE",
-        "speedBonus": 2,
+        "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 300
+        "value": 300,
+        "itemLevel": 9
     },
     {
-        "attackBonus": 14,
-        "critBonus": 20,
-        "defenseBonus": 4,
+        "attackBonus": 0,
+        "critBonus": 0,
+        "defenseBonus": 0,
         "description": "The staff of a grand wizard.",
         "dodgeBonus": 0,
         "durability": 100,
@@ -947,12 +984,13 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 600
+        "value": 600,
+        "itemLevel": 13
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 1,
+        "defenseBonus": 0,
         "description": "Simple cloth offering minimal protection.",
         "dodgeBonus": 0,
         "durability": 100,
@@ -972,12 +1010,13 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 10
+        "value": 10,
+        "itemLevel": 2
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 2,
+        "defenseBonus": 0,
         "description": "Quilted layers provide basic protection.",
         "dodgeBonus": 0,
         "durability": 100,
@@ -997,12 +1036,13 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 18
+        "value": 18,
+        "itemLevel": 2
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 3,
+        "defenseBonus": 0,
         "description": "Tough animal hide offers good flexibility.",
         "dodgeBonus": 0,
         "durability": 100,
@@ -1022,14 +1062,15 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 28
+        "value": 28,
+        "itemLevel": 3
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 6,
+        "defenseBonus": 0,
         "description": "Leather reinforced with metal studs.",
-        "dodgeBonus": 4,
+        "dodgeBonus": 0,
         "durability": 100,
         "duration": 0,
         "enchantmentName": "",
@@ -1047,12 +1088,13 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 85
+        "value": 85,
+        "itemLevel": 4
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 8,
+        "defenseBonus": 0,
         "description": "Overlapping metal scales.",
         "dodgeBonus": 0,
         "durability": 100,
@@ -1069,15 +1111,16 @@
         "quantity": 1,
         "questId": "",
         "rarity": "UNCOMMON",
-        "speedBonus": -1,
+        "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 120
+        "value": 120,
+        "itemLevel": 6
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 9,
+        "defenseBonus": 0,
         "description": "Solid chest protection.",
         "dodgeBonus": 0,
         "durability": 100,
@@ -1094,15 +1137,16 @@
         "quantity": 1,
         "questId": "",
         "rarity": "UNCOMMON",
-        "speedBonus": -1,
+        "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 135
+        "value": 135,
+        "itemLevel": 6
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 11,
+        "defenseBonus": 0,
         "description": "Partial plate armor with good mobility.",
         "dodgeBonus": 0,
         "durability": 100,
@@ -1119,15 +1163,16 @@
         "quantity": 1,
         "questId": "",
         "rarity": "RARE",
-        "speedBonus": -2,
+        "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 220
+        "value": 220,
+        "itemLevel": 8
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 10,
+        "defenseBonus": 0,
         "description": "Strips of metal bound together.",
         "dodgeBonus": 0,
         "durability": 100,
@@ -1144,15 +1189,16 @@
         "quantity": 1,
         "questId": "",
         "rarity": "UNCOMMON",
-        "speedBonus": -2,
+        "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 150
+        "value": 150,
+        "itemLevel": 6
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 12,
+        "defenseBonus": 0,
         "description": "Vertical metal strips over leather.",
         "dodgeBonus": 0,
         "durability": 100,
@@ -1169,15 +1215,16 @@
         "quantity": 1,
         "questId": "",
         "rarity": "RARE",
-        "speedBonus": -2,
+        "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 260
+        "value": 260,
+        "itemLevel": 9
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 14,
+        "defenseBonus": 0,
         "description": "Complete heavy plate protection.",
         "dodgeBonus": 0,
         "durability": 100,
@@ -1194,17 +1241,18 @@
         "quantity": 1,
         "questId": "",
         "rarity": "RARE",
-        "speedBonus": -4,
+        "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 420
+        "value": 420,
+        "itemLevel": 10
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 17,
+        "defenseBonus": 0,
         "description": "Crafted from genuine dragon scales.",
-        "dodgeBonus": 6,
+        "dodgeBonus": 0,
         "durability": 100,
         "duration": 0,
         "enchantmentName": "",
@@ -1219,17 +1267,18 @@
         "quantity": 1,
         "questId": "",
         "rarity": "EPIC",
-        "speedBonus": -1,
+        "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 800
+        "value": 800,
+        "itemLevel": 14
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 20,
+        "defenseBonus": 0,
         "description": "Blessed armor from the heavens.",
-        "dodgeBonus": 10,
+        "dodgeBonus": 0,
         "durability": 100,
         "duration": 0,
         "enchantmentName": "",
@@ -1244,15 +1293,16 @@
         "quantity": 1,
         "questId": "",
         "rarity": "LEGENDARY",
-        "speedBonus": 2,
+        "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 2000
+        "value": 2000,
+        "itemLevel": 18
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 1,
+        "defenseBonus": 0,
         "description": "A basic wooden shield.",
         "dodgeBonus": 0,
         "durability": 100,
@@ -1272,12 +1322,13 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 12
+        "value": 12,
+        "itemLevel": 2
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 5,
+        "defenseBonus": 0,
         "description": "Sturdy metal shield.",
         "dodgeBonus": 0,
         "durability": 100,
@@ -1297,12 +1348,13 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 75
+        "value": 75,
+        "itemLevel": 3
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 8,
+        "defenseBonus": 0,
         "description": "Massive shield offering great protection.",
         "dodgeBonus": 0,
         "durability": 100,
@@ -1319,14 +1371,15 @@
         "quantity": 1,
         "questId": "",
         "rarity": "RARE",
-        "speedBonus": -2,
+        "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 200
+        "value": 200,
+        "itemLevel": 7
     },
     {
-        "attackBonus": 8,
-        "critBonus": 3,
+        "attackBonus": 0,
+        "critBonus": 0,
         "defenseBonus": 0,
         "description": "Forged in the furnaces of mountain dwarves, this ring channels raw physical strength into every strike. Warriors favor this precious artifact.",
         "dodgeBonus": 0,
@@ -1347,14 +1400,15 @@
         "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 110
+        "value": 110,
+        "itemLevel": 5
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 6,
+        "defenseBonus": 0,
         "description": "A protective charm that shields the wearer from harm. Crafted by ancient mages to withstand the fiercest blows.",
-        "dodgeBonus": 2,
+        "dodgeBonus": 0,
         "durability": 100,
         "duration": 0,
         "enchantmentName": "",
@@ -1372,14 +1426,15 @@
         "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 100
+        "value": 100,
+        "itemLevel": 5
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 5,
+        "defenseBonus": 0,
         "description": "Pulses with life energy, enhancing the wearer's constitution and resilience. Grants both defensive prowess and regenerative vitality.",
-        "dodgeBonus": 3,
+        "dodgeBonus": 0,
         "durability": 100,
         "duration": 0,
         "enchantmentName": "",
@@ -1397,14 +1452,15 @@
         "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 170
+        "value": 170,
+        "itemLevel": 7
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 2,
+        "defenseBonus": 0,
         "description": "Woven from the essence of twilight itself, this cloak allows the wearer to slip between shadows. Masters of stealth seek this treasure.",
-        "dodgeBonus": 14,
+        "dodgeBonus": 0,
         "durability": 100,
         "duration": 0,
         "enchantmentName": "",
@@ -1419,15 +1475,16 @@
         "quantity": 1,
         "questId": "",
         "rarity": "RARE",
-        "speedBonus": 4,
+        "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 220
+        "value": 220,
+        "itemLevel": 8
     },
     {
-        "attackBonus": 12,
-        "critBonus": 12,
-        "defenseBonus": 8,
+        "attackBonus": 0,
+        "critBonus": 0,
+        "defenseBonus": 0,
         "description": "The crystallized heart of an ancient dragon, containing immense power. Grants both offensive fury and defensive scales to the wielder.",
         "dodgeBonus": 0,
         "durability": 100,
@@ -1444,17 +1501,18 @@
         "quantity": 1,
         "questId": "",
         "rarity": "EPIC",
-        "speedBonus": -1,
+        "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 650
+        "value": 650,
+        "itemLevel": 13
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 8,
+        "defenseBonus": 0,
         "description": "A legendary feather from the eternal phoenix, granting near-immortal evasion and rapid regeneration. The ultimate accessory of champions.",
-        "dodgeBonus": 20,
+        "dodgeBonus": 0,
         "durability": 100,
         "duration": 0,
         "enchantmentName": "",
@@ -1469,15 +1527,16 @@
         "quantity": 1,
         "questId": "",
         "rarity": "LEGENDARY",
-        "speedBonus": 3,
+        "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 1200
+        "value": 1200,
+        "itemLevel": 17
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 7,
+        "defenseBonus": 0,
         "description": "Hardens the wearer's flesh to the strength of iron, providing exceptional defense at the cost of minor agility.",
         "dodgeBonus": 0,
         "durability": 100,
@@ -1494,14 +1553,15 @@
         "quantity": 1,
         "questId": "",
         "rarity": "UNCOMMON",
-        "speedBonus": -2,
+        "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 95
+        "value": 95,
+        "itemLevel": 4
     },
     {
-        "attackBonus": 4,
-        "critBonus": 12,
+        "attackBonus": 0,
+        "critBonus": 0,
         "defenseBonus": 0,
         "description": "The hidden weapon of shadow guilds. Amplifies critical damage and speed for the perfect strike.",
         "dodgeBonus": 0,
@@ -1519,15 +1579,16 @@
         "quantity": 1,
         "questId": "",
         "rarity": "RARE",
-        "speedBonus": 5,
+        "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 200
+        "value": 200,
+        "itemLevel": 8
     },
     {
-        "attackBonus": 5,
-        "critBonus": 5,
-        "defenseBonus": 5,
+        "attackBonus": 0,
+        "critBonus": 0,
+        "defenseBonus": 0,
         "description": "Blessed by ancient scholars, this amulet provides balanced enhancements to both offense and defense through tactical insight.",
         "dodgeBonus": 0,
         "durability": 100,
@@ -1547,12 +1608,13 @@
         "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 210
+        "value": 210,
+        "itemLevel": 8
     },
     {
-        "attackBonus": 15,
-        "critBonus": 8,
-        "defenseBonus": -3,
+        "attackBonus": 0,
+        "critBonus": 0,
+        "defenseBonus": 0,
         "description": "An artifact of dark power, granting tremendous attack at the cost of reduced defense. For the bold and aggressive.",
         "dodgeBonus": 0,
         "durability": 100,
@@ -1572,14 +1634,15 @@
         "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 550
+        "value": 550,
+        "itemLevel": 12
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": 4,
+        "defenseBonus": 0,
         "description": "Infused with holy silver, this pendant provides steady defensive protection and minor healing properties.",
-        "dodgeBonus": 4,
+        "dodgeBonus": 0,
         "durability": 100,
         "duration": 0,
         "enchantmentName": "",
@@ -1597,7 +1660,8 @@
         "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 105
+        "value": 105,
+        "itemLevel": 5
     },
     {
         "attackBonus": 0,
@@ -1608,7 +1672,7 @@
         "durability": 100,
         "duration": 0,
         "enchantmentName": "",
-        "healAmount": 200,
+        "healAmount": 0,
         "id": 4,
         "isEnchanted": false,
         "isEquipped": false,
@@ -1622,7 +1686,8 @@
         "speedBonus": 0,
         "type": "CONSUMABLE",
         "upgradeLevel": 0,
-        "value": 100
+        "value": 100,
+        "itemLevel": 10
     },
     {
         "attackBonus": 0,
@@ -1633,7 +1698,7 @@
         "durability": 100,
         "duration": 0,
         "enchantmentName": "",
-        "healAmount": 999,
+        "healAmount": 0,
         "id": 5,
         "isEnchanted": false,
         "isEquipped": false,
@@ -1647,7 +1712,8 @@
         "speedBonus": 0,
         "type": "CONSUMABLE",
         "upgradeLevel": 0,
-        "value": 250
+        "value": 250,
+        "itemLevel": 14
     },
     {
         "attackBonus": 0,
@@ -1672,12 +1738,13 @@
         "speedBonus": 0,
         "type": "CONSUMABLE",
         "upgradeLevel": 0,
-        "value": 500
+        "value": 500,
+        "itemLevel": 14
     },
     {
-        "attackBonus": 20,
+        "attackBonus": 0,
         "critBonus": 0,
-        "defenseBonus": -5,
+        "defenseBonus": 0,
         "description": "Massive attack boost, reduced defense.",
         "dodgeBonus": 0,
         "durability": 100,
@@ -1697,14 +1764,15 @@
         "speedBonus": 0,
         "type": "CONSUMABLE",
         "upgradeLevel": 0,
-        "value": 80
+        "value": 80,
+        "itemLevel": 7
     },
     {
         "attackBonus": 0,
         "critBonus": 0,
         "defenseBonus": 0,
         "description": "Become invisible to enemies.",
-        "dodgeBonus": 50,
+        "dodgeBonus": 0,
         "durability": 100,
         "duration": 2,
         "enchantmentName": "",
@@ -1722,6 +1790,7 @@
         "speedBonus": 0,
         "type": "CONSUMABLE",
         "upgradeLevel": 0,
-        "value": 150
+        "value": 150,
+        "itemLevel": 11
     }
 ]

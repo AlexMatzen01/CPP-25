@@ -10,6 +10,7 @@
 #include <sstream>
 #include <algorithm>
 #include <cctype>
+#include <cstdlib>
 #include <chrono>
 #include <thread>
 #include <iomanip>
@@ -403,8 +404,521 @@ int calculateExpForLevel(int level) {
     return static_cast<int>(exp);
 }
 
+namespace {
+
+int rarityRank(ItemRarity rarity) {
+    switch (rarity) {
+        case ItemRarity::COMMON:    return 1;
+        case ItemRarity::UNCOMMON:  return 2;
+        case ItemRarity::RARE:      return 3;
+        case ItemRarity::EPIC:      return 4;
+        case ItemRarity::LEGENDARY: return 5;
+        default:                    return 1;
+    }
+}
+
+void grantTierStatBonus(Item& item, int tier) {
+    const int magnitude = (tier <= 2) ? 2 : (tier == 3 ? 4 : 6);
+
+    switch (item.type) {
+        case ItemType::WEAPON: {
+            int roll = randomInt(1, 100);
+            if (roll <= 55) {
+                item.attackBonus += magnitude;
+            } else if (roll <= 85) {
+                item.critBonus += std::max(1, magnitude / 2);
+            } else {
+                item.speedBonus += std::max(1, magnitude / 3);
+            }
+            break;
+        }
+        case ItemType::ARMOR: {
+            int roll = randomInt(1, 100);
+            if (roll <= 65) {
+                item.defenseBonus += magnitude;
+            } else {
+                item.dodgeBonus += std::max(1, magnitude / 2);
+            }
+            break;
+        }
+        case ItemType::ACCESSORY: {
+            int roll = randomInt(1, 5);
+            if (roll == 1) item.attackBonus += magnitude;
+            else if (roll == 2) item.defenseBonus += magnitude;
+            else if (roll == 3) item.critBonus += std::max(1, magnitude);
+            else if (roll == 4) item.dodgeBonus += std::max(1, magnitude);
+            else item.speedBonus += std::max(1, magnitude / 2);
+            break;
+        }
+        case ItemType::CONSUMABLE: {
+            if (item.healAmount > 0) {
+                item.healAmount += magnitude * 3;
+            }
+            if (item.attackBonus > 0) item.attackBonus += std::max(1, magnitude / 2);
+            if (item.defenseBonus > 0) item.defenseBonus += std::max(1, magnitude / 2);
+            if (item.critBonus > 0) item.critBonus += std::max(1, magnitude / 2);
+            if (item.dodgeBonus > 0) item.dodgeBonus += std::max(1, magnitude / 2);
+            if (item.speedBonus > 0) item.speedBonus += std::max(1, magnitude / 3);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+void rollUniquePerk(Item& item, int tier) {
+    if (item.hasUniquePerk || tier < 3) {
+        return;
+    }
+
+    int chance = (tier >= 4) ? 70 : 35;
+    chance += (rarityRank(item.rarity) - 1) * 5;
+    if (!randomChance(chance)) {
+        return;
+    }
+
+    item.hasUniquePerk = true;
+
+    switch (item.type) {
+        case ItemType::WEAPON: {
+            int roll = randomInt(1, 3);
+            if (roll == 1) {
+                item.uniquePerkName = "Executioner";
+                item.attackBonus += 6;
+                item.critBonus += 4;
+            } else if (roll == 2) {
+                item.uniquePerkName = "Tempo";
+                item.speedBonus += 3;
+                item.critBonus += 3;
+            } else {
+                item.uniquePerkName = "Blooddrinker";
+                item.attackBonus += 4;
+                item.healAmount += 8;
+            }
+            break;
+        }
+        case ItemType::ARMOR: {
+            int roll = randomInt(1, 3);
+            if (roll == 1) {
+                item.uniquePerkName = "Bulwark";
+                item.defenseBonus += 8;
+            } else if (roll == 2) {
+                item.uniquePerkName = "Warden";
+                item.defenseBonus += 5;
+                item.dodgeBonus += 5;
+            } else {
+                item.uniquePerkName = "Juggernaut";
+                item.defenseBonus += 6;
+                item.speedBonus -= 1;
+            }
+            break;
+        }
+        case ItemType::ACCESSORY: {
+            int roll = randomInt(1, 3);
+            if (roll == 1) {
+                item.uniquePerkName = "Fortunebound";
+                item.critBonus += 6;
+                item.dodgeBonus += 6;
+            } else if (roll == 2) {
+                item.uniquePerkName = "Arcane Pulse";
+                item.attackBonus += 4;
+                item.speedBonus += 4;
+            } else {
+                item.uniquePerkName = "Guardian Sigil";
+                item.defenseBonus += 5;
+                item.dodgeBonus += 4;
+            }
+            break;
+        }
+        case ItemType::CONSUMABLE: {
+            item.uniquePerkName = "Distilled";
+            if (item.healAmount > 0) {
+                item.healAmount = static_cast<int>(item.healAmount * 1.4f);
+            }
+            break;
+        }
+        default:
+            item.uniquePerkName = "Empowered";
+            break;
+    }
+}
+
+}  // namespace
+
+int estimateEnemyPowerLevel(const Enemy& enemy) {
+    const CombatStats& stats = enemy.stats;
+    const int offense = stats.attack + (stats.magicPower / 2);
+    const int defense = stats.defense + (stats.magicResist / 2);
+    const int vitality = std::max(1, stats.maxHP / 12);
+    const int mobility = std::max(1, stats.speed / 2);
+
+    int estimated = (offense + defense + vitality + mobility) / 6;
+    if (estimated < 1) {
+        estimated = 1;
+    }
+
+    if (enemy.isBoss) {
+        estimated += 4;
+    }
+
+    return estimated;
+}
+
+int rollItemLevel(int contextLevel, ItemRarity rarity, bool isBoss) {
+    int base = std::max(1, contextLevel);
+    base += (rarityRank(rarity) - 1) * 2;
+    if (isBoss) {
+        base += 3;
+    }
+
+    const int variance = std::max(1, base / 6);
+    const int rolled = base + randomInt(-variance, variance);
+    return std::max(1, rolled);
+}
+
+int getItemLevelTier(int itemLevel) {
+    if (itemLevel < 10) return 1;
+    if (itemLevel < 20) return 2;
+    if (itemLevel < 35) return 3;
+    return 4;
+}
+
+std::string itemLevelTierToString(int itemLevel) {
+    switch (getItemLevelTier(itemLevel)) {
+        case 1: return "Tier I";
+        case 2: return "Tier II";
+        case 3: return "Tier III";
+        case 4: return "Tier IV";
+        default: return "Tier I";
+    }
+}
+
+void applyItemLevelScaling(Item& item, int targetItemLevel, bool rollPerk) {
+    const int currentLevel = std::max(1, item.itemLevel);
+    const int desiredLevel = std::max(1, targetItemLevel);
+
+    if (desiredLevel <= currentLevel) {
+        item.itemLevel = currentLevel;
+        if (item.value < 1) item.value = 1;
+        return;
+    }
+
+    const int levelDelta = desiredLevel - currentLevel;
+    const int rarityMod = rarityRank(item.rarity);
+    const int oldTier = getItemLevelTier(currentLevel);
+
+    switch (item.type) {
+        case ItemType::WEAPON: {
+            item.attackBonus += std::max(1, (levelDelta * (3 + rarityMod)) / 6);
+            if (item.critBonus != 0 || randomChance(55)) {
+                item.critBonus += std::max(1, levelDelta / 3);
+            }
+            if (item.speedBonus != 0 && randomChance(35)) {
+                item.speedBonus += std::max(1, levelDelta / 5);
+            }
+            break;
+        }
+        case ItemType::ARMOR: {
+            item.defenseBonus += std::max(1, (levelDelta * (4 + rarityMod)) / 7);
+            if (item.dodgeBonus != 0 || randomChance(45)) {
+                item.dodgeBonus += std::max(1, levelDelta / 4);
+            }
+            if (item.speedBonus < 0 && randomChance(35)) {
+                item.speedBonus += 1;
+            }
+            break;
+        }
+        case ItemType::ACCESSORY: {
+            int statPoints = std::max(1, levelDelta / 2);
+            while (statPoints-- > 0) {
+                int roll = randomInt(1, 5);
+                if (roll == 1) item.attackBonus += 1;
+                else if (roll == 2) item.defenseBonus += 1;
+                else if (roll == 3) item.critBonus += 1;
+                else if (roll == 4) item.dodgeBonus += 1;
+                else item.speedBonus += 1;
+            }
+            break;
+        }
+        case ItemType::CONSUMABLE: {
+            if (item.healAmount > 0) {
+                item.healAmount += std::max(3, levelDelta * (1 + rarityMod / 2));
+            }
+            if (item.attackBonus > 0) item.attackBonus += std::max(1, levelDelta / 3);
+            if (item.defenseBonus > 0) item.defenseBonus += std::max(1, levelDelta / 3);
+            if (item.critBonus > 0) item.critBonus += std::max(1, levelDelta / 4);
+            if (item.dodgeBonus > 0) item.dodgeBonus += std::max(1, levelDelta / 4);
+            if (item.speedBonus > 0) item.speedBonus += std::max(1, levelDelta / 5);
+            break;
+        }
+        default:
+            break;
+    }
+
+    if (item.maxDurability > 0) {
+        item.maxDurability += std::max(0, levelDelta / 2);
+        item.durability = item.maxDurability;
+    }
+
+    item.value += levelDelta * (12 + rarityMod * 4);
+    if (item.value < 1) item.value = 1;
+
+    item.itemLevel = desiredLevel;
+    const int newTier = getItemLevelTier(desiredLevel);
+
+    if (rollPerk && newTier > oldTier) {
+        for (int tier = oldTier + 1; tier <= newTier; ++tier) {
+            grantTierStatBonus(item, tier);
+        }
+    }
+
+    if (rollPerk) {
+        rollUniquePerk(item, newTier);
+    }
+}
+
+int estimateItemLevelFromLegacyStats(const Item& item) {
+    int rarityBase = 4;
+    switch (item.rarity) {
+        case ItemRarity::COMMON: rarityBase = 4; break;
+        case ItemRarity::UNCOMMON: rarityBase = 9; break;
+        case ItemRarity::RARE: rarityBase = 15; break;
+        case ItemRarity::EPIC: rarityBase = 24; break;
+        case ItemRarity::LEGENDARY: rarityBase = 34; break;
+        default: break;
+    }
+
+    int power = 0;
+    power += std::max(0, item.attackBonus) * 3;
+    power += std::max(0, item.defenseBonus) * 3;
+    power += std::max(0, item.healAmount) / 4;
+    power += std::max(0, item.critBonus) * 2;
+    power += std::max(0, item.dodgeBonus) * 2;
+    power += std::max(0, item.speedBonus) * 2;
+    power += std::max(0, item.duration) * 2;
+
+    // Negative modifiers should lower legacy strength a bit.
+    power += std::min(0, item.attackBonus) * 2;
+    power += std::min(0, item.defenseBonus) * 2;
+    power += std::min(0, item.speedBonus) * 2;
+
+    int estimated = rarityBase + std::max(0, power) / 10;
+    if (item.type == ItemType::KEY || item.type == ItemType::QUEST ||
+        item.type == ItemType::SPECIAL) {
+        estimated = std::max(estimated, rarityBase);
+    }
+
+    if (estimated < 1) estimated = 1;
+    if (estimated > 60) estimated = 60;
+    return estimated;
+}
+
+void rebuildItemStatsFromLevel(Item& item) {
+    item.itemLevel = std::max(1, std::min(item.itemLevel, 60));
+    item.quantity = std::max(1, item.quantity);
+
+    const int level = item.itemLevel;
+    const int rarity = rarityRank(item.rarity);
+    const std::string lowerName = toLower(item.name);
+
+    item.healAmount = 0;
+    item.attackBonus = 0;
+    item.defenseBonus = 0;
+    item.critBonus = 0;
+    item.dodgeBonus = 0;
+    item.speedBonus = 0;
+
+    auto applyValueFloor = [&](int floorValue) {
+        if (item.value < floorValue) {
+            item.value = floorValue;
+        }
+    };
+
+    switch (item.type) {
+        case ItemType::WEAPON: {
+            item.isUsable = false;
+            item.isStackable = false;
+
+            item.attackBonus = std::max(1, ((level * (4 + rarity)) / 4) + rarity);
+            item.critBonus = std::max(0, (level * (1 + rarity)) / 8);
+
+            if (lowerName.find("dagger") != std::string::npos ||
+                lowerName.find("fang") != std::string::npos) {
+                item.attackBonus = std::max(1, item.attackBonus - std::max(1, level / 8));
+                item.critBonus += std::max(1, level / 3);
+                item.speedBonus += std::max(1, level / 12);
+            } else if (lowerName.find("axe") != std::string::npos) {
+                item.attackBonus += std::max(1, level / 4);
+                item.speedBonus -= std::max(1, level / 16);
+            } else if (lowerName.find("staff") != std::string::npos ||
+                       lowerName.find("wand") != std::string::npos) {
+                item.critBonus += std::max(1, level / 5);
+                item.defenseBonus += std::max(0, level / 16);
+            } else if (lowerName.find("spear") != std::string::npos ||
+                       lowerName.find("pike") != std::string::npos ||
+                       lowerName.find("halberd") != std::string::npos) {
+                item.defenseBonus += std::max(1, level / 10);
+            } else if (lowerName.find("sword") != std::string::npos ||
+                       lowerName.find("blade") != std::string::npos) {
+                item.critBonus += std::max(1, level / 7);
+            }
+
+            item.maxDurability = std::max(item.maxDurability, 100 + (level * 2));
+            item.durability = std::max(item.durability, item.maxDurability);
+            applyValueFloor(15 + (level * (6 + rarity * 3)));
+            break;
+        }
+        case ItemType::ARMOR: {
+            item.isUsable = false;
+            item.isStackable = false;
+
+            item.defenseBonus = std::max(1, ((level * (5 + rarity)) / 4) + rarity);
+            item.dodgeBonus = std::max(0, level / 12);
+
+            if (lowerName.find("shield") != std::string::npos) {
+                item.defenseBonus += std::max(1, level / 4);
+                item.speedBonus -= std::max(0, level / 18);
+            }
+
+            if (lowerName.find("robe") != std::string::npos ||
+                lowerName.find("cloak") != std::string::npos ||
+                lowerName.find("leather") != std::string::npos ||
+                lowerName.find("hide") != std::string::npos) {
+                item.dodgeBonus += std::max(1, level / 10) + std::max(0, rarity - 1);
+                item.speedBonus += std::max(0, level / 20);
+            }
+
+            if (lowerName.find("plate") != std::string::npos ||
+                lowerName.find("mail") != std::string::npos ||
+                lowerName.find("armor") != std::string::npos ||
+                lowerName.find("steel") != std::string::npos) {
+                item.speedBonus -= std::max(0, (level / 14) - 1);
+            }
+
+            item.maxDurability = std::max(item.maxDurability, 120 + (level * 3));
+            item.durability = std::max(item.durability, item.maxDurability);
+            applyValueFloor(15 + (level * (7 + rarity * 3)));
+            break;
+        }
+        case ItemType::ACCESSORY: {
+            item.isUsable = false;
+            item.isStackable = false;
+
+            const int budget = std::max(3, (level * (2 + rarity)) / 3);
+
+            if (lowerName.find("swiftness") != std::string::npos) {
+                item.speedBonus = std::max(2, budget / 2);
+                item.dodgeBonus = std::max(1, budget - item.speedBonus);
+            } else if (lowerName.find("fortune") != std::string::npos) {
+                item.critBonus = std::max(2, budget);
+                item.attackBonus = std::max(1, budget / 4);
+            } else if (lowerName.find("might") != std::string::npos) {
+                item.attackBonus = std::max(2, budget);
+                item.critBonus = std::max(1, budget / 4);
+            } else if (lowerName.find("protection") != std::string::npos ||
+                       lowerName.find("iron skin") != std::string::npos) {
+                item.defenseBonus = std::max(2, budget);
+                item.dodgeBonus = std::max(1, budget / 5);
+                if (lowerName.find("iron skin") != std::string::npos) {
+                    item.speedBonus -= std::max(1, level / 12);
+                }
+            } else if (lowerName.find("vitality") != std::string::npos) {
+                item.defenseBonus = std::max(2, (budget * 2) / 3);
+                item.dodgeBonus = std::max(1, budget / 3);
+            } else if (lowerName.find("shadow") != std::string::npos) {
+                item.dodgeBonus = std::max(2, (budget * 2) / 3);
+                item.speedBonus = std::max(1, budget / 3);
+                item.defenseBonus = std::max(1, budget / 6);
+            } else if (lowerName.find("dragon") != std::string::npos) {
+                item.attackBonus = std::max(2, budget / 2);
+                item.defenseBonus = std::max(2, budget / 3);
+                item.critBonus = std::max(1, budget - item.attackBonus - item.defenseBonus);
+                item.speedBonus -= std::max(1, level / 14);
+            } else if (lowerName.find("assassin") != std::string::npos) {
+                item.critBonus = std::max(2, budget / 2);
+                item.speedBonus = std::max(1, budget / 3);
+                item.attackBonus = std::max(1, budget - item.critBonus - item.speedBonus);
+            } else if (lowerName.find("wisdom") != std::string::npos) {
+                item.attackBonus = std::max(1, budget / 3);
+                item.defenseBonus = std::max(1, budget / 3);
+                item.critBonus = std::max(1, budget - item.attackBonus - item.defenseBonus);
+            } else if (lowerName.find("vile black hand") != std::string::npos) {
+                item.attackBonus = std::max(2, budget + std::max(1, rarity));
+                item.critBonus = std::max(1, budget / 3);
+                item.defenseBonus = -std::max(1, level / 10);
+            } else {
+                const int profile = std::abs(item.id) % 4;
+                if (profile == 0) {
+                    item.attackBonus = std::max(2, budget / 2);
+                    item.critBonus = std::max(1, budget - item.attackBonus);
+                } else if (profile == 1) {
+                    item.defenseBonus = std::max(2, budget / 2);
+                    item.dodgeBonus = std::max(1, budget - item.defenseBonus);
+                } else if (profile == 2) {
+                    item.speedBonus = std::max(1, budget / 3);
+                    item.dodgeBonus = std::max(1, budget / 2);
+                    item.critBonus = std::max(1, budget - item.speedBonus - item.dodgeBonus);
+                } else {
+                    item.attackBonus = std::max(1, budget / 3);
+                    item.defenseBonus = std::max(1, budget / 3);
+                    item.critBonus = std::max(1, budget - item.attackBonus - item.defenseBonus);
+                }
+            }
+
+            applyValueFloor(20 + (level * (7 + rarity * 3)));
+            break;
+        }
+        case ItemType::CONSUMABLE: {
+            item.isUsable = true;
+
+            if (lowerName.find("resurrection") != std::string::npos) {
+                item.isStackable = false;
+                applyValueFloor(120 + (level * (8 + rarity * 3)));
+                break;
+            }
+
+            if (item.duration > 0) {
+                item.isStackable = false;
+
+                if (lowerName.find("berserker") != std::string::npos) {
+                    item.attackBonus = std::max(3, (level * (3 + rarity)) / 3);
+                    item.critBonus = std::max(1, level / 7);
+                    item.defenseBonus = -std::max(1, level / 8);
+                } else if (lowerName.find("strength") != std::string::npos) {
+                    item.attackBonus = std::max(2, (level * (2 + rarity)) / 4);
+                    item.critBonus = std::max(1, level / 10);
+                } else if (lowerName.find("defense") != std::string::npos) {
+                    item.defenseBonus = std::max(2, (level * (2 + rarity)) / 4);
+                } else if (lowerName.find("agility") != std::string::npos ||
+                           lowerName.find("invis") != std::string::npos) {
+                    item.dodgeBonus = std::max(2, (level * (2 + rarity)) / 4);
+                    item.speedBonus = std::max(1, level / 8);
+                } else {
+                    item.attackBonus = std::max(1, level / 6);
+                    item.defenseBonus = std::max(1, level / 6);
+                }
+            } else {
+                item.isStackable = true;
+                item.healAmount = std::min(999, 15 + (level * (8 + rarity * 2)));
+            }
+
+            applyValueFloor(8 + (level * (4 + rarity * 2)));
+            break;
+        }
+        case ItemType::KEY:
+        case ItemType::QUEST:
+        case ItemType::SPECIAL:
+        default:
+            break;
+    }
+}
+
 int calculateSellValue(const Item& item) {
-    int baseValue = static_cast<int>(item.value * SELL_PRICE_MULTIPLIER);
+    int baseValue = item.value + ((std::max(1, item.itemLevel) - 1) * 3);
+    if (item.hasUniquePerk) {
+        baseValue += 120;
+    }
+    baseValue = static_cast<int>(baseValue * SELL_PRICE_MULTIPLIER);
     return (baseValue < 1) ? 1 : baseValue;
 }
 
@@ -431,6 +945,36 @@ int calculateScore(const Player& player) {
     score += player.level * 100;
     
     return score;
+}
+
+int calculateAverageItemLevel(const Player& player) {
+    int totalItemLevel = 0;
+    int equippedCount = 0;
+
+    for (const Item& item : player.inventory) {
+        if (!item.isEquipped) {
+            continue;
+        }
+
+        if (item.type != ItemType::WEAPON &&
+            item.type != ItemType::ARMOR &&
+            item.type != ItemType::ACCESSORY) {
+            continue;
+        }
+
+        totalItemLevel += std::max(1, item.itemLevel);
+        ++equippedCount;
+    }
+
+    if (equippedCount == 0) {
+        return 0;
+    }
+
+    return (totalItemLevel + (equippedCount / 2)) / equippedCount;
+}
+
+void refreshAverageItemLevel(Player& player) {
+    player.averageItemLevel = calculateAverageItemLevel(player);
 }
 
 }  // namespace AQE

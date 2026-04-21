@@ -925,7 +925,12 @@ void GameEngine::displayCurrentRoom() {
     if (!room.items.empty()) {
         std::cout << "\nItems:\n";
         for (size_t i = 0; i < room.items.size(); ++i) {
-            std::cout << "  " << (i+1) << ". " << room.items[i].name << "\n";
+            std::cout << "  " << (i+1) << ". " << room.items[i].name
+                      << " [iLvl " << room.items[i].itemLevel << "]";
+            if (room.items[i].hasUniquePerk && !room.items[i].uniquePerkName.empty()) {
+                std::cout << " <" << room.items[i].uniquePerkName << ">";
+            }
+            std::cout << "\n";
         }
     }
     
@@ -1156,14 +1161,33 @@ void GameEngine::searchRoom() {
     // Chance to find hidden items
     if (randomChance(30)) {
         std::cout << "\nYou found a hidden item!\n";
-        // Add random item (would use item templates if loaded)
+        const int contextLevel = std::max(1, m_gameState.player.level +
+            ((room.type == RoomType::TREASURE || room.type == RoomType::SECRET) ? 2 : 0));
+
         Item hiddenItem;
-        hiddenItem.id = randomInt(1000, 2000);
-        hiddenItem.name = "Hidden Treasure";
-        hiddenItem.description = "A valuable item you found while searching.";
-        hiddenItem.value = randomInt(50, 200);
-        hiddenItem.type = ItemType::CONSUMABLE;
+        if (!m_gameState.itemTemplates.empty() && randomChance(60)) {
+            hiddenItem = generateItemFromTemplate(
+                randomElement(m_gameState.itemTemplates),
+                contextLevel,
+                true
+            );
+        } else {
+            ItemRarity rarity = ItemRarity::UNCOMMON;
+            if (room.type == RoomType::TREASURE || room.type == RoomType::SECRET) {
+                int roll = randomInt(1, 100);
+                if (roll <= 12) rarity = ItemRarity::LEGENDARY;
+                else if (roll <= 30) rarity = ItemRarity::EPIC;
+                else if (roll <= 60) rarity = ItemRarity::RARE;
+            }
+            hiddenItem = generateRandomItem(rarity, contextLevel);
+        }
+
         room.items.push_back(hiddenItem);
+        std::cout << "It shimmers at iLvl " << hiddenItem.itemLevel;
+        if (hiddenItem.hasUniquePerk && !hiddenItem.uniquePerkName.empty()) {
+            std::cout << " with perk '" << hiddenItem.uniquePerkName << "'";
+        }
+        std::cout << ".\n";
         foundSomething = true;
     }
     
@@ -1288,7 +1312,11 @@ bool GameEngine::pickupItem(int itemIndex) {
     m_gameState.player.inventory.push_back(item);
     room.items.erase(room.items.begin() + itemIndex);
     
-    std::cout << "\nYou picked up: " << item.name << "\n";
+    std::cout << "\nYou picked up: " << item.name << " (iLvl " << item.itemLevel << ")";
+    if (item.hasUniquePerk && !item.uniquePerkName.empty()) {
+        std::cout << " [Perk: " << item.uniquePerkName << "]";
+    }
+    std::cout << "\n";
     waitForEnter();
     
     return true;
@@ -1341,7 +1369,8 @@ void GameEngine::showPlayerStatus() {
     // XP bar
     displayProgressBar(p.experience, p.experienceToLevel, 30, "XP");
     
-    std::cout << "Gold: " << p.gold << " | Turns: " << p.totalTurns << "\n";
+    std::cout << "Gold: " << p.gold << " | Avg iLvl: " << p.averageItemLevel
+              << " | Turns: " << p.totalTurns << "\n";
     
     // Status effects
     if (!p.activeEffects.empty()) {
@@ -1882,6 +1911,7 @@ void GameEngine::displayGameStats() {
     std::cout << "Puzzles Solved: " << p.puzzlesSolved << "\n";
     std::cout << "Quests Completed: " << p.completedQuests.size() << "\n";
     std::cout << "Morality: " << p.moralityScore << "\n";
+    std::cout << "Average Item Level: " << p.averageItemLevel << "\n";
     std::cout << "Final Gold: " << p.gold << "\n\n";
 }
 
@@ -2588,6 +2618,12 @@ bool GameEngine::triggerFinalBoss() {
         legendaryWeapon.speedBonus = 5;
         legendaryWeapon.value = 5000;
         legendaryWeapon.quantity = 1;
+        const int legendaryTargetLevel = rollItemLevel(
+            std::max(1, m_gameState.player.level + 6),
+            ItemRarity::LEGENDARY,
+            true
+        );
+        applyItemLevelScaling(legendaryWeapon, legendaryTargetLevel, true);
         m_gameState.player.inventory.push_back(legendaryWeapon);
         
         clearScreen();

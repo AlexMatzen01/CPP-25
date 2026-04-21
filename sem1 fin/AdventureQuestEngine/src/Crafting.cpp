@@ -120,6 +120,23 @@ void applyAccessoryStats(Item& item) {
     item.dodgeBonus = 2;
 }
 
+void configureVendorTemplateItem(Item& item, int dungeonLevel) {
+    if (item.itemLevel <= 0) {
+        int rarityOffset = 0;
+        switch (item.rarity) {
+            case ItemRarity::COMMON: rarityOffset = 0; break;
+            case ItemRarity::UNCOMMON: rarityOffset = 2; break;
+            case ItemRarity::RARE: rarityOffset = 4; break;
+            case ItemRarity::EPIC: rarityOffset = 6; break;
+            case ItemRarity::LEGENDARY: rarityOffset = 8; break;
+            default: break;
+        }
+        item.itemLevel = std::max(1, dungeonLevel + rarityOffset);
+    }
+
+    rebuildItemStatsFromLevel(item);
+}
+
 }  // namespace
 
 // ---
@@ -556,12 +573,91 @@ void CraftingSystem::displayEnchantableItems() const {
     
     for (size_t i = 0; i < playerRef.inventory.size(); ++i) {
         const auto& item = playerRef.inventory[i];
-        if (item.type == ItemType::WEAPON || item.type == ItemType::ARMOR) {
+        if (item.type == ItemType::WEAPON || item.type == ItemType::ARMOR ||
+            item.type == ItemType::ACCESSORY) {
             std::cout << "[" << (i + 1) << "] " << item.name;
             if (item.isEnchanted) std::cout << " (Enchanted: " << item.enchantmentName << ")";
+            std::cout << " | iLvl " << item.itemLevel << " ("
+                      << itemLevelTierToString(item.itemLevel) << ")";
+            if (item.hasUniquePerk && !item.uniquePerkName.empty()) {
+                std::cout << " | Perk: " << item.uniquePerkName;
+            }
             std::cout << " | Durability: " << item.durability << "/" << item.maxDurability << "\n";
         }
     }
+}
+
+bool CraftingSystem::reforgeItem(int itemId, int targetItemLevel) {
+    for (auto& item : playerRef.inventory) {
+        if (item.id != itemId) {
+            continue;
+        }
+
+        if (item.type != ItemType::WEAPON && item.type != ItemType::ARMOR &&
+            item.type != ItemType::ACCESSORY) {
+            std::cout << "Only equipment can be reforged.\n";
+            return false;
+        }
+
+        if (item.rarity != ItemRarity::LEGENDARY) {
+            std::cout << "Reforging is reserved for legendary gear.\n";
+            return false;
+        }
+
+        const int currentItemLevel = std::max(1, item.itemLevel);
+        if (targetItemLevel <= currentItemLevel) {
+            std::cout << "Target iLvl must be higher than current iLvl.\n";
+            return false;
+        }
+
+        const int cappedTarget = std::min(targetItemLevel, currentItemLevel + 25);
+        const int levelDelta = cappedTarget - currentItemLevel;
+        const int goldCost = (levelDelta * levelDelta * 180) +
+                             ((item.upgradeLevel + 1) * 400);
+        const int essenceCost = std::max(4, (levelDelta / 2) + 2);
+        const int dragonScaleCost = std::max(1, (levelDelta / 8) +
+            ((cappedTarget >= 30) ? 1 : 0));
+        const int crystalCost = std::max(2, (levelDelta / 4) + 1);
+
+        if (playerRef.gold < goldCost) {
+            std::cout << "Not enough gold! Need " << goldCost << "\n";
+            return false;
+        }
+
+        if (getMaterialCount(6) < essenceCost ||
+            getMaterialCount(9) < dragonScaleCost ||
+            getMaterialCount(10) < crystalCost) {
+            std::cout << "Missing reforging materials. Need: "
+                      << essenceCost << " Essence, "
+                      << dragonScaleCost << " Dragon Scale, "
+                      << crystalCost << " Magic Crystal.\n";
+            return false;
+        }
+
+        playerRef.gold -= goldCost;
+        consumeMaterials({
+            {6, essenceCost},
+            {9, dragonScaleCost},
+            {10, crystalCost}
+        });
+
+        applyItemLevelScaling(item, cappedTarget, true);
+        item.value += goldCost / 2;
+
+        if (item.isEquipped) {
+            refreshAverageItemLevel(playerRef);
+        }
+
+        std::cout << "Reforged " << item.name << " to iLvl " << item.itemLevel
+                  << " (" << itemLevelTierToString(item.itemLevel) << ")!\n";
+        if (item.hasUniquePerk && !item.uniquePerkName.empty()) {
+            std::cout << "New perk resonance: " << item.uniquePerkName << "\n";
+        }
+        return true;
+    }
+
+    std::cout << "Item not found!\n";
+    return false;
 }
 
 std::vector<CraftingMaterial> CraftingSystem::disenchantItem(int itemId) {
@@ -615,9 +711,10 @@ void CraftingSystem::runCraftingMenu() {
         std::cout << "5. Repair Item\n";
         std::cout << "6. Disenchant Item (Break down)\n";
         std::cout << "7. Material Conversion\n";
+        std::cout << "8. Reforge Legendary (Raise iLvl)\n";
         std::cout << "0. Exit Crafting\n";
 
-        int choice = getValidatedInt("Choice: ", 0, 7);
+        int choice = getValidatedInt("Choice: ", 0, 8);
 
         switch (choice) {
             case 1:
@@ -680,6 +777,21 @@ void CraftingSystem::runCraftingMenu() {
             case 7:
                 if (getYesNo("Convert 5 Iron Ore into 1 Magical Essence")) {
                     convertMaterial(1, 6, 5);
+                }
+                break;
+            case 8:
+                displayEnchantableItems();
+                {
+                int fidx = getValidatedInt("Enter Item Index to reforge (0 to cancel): ", 0,
+                                           static_cast<int>(playerRef.inventory.size()));
+                if (fidx > 0 && fidx <= static_cast<int>(playerRef.inventory.size())) {
+                    const Item& selected = playerRef.inventory[fidx - 1];
+                    int minTarget = std::max(2, selected.itemLevel + 1);
+                    int maxTarget = std::max(minTarget, selected.itemLevel + 20);
+                    std::cout << "Reforge cost scales heavily with target iLvl.\n";
+                    int target = getValidatedInt("Enter target iLvl: ", minTarget, maxTarget);
+                    reforgeItem(selected.id, target);
+                }
                 }
                 break;
             case 0:
@@ -2073,6 +2185,10 @@ MerchantInventory MerchantSystem::createGeneralStore(int level) {
     potion2.type = ItemType::CONSUMABLE; potion2.rarity = ItemRarity::UNCOMMON;
     potion3.id = 3; potion3.name = "Greater Health Potion"; potion3.value = 50;
     potion3.type = ItemType::CONSUMABLE; potion3.rarity = ItemRarity::RARE;
+
+    configureVendorTemplateItem(potion1, level);
+    configureVendorTemplateItem(potion2, level);
+    configureVendorTemplateItem(potion3, level);
     
     shop.items.push_back(potion1);
     shop.items.push_back(potion2);
@@ -2102,6 +2218,10 @@ MerchantInventory MerchantSystem::createWeaponsmith(int level) {
     axe.type = ItemType::WEAPON; axe.rarity = ItemRarity::UNCOMMON;
     staff.id = 12; staff.name = "Arcane Staff"; staff.value = 100;
     staff.type = ItemType::WEAPON; staff.rarity = ItemRarity::RARE;
+
+    configureVendorTemplateItem(sword, level);
+    configureVendorTemplateItem(axe, level);
+    configureVendorTemplateItem(staff, level);
     
     shop.items.push_back(sword);
     if (level >= 2) shop.items.push_back(axe);
@@ -2131,6 +2251,10 @@ MerchantInventory MerchantSystem::createArmorer(int level) {
     chain.type = ItemType::ARMOR; chain.rarity = ItemRarity::UNCOMMON;
     plate.id = 22; plate.name = "Plate Armor"; plate.value = 200;
     plate.type = ItemType::ARMOR; plate.rarity = ItemRarity::RARE;
+
+    configureVendorTemplateItem(leather, level);
+    configureVendorTemplateItem(chain, level);
+    configureVendorTemplateItem(plate, level);
     
     shop.items.push_back(leather);
     if (level >= 2) shop.items.push_back(chain);
@@ -2162,6 +2286,11 @@ MerchantInventory MerchantSystem::createApothecary(int level) {
     potion3.type = ItemType::CONSUMABLE; potion3.rarity = ItemRarity::RARE;
     elixir.id = 60; elixir.name = "Elixir of Strength"; elixir.value = 40;
     elixir.type = ItemType::CONSUMABLE; elixir.rarity = ItemRarity::UNCOMMON;
+
+    configureVendorTemplateItem(potion1, level);
+    configureVendorTemplateItem(potion2, level);
+    configureVendorTemplateItem(potion3, level);
+    configureVendorTemplateItem(elixir, level);
     
     shop.items.push_back(potion1);
     shop.items.push_back(potion2);
@@ -2193,6 +2322,9 @@ MerchantInventory MerchantSystem::createEnchanter(int level) {
     amulet.id = 31; amulet.name = "Amulet of Fortune"; amulet.value = 150;
     amulet.type = ItemType::ACCESSORY; amulet.rarity = ItemRarity::RARE;
     applyAccessoryStats(amulet);
+
+    configureVendorTemplateItem(ring, level);
+    configureVendorTemplateItem(amulet, level);
     
     if (level >= 2) shop.items.push_back(ring);
     if (level >= 4) shop.items.push_back(amulet);
@@ -2216,6 +2348,8 @@ MerchantInventory MerchantSystem::createBlackMarket(int level) {
     Item artifact;
     artifact.id = 50; artifact.name = "Ancient Artifact"; artifact.value = 1000;
     artifact.type = ItemType::SPECIAL; artifact.rarity = ItemRarity::LEGENDARY;
+
+    configureVendorTemplateItem(artifact, level);
     
     if (level >= 6) {
         shop.items.push_back(artifact);
@@ -2243,6 +2377,10 @@ MerchantInventory MerchantSystem::createTravelingMerchant(int level) {
     accessory.id = 31; accessory.name = "Amulet of Fortune"; accessory.value = 150;
     accessory.type = ItemType::ACCESSORY; accessory.rarity = ItemRarity::RARE;
     applyAccessoryStats(accessory);
+
+    configureVendorTemplateItem(potion, level);
+    configureVendorTemplateItem(weapon, level);
+    configureVendorTemplateItem(accessory, level);
     
     shop.items.push_back(potion);
     shop.items.push_back(weapon);

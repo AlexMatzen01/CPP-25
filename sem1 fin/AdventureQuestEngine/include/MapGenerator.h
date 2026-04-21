@@ -197,7 +197,7 @@ private:
      * @param room Reference to room to populate
      * @param templates Available item templates
      */
-    void populateWithItems(Room& room, const std::vector<Item>& templates);
+    void populateWithItems(Room& room, const std::vector<Item>& templates, int contextLevel);
     
     /**
 // Assign events to room based on type

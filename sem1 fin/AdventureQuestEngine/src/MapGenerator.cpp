@@ -76,9 +76,10 @@ bool MapGenerator::generateMap(GameState& gameState) {
     }
     
     // Step 8: Populate rooms with content
+    const int dungeonLevel = std::max(1, gameState.currentDungeonLevel);
     for (Room& room : rooms) {
         populateWithEnemies(room, gameState.enemyTemplates);
-        populateWithItems(room, gameState.itemTemplates);
+        populateWithItems(room, gameState.itemTemplates, dungeonLevel);
         assignEvents(room, gameState.eventTemplates);
         
         if (room.type == RoomType::PUZZLE) {
@@ -905,8 +906,10 @@ void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& tem
     }
 }
 
-void MapGenerator::populateWithItems(Room& room, const std::vector<Item>& templates) {
+void MapGenerator::populateWithItems(Room& room, const std::vector<Item>& templates, int contextLevel) {
     if (templates.empty()) return;
+
+    const int floorLevel = std::max(1, contextLevel);
     
     int itemCount = 0;
     
@@ -983,13 +986,13 @@ void MapGenerator::populateWithItems(Room& room, const std::vector<Item>& templa
         // Weight by rarity
         std::vector<const Item*> validItems;
         for (const Item& item : templates) {
-            int rarity = static_cast<int>(item.rarity) + rarityBoost;
-            if (rarity >= static_cast<int>(ItemRarity::LEGENDARY)) {
-                rarity = static_cast<int>(ItemRarity::LEGENDARY);
+            int effectiveRarity = static_cast<int>(item.rarity) - rarityBoost;
+            if (effectiveRarity < static_cast<int>(ItemRarity::COMMON)) {
+                effectiveRarity = static_cast<int>(ItemRarity::COMMON);
             }
             
             // Add item multiple times based on inverse rarity (common items appear more)
-            int weight = 5 - static_cast<int>(item.rarity);
+            int weight = 5 - effectiveRarity;
             for (int w = 0; w < weight; ++w) {
                 validItems.push_back(&item);
             }
@@ -999,6 +1002,8 @@ void MapGenerator::populateWithItems(Room& room, const std::vector<Item>& templa
             int idx = randomInt(0, static_cast<int>(validItems.size()) - 1);
             Item item = *validItems[idx];  // Copy
             item.quantity = 1;
+            const int rolledItemLevel = rollItemLevel(floorLevel, item.rarity, false);
+            applyItemLevelScaling(item, rolledItemLevel, true);
             room.items.push_back(item);
         }
     }

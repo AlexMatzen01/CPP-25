@@ -24,6 +24,12 @@ set(SOURCES
     src/MapGenerator.cpp
     src/Utils.cpp
     src/GameEngine.cpp
+    src/Achievement.cpp
+    src/Companion.cpp
+    src/Crafting.cpp
+    src/Magic.cpp
+    src/SkillTree.cpp
+    src/UIEnhanced.cpp
 )
 
 # Create executable
