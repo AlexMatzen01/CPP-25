@@ -483,6 +483,12 @@ private:
      * @return Const reference to current room
      */
     const Room& getCurrentRoom() const;
+
+    /**
+// Resolves the active exit room ID from dungeon state with generator fallback
+     * @return Exit room ID, or -1 if unavailable
+     */
+    int getActiveExitRoomId() const;
     
     /**
 // Shows the story introduction
@@ -509,6 +515,32 @@ private:
      * @return True if player wins
      */
     bool triggerFinalBoss();
+
+    /**
+// Transforms the final chamber into the Portal Room and unlocks Maw access
+     */
+    void unlockMawPortal();
+
+    /**
+// Handles interaction menu inside the Portal Room
+     */
+    void handleMawPortal();
+
+    /**
+// Runs The Maw endless challenge loop
+     * @return True if player returned alive, false if slain
+     */
+    bool runMawExpedition();
+
+    /**
+// Builds a scaled Maw enemy for the provided floor depth
+     */
+    Enemy createMawEnemy(int depth, bool bossVariant) const;
+
+    /**
+// Completes the main quest and grants rewards after Shadow Lord defeat
+     */
+    void completeMainQuestAfterShadowLord();
     
     /**
 // Shows the victory celebration sequence

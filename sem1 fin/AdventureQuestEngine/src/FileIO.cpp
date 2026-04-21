@@ -56,6 +56,7 @@ namespace AQE {
         if (j.contains("itemLevel")) j.at("itemLevel").get_to(i.itemLevel);
         if (j.contains("hasUniquePerk")) j.at("hasUniquePerk").get_to(i.hasUniquePerk);
         if (j.contains("uniquePerkName")) j.at("uniquePerkName").get_to(i.uniquePerkName);
+        if (j.contains("mawOnly")) j.at("mawOnly").get_to(i.mawOnly);
         if (j.contains("isEnchanted")) j.at("isEnchanted").get_to(i.isEnchanted);
         if (j.contains("enchantmentName")) j.at("enchantmentName").get_to(i.enchantmentName);
     }
@@ -121,6 +122,8 @@ namespace AQE {
         if (j.contains("lootTable")) j.at("lootTable").get_to(e.lootTable);
         if (j.contains("lootChances")) j.at("lootChances").get_to(e.lootChances);
         if (j.contains("isBoss")) j.at("isBoss").get_to(e.isBoss);
+        if (j.contains("mawOnly")) j.at("mawOnly").get_to(e.mawOnly);
+        if (j.contains("trueDamage")) j.at("trueDamage").get_to(e.trueDamage);
         if (j.contains("dialogue")) j.at("dialogue").get_to(e.dialogue);
         if (j.contains("activeEffects")) j.at("activeEffects").get_to(e.activeEffects);
         if (j.contains("nextIntent")) j.at("nextIntent").get_to(e.nextIntent);
@@ -415,6 +418,9 @@ bool FileIO::saveGame(const GameState& gameState, const std::string& filename) {
     file << "puzzles=" << p.puzzlesSolved << "\n";
     file << "bosses=" << p.bossesDefeated << "\n";
     file << "averageItemLevel=" << p.averageItemLevel << "\n";
+    file << "shadowLordDefeated=" << (p.shadowLordDefeated ? 1 : 0) << "\n";
+    file << "mawUnlocked=" << (p.mawUnlocked ? 1 : 0) << "\n";
+    file << "mawDepthReached=" << p.mawDepthReached << "\n";
     
     // Save inventory
     file << "\n[INVENTORY]\n";
@@ -474,6 +480,10 @@ bool FileIO::loadGame(GameState& gameState, const std::string& filename) {
     }
     
     Player& p = gameState.player;
+    p.shadowLordDefeated = false;
+    p.mawUnlocked = false;
+    p.mawDepthReached = 0;
+
     struct LoadedRoomState {
         int roomId;
         bool isExplored;
@@ -520,6 +530,9 @@ bool FileIO::loadGame(GameState& gameState, const std::string& filename) {
             else if (key == "puzzles") p.puzzlesSolved = std::stoi(value);
             else if (key == "bosses") p.bossesDefeated = std::stoi(value);
             else if (key == "averageItemLevel") p.averageItemLevel = std::max(0, std::stoi(value));
+            else if (key == "shadowLordDefeated") p.shadowLordDefeated = (std::stoi(value) != 0);
+            else if (key == "mawUnlocked") p.mawUnlocked = (std::stoi(value) != 0);
+            else if (key == "mawDepthReached") p.mawDepthReached = std::max(0, std::stoi(value));
         }
         else if (section == "[INVENTORY]") {
             if (key == "item") {

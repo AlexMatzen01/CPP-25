@@ -497,5 +497,217 @@
             "maxMana": 50,
             "speed": 11
         }
+    },
+    {
+        "abilities": [
+            {
+                "cooldown": 3,
+                "currentCooldown": 0,
+                "damage": 22,
+                "description": "Slashes from multiple angles in a single blink.",
+                "healAmount": 0,
+                "heals": false,
+                "name": "Rift Flurry",
+                "triggerChance": 0.35
+            }
+        ],
+        "activeEffects": [],
+        "asciiArt": "",
+        "description": "A predatory assassin shaped from living shadow.",
+        "dialogue": "Blink... bleed... vanish.",
+        "experienceReward": 280,
+        "goldReward": 160,
+        "id": 9001,
+        "intentStrength": 0,
+        "isBoss": false,
+        "mawOnly": true,
+        "trueDamage": 4,
+        "lootChances": [
+            40,
+            25
+        ],
+        "lootTable": [
+            503,
+            504
+        ],
+        "name": "Abyss Stalker",
+        "nextIntent": "UNKNOWN",
+        "stats": {
+            "attack": 20,
+            "critChance": 22,
+            "currentHP": 130,
+            "currentMana": 60,
+            "defense": 9,
+            "dodgeChance": 24,
+            "magicPower": 16,
+            "maxHP": 130,
+            "maxMana": 60,
+            "speed": 20
+        }
+    },
+    {
+        "abilities": [
+            {
+                "cooldown": 4,
+                "currentCooldown": 0,
+                "damage": 28,
+                "description": "Consumes light and detonates it inside the target.",
+                "healAmount": 0,
+                "heals": false,
+                "name": "Null Burst",
+                "triggerChance": 0.3
+            }
+        ],
+        "activeEffects": [],
+        "asciiArt": "",
+        "description": "A floating knot of void with jaws where reality should be.",
+        "dialogue": "The void remembers your name.",
+        "experienceReward": 320,
+        "goldReward": 190,
+        "id": 9002,
+        "intentStrength": 0,
+        "isBoss": false,
+        "mawOnly": true,
+        "trueDamage": 5,
+        "lootChances": [
+            45,
+            20
+        ],
+        "lootTable": [
+            501,
+            505
+        ],
+        "name": "Void Devourer",
+        "nextIntent": "UNKNOWN",
+        "stats": {
+            "attack": 24,
+            "critChance": 14,
+            "currentHP": 180,
+            "currentMana": 70,
+            "defense": 12,
+            "dodgeChance": 12,
+            "magicPower": 22,
+            "maxHP": 180,
+            "maxMana": 70,
+            "speed": 15
+        }
+    },
+    {
+        "abilities": [
+            {
+                "cooldown": 5,
+                "currentCooldown": 0,
+                "damage": 0,
+                "description": "Steals life from nearby fractures in space.",
+                "healAmount": 24,
+                "heals": true,
+                "name": "Abyssal Siphon",
+                "triggerChance": 0.25
+            },
+            {
+                "cooldown": 3,
+                "currentCooldown": 0,
+                "damage": 26,
+                "description": "A scything beam that tears through armor.",
+                "healAmount": 0,
+                "heals": false,
+                "name": "Entropy Lance",
+                "triggerChance": 0.35
+            }
+        ],
+        "activeEffects": [],
+        "asciiArt": "",
+        "description": "A faceless collector that harvests memories and bone.",
+        "dialogue": "All things are inventory.",
+        "experienceReward": 360,
+        "goldReward": 220,
+        "id": 9003,
+        "intentStrength": 0,
+        "isBoss": false,
+        "mawOnly": true,
+        "trueDamage": 6,
+        "lootChances": [
+            50,
+            30,
+            15
+        ],
+        "lootTable": [
+            502,
+            503,
+            505
+        ],
+        "name": "Rift Harvester",
+        "nextIntent": "UNKNOWN",
+        "stats": {
+            "attack": 26,
+            "critChance": 16,
+            "currentHP": 210,
+            "currentMana": 90,
+            "defense": 14,
+            "dodgeChance": 10,
+            "magicPower": 26,
+            "maxHP": 210,
+            "maxMana": 90,
+            "speed": 14
+        }
+    },
+    {
+        "abilities": [
+            {
+                "cooldown": 4,
+                "currentCooldown": 0,
+                "damage": 44,
+                "description": "Collapses a section of reality into pure harm.",
+                "healAmount": 0,
+                "heals": false,
+                "name": "Cataclysm Fold",
+                "triggerChance": 0.3
+            },
+            {
+                "cooldown": 6,
+                "currentCooldown": 0,
+                "damage": 0,
+                "description": "Feeds on panic to regenerate.",
+                "healAmount": 40,
+                "heals": true,
+                "name": "Dread Feast",
+                "triggerChance": 0.25
+            }
+        ],
+        "activeEffects": [],
+        "asciiArt": "",
+        "description": "The throne-beast of the endless death realm.",
+        "dialogue": "You survived long enough to matter.",
+        "experienceReward": 900,
+        "goldReward": 650,
+        "id": 9004,
+        "intentStrength": 0,
+        "isBoss": true,
+        "mawOnly": true,
+        "trueDamage": 10,
+        "lootChances": [
+            75,
+            55,
+            35
+        ],
+        "lootTable": [
+            501,
+            502,
+            503
+        ],
+        "name": "The Sovereign Hunger",
+        "nextIntent": "UNKNOWN",
+        "stats": {
+            "attack": 36,
+            "critChance": 20,
+            "currentHP": 420,
+            "currentMana": 120,
+            "defense": 20,
+            "dodgeChance": 12,
+            "magicPower": 34,
+            "maxHP": 420,
+            "maxMana": 120,
+            "speed": 18
+        }
     }
 ]

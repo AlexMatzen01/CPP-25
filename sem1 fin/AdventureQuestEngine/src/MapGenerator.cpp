@@ -891,6 +891,9 @@ void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& tem
         // Find appropriate enemy
         std::vector<const Enemy*> validEnemies;
         for (const Enemy& e : templates) {
+            if (e.mawOnly) {
+                continue;
+            }
             if (needsBoss && e.isBoss) {
                 validEnemies.push_back(&e);
             } else if (!needsBoss && !e.isBoss) {
@@ -986,6 +989,9 @@ void MapGenerator::populateWithItems(Room& room, const std::vector<Item>& templa
         // Weight by rarity
         std::vector<const Item*> validItems;
         for (const Item& item : templates) {
+            if (item.mawOnly) {
+                continue;
+            }
             int effectiveRarity = static_cast<int>(item.rarity) - rarityBoost;
             if (effectiveRarity < static_cast<int>(ItemRarity::COMMON)) {
                 effectiveRarity = static_cast<int>(ItemRarity::COMMON);

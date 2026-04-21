@@ -248,6 +248,7 @@ struct Item {
     int itemLevel;               // Dynamic item level (iLvl)
     bool hasUniquePerk;          // High-tier roll with special bonus
     std::string uniquePerkName;  // Display name for rolled perk
+    bool mawOnly;                // Only drops/spawns in The Maw
     
     // Enchantment system
     bool isEnchanted;            // Has enchantment applied?
@@ -258,7 +259,7 @@ struct Item {
              defenseBonus(0), critBonus(0), dodgeBonus(0), speedBonus(0),
              duration(0), isEquipped(false), isUsable(true), isStackable(true),
              durability(100), maxDurability(100), upgradeLevel(0),
-             itemLevel(1), hasUniquePerk(false),
+             itemLevel(1), hasUniquePerk(false), mawOnly(false),
              isEnchanted(false) {}
 };
 
@@ -298,6 +299,8 @@ struct Enemy {
     std::vector<int> lootTable;       // IDs of possible item drops
     std::vector<int> lootChances;     // Drop chances (percentages)
     bool isBoss;                      // Is this a boss enemy?
+    bool mawOnly;                     // Only appears in The Maw
+    int trueDamage;                   // Unmitigable damage dealt per attack
     std::string dialogue;             // What the enemy says
     std::vector<StatusEffect> activeEffects; // Active status effects
 
@@ -306,6 +309,7 @@ struct Enemy {
     int intentStrength;               // Relative strength/weight
     
     Enemy() : id(0), experienceReward(10), goldReward(5), isBoss(false),
+              mawOnly(false), trueDamage(0),
               nextIntent(EnemyIntent::UNKNOWN), intentStrength(0) {}
 };
 
@@ -585,6 +589,9 @@ struct Player {
     bool hasWon;                     // Reached victory condition?
     bool isAlive;                    // Still alive?
     bool hasSecretEnding;            // Found secret ending?
+    bool shadowLordDefeated;         // True after defeating final boss
+    bool mawUnlocked;                // Portal Room / The Maw access unlocked
+    int mawDepthReached;             // Deepest cleared Maw floor
     
     Player() : charClass(CharacterClass::WARRIOR), level(1), experience(0),
                experienceToLevel(100), gold(50), maxInventorySize(30),
@@ -593,7 +600,8 @@ struct Player {
                currentRoomId(0), moralityScore(0), totalKills(0), explorationTurns(0),
                combatTurns(0), totalTurns(0), secretsFound(0), puzzlesSolved(0),
                bossesDefeated(0), deathCount(0), hasWon(false), isAlive(true),
-               hasSecretEnding(false) {}
+               hasSecretEnding(false), shadowLordDefeated(false), mawUnlocked(false),
+               mawDepthReached(0) {}
 };
 
 // ---

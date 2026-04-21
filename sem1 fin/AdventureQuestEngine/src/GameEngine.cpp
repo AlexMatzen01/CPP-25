@@ -1117,9 +1117,10 @@ bool GameEngine::movePlayer(char direction) {
     
     // Move player
     m_gameState.player.currentRoomId = newRoomId;
+    const int activeExitRoomId = getActiveExitRoomId();
     
-    // Check if this is the exit - trigger FINAL BOSS FIGHT!
-    if (newRoomId == m_mapGenerator.getExitRoomId()) {
+    // Check if this is the exit - trigger FINAL BOSS FIGHT once.
+    if (newRoomId == activeExitRoomId && !m_gameState.player.shadowLordDefeated) {
         clearScreen();
         displayDivider(80, '=');
         std::cout << Color::BRIGHT_RED << centerString("THE SHADOW LORD'S CHAMBER", 80) << Color::RESET << std::endl;
@@ -1140,11 +1141,14 @@ bool GameEngine::movePlayer(char direction) {
         
         // Trigger the final boss battle!
         if (triggerFinalBoss()) {
-            showVictoryCelebration();
-            m_gameState.player.hasWon = true;
+            unlockMawPortal();
+            handleMawPortal();
         } else {
             // Player died - game over handled in combat
         }
+    } else if (newRoomId == activeExitRoomId && m_gameState.player.mawUnlocked) {
+        std::cout << "\nThe anomaly portal hums in the center of the chamber.\n";
+        waitForEnter();
     }
     
     return true;
@@ -1165,9 +1169,16 @@ void GameEngine::searchRoom() {
             ((room.type == RoomType::TREASURE || room.type == RoomType::SECRET) ? 2 : 0));
 
         Item hiddenItem;
-        if (!m_gameState.itemTemplates.empty() && randomChance(60)) {
+        std::vector<Item> nonMawTemplates;
+        for (const Item& templateItem : m_gameState.itemTemplates) {
+            if (!templateItem.mawOnly) {
+                nonMawTemplates.push_back(templateItem);
+            }
+        }
+
+        if (!nonMawTemplates.empty() && randomChance(60)) {
             hiddenItem = generateItemFromTemplate(
-                randomElement(m_gameState.itemTemplates),
+                randomElement(nonMawTemplates),
                 contextLevel,
                 true
             );
@@ -1263,6 +1274,11 @@ void GameEngine::interactWithRoom() {
         }
         
         waitForEnter();
+        return;
+    }
+
+    if (room.id == getActiveExitRoomId() && m_gameState.player.mawUnlocked) {
+        handleMawPortal();
         return;
     }
 
@@ -1637,7 +1653,7 @@ void GameEngine::openCheatMenu() {
                 break;
                 
             case 8: // Teleport to Exit
-                m_gameState.player.currentRoomId = m_mapGenerator.getExitRoomId();
+                m_gameState.player.currentRoomId = getActiveExitRoomId();
                 std::cout << "\n" << Color::BRIGHT_MAGENTA << "✨ Teleported to the exit room!" << Color::RESET << "\n";
                 waitForEnter();
                 displayCurrentRoom();
@@ -1747,6 +1763,11 @@ EndingType GameEngine::determineEnding() {
     
     // Victory endings
     if (p.hasWon) {
+        // Surviving deep Maw runs counts as a secret-tier accomplishment.
+        if (p.mawDepthReached >= 10) {
+            return EndingType::VICTORY_SECRET;
+        }
+
         // Check for secret ending
         if (p.hasSecretEnding || p.secretsFound >= 3) {
             return EndingType::VICTORY_SECRET;
@@ -1870,6 +1891,9 @@ int GameEngine::calculateFinalScore() {
     
     // Quests
     score += p.completedQuests.size() * 150;
+
+    // Endgame challenge bonus
+    score += p.mawDepthReached * 200;
     
     // Time bonus (fewer turns = higher bonus)
     if (p.totalTurns < 100) {
@@ -1892,6 +1916,7 @@ int GameEngine::calculateFinalScore() {
     std::cout << "Combat: " << (p.totalKills * 10 + p.bossesDefeated * 100) << "\n";
     std::cout << "Exploration: " << (p.secretsFound * 50 + static_cast<int>(p.visitedRooms.size()) * 5 + p.puzzlesSolved * 75) << "\n";
     std::cout << "Quests: " << (static_cast<int>(p.completedQuests.size()) * 150) << "\n";
+    std::cout << "The Maw: " << (p.mawDepthReached * 200) << "\n";
     std::cout << "\nTOTAL SCORE: " << score << "\n\n";
     
     return score;
@@ -1907,6 +1932,7 @@ void GameEngine::displayGameStats() {
     std::cout << "Rooms Visited: " << p.visitedRooms.size() << "\n";
     std::cout << "Enemies Defeated: " << p.totalKills << "\n";
     std::cout << "Bosses Defeated: " << p.bossesDefeated << "\n";
+    std::cout << "Maw Depth Reached: " << p.mawDepthReached << "\n";
     std::cout << "Secrets Found: " << p.secretsFound << "\n";
     std::cout << "Puzzles Solved: " << p.puzzlesSolved << "\n";
     std::cout << "Quests Completed: " << p.completedQuests.size() << "\n";
@@ -1982,6 +2008,10 @@ bool GameEngine::loadGame(const std::string& filename) {
 
     if (!hasCurrentRoom && !m_gameState.dungeon.empty()) {
         m_gameState.player.currentRoomId = m_mapGenerator.getEntranceRoomId();
+    }
+
+    if (m_gameState.player.mawUnlocked) {
+        unlockMawPortal();
     }
 
     return true;
@@ -2152,6 +2182,9 @@ bool GameEngine::loadGameData() {
 void GameEngine::initializeGame() {
     m_gameState.player.isAlive = true;
     m_gameState.player.hasWon = false;
+    m_gameState.player.shadowLordDefeated = false;
+    m_gameState.player.mawUnlocked = false;
+    m_gameState.player.mawDepthReached = 0;
     m_gameState.player.totalTurns = 0;
 }
 
@@ -2513,6 +2546,16 @@ const Room& GameEngine::getCurrentRoom() const {
     return fallbackRoom;
 }
 
+int GameEngine::getActiveExitRoomId() const {
+    for (const auto& room : m_gameState.dungeon) {
+        if (room.type == RoomType::EXIT) {
+            return room.id;
+        }
+    }
+
+    return m_mapGenerator.getExitRoomId();
+}
+
 bool GameEngine::triggerFinalBoss() {
     // Create the Shadow Lord - an epic final boss!
     Enemy shadowLord;
@@ -2605,6 +2648,8 @@ bool GameEngine::triggerFinalBoss() {
         m_gameState.player.gold += result.goldGained;
         m_gameState.player.bossesDefeated++;
         m_gameState.player.totalKills++;
+        m_gameState.player.shadowLordDefeated = true;
+        m_gameState.player.mawUnlocked = true;
         
         // Give legendary loot!
         Item legendaryWeapon;
@@ -2631,11 +2676,380 @@ bool GameEngine::triggerFinalBoss() {
         std::cout << Color::YELLOW << legendaryWeapon.name << Color::RESET << "\n";
         std::cout << legendaryWeapon.description << "\n\n";
         waitForEnter();
+
+        completeMainQuestAfterShadowLord();
+        unlockMawPortal();
         
         return true;
     }
     
     return false;
+}
+
+void GameEngine::unlockMawPortal() {
+    if (!m_gameState.player.mawUnlocked) {
+        return;
+    }
+
+    const int exitRoomId = getActiveExitRoomId();
+    for (Room& room : m_gameState.dungeon) {
+        if (room.id != exitRoomId) {
+            continue;
+        }
+
+        room.name = "Portal Room";
+        room.shortDesc = "A torn rift to The Maw pulses at the chamber center.";
+        room.description = "With the Shadow Lord slain, the chamber should be at peace - but a jagged "
+                           "anomaly hangs in the air, devouring light and sound. Ancient runes along the "
+                           "floor now point toward the breach. Beyond it lies The Maw, an endless death realm.";
+        room.isCleared = true;
+        break;
+    }
+
+    m_mapGenerator.syncFromDungeon(m_gameState.dungeon);
+}
+
+Enemy GameEngine::createMawEnemy(int depth, bool bossVariant) const {
+    std::vector<Enemy> pool;
+
+    for (const Enemy& candidate : m_gameState.enemyTemplates) {
+        if (!candidate.mawOnly) {
+            continue;
+        }
+
+        if (bossVariant && candidate.isBoss) {
+            pool.push_back(candidate);
+        } else if (!bossVariant && !candidate.isBoss) {
+            pool.push_back(candidate);
+        }
+    }
+
+    // Fallback to non-maw templates if dedicated Maw templates are missing.
+    if (pool.empty()) {
+        for (const Enemy& candidate : m_gameState.enemyTemplates) {
+            if (bossVariant && candidate.isBoss) {
+                pool.push_back(candidate);
+            } else if (!bossVariant && !candidate.isBoss) {
+                pool.push_back(candidate);
+            }
+        }
+    }
+
+    if (pool.empty()) {
+        pool = m_gameState.enemyTemplates;
+    }
+
+    Enemy mawEnemy;
+    if (!pool.empty()) {
+        mawEnemy = pool[randomInt(0, static_cast<int>(pool.size()) - 1)];
+    } else {
+        mawEnemy.name = "Abyss Wraith";
+        mawEnemy.description = "A formless predator born from the dark between worlds.";
+        mawEnemy.stats.maxHP = 140;
+        mawEnemy.stats.currentHP = 140;
+        mawEnemy.stats.attack = 28;
+        mawEnemy.stats.defense = 10;
+        mawEnemy.stats.critChance = 18;
+        mawEnemy.stats.dodgeChance = 12;
+        mawEnemy.stats.speed = 16;
+        mawEnemy.stats.magicPower = 25;
+        mawEnemy.stats.magicResist = 12;
+        mawEnemy.experienceReward = 220;
+        mawEnemy.goldReward = 120;
+    }
+
+    const float hpScale = (bossVariant ? 2.2f : 1.45f) + (static_cast<float>(depth) * (bossVariant ? 0.18f : 0.12f));
+    const float attackScale = (bossVariant ? 1.8f : 1.3f) + (static_cast<float>(depth) * (bossVariant ? 0.12f : 0.08f));
+    const float defenseScale = (bossVariant ? 1.55f : 1.18f) + (static_cast<float>(depth) * (bossVariant ? 0.08f : 0.05f));
+
+    mawEnemy.stats.maxHP = std::max(40, static_cast<int>(mawEnemy.stats.maxHP * hpScale));
+    mawEnemy.stats.currentHP = mawEnemy.stats.maxHP;
+    mawEnemy.stats.attack = std::max(8, static_cast<int>(mawEnemy.stats.attack * attackScale));
+    mawEnemy.stats.defense = std::max(4, static_cast<int>(mawEnemy.stats.defense * defenseScale));
+    mawEnemy.stats.magicPower = std::max(6, static_cast<int>(mawEnemy.stats.magicPower * attackScale));
+    mawEnemy.stats.magicResist = std::max(3, static_cast<int>(mawEnemy.stats.magicResist * defenseScale));
+    mawEnemy.stats.speed = std::max(6, mawEnemy.stats.speed + depth + (bossVariant ? 4 : 1));
+    mawEnemy.stats.critChance = std::min(MAX_CRIT_CHANCE, mawEnemy.stats.critChance + depth + (bossVariant ? 8 : 3));
+    mawEnemy.stats.dodgeChance = std::min(MAX_DODGE_CHANCE, mawEnemy.stats.dodgeChance + depth / 2 + (bossVariant ? 4 : 1));
+
+    mawEnemy.trueDamage = std::max(2, (depth / 2) + (bossVariant ? 5 : 2));
+    mawEnemy.isBoss = bossVariant;
+    mawEnemy.experienceReward = std::max(80, mawEnemy.experienceReward + depth * (bossVariant ? 120 : 45));
+    mawEnemy.goldReward = std::max(40, mawEnemy.goldReward + depth * (bossVariant ? 70 : 25));
+
+    for (EnemyAbility& ability : mawEnemy.abilities) {
+        ability.damage += depth * (bossVariant ? 5 : 2);
+        ability.healAmount += depth * (bossVariant ? 3 : 1);
+        ability.currentCooldown = 0;
+        ability.triggerChance = std::min(0.8f, ability.triggerChance + (bossVariant ? 0.18f : 0.10f));
+    }
+
+    if (mawEnemy.abilities.empty()) {
+        EnemyAbility mawStrike;
+        mawStrike.name = "Abyss Rend";
+        mawStrike.description = "Tears through resistance with pure void force.";
+        mawStrike.damage = 14 + depth * 4;
+        mawStrike.cooldown = 2;
+        mawStrike.currentCooldown = 0;
+        mawStrike.triggerChance = 0.45f;
+        mawEnemy.abilities.push_back(mawStrike);
+    }
+
+    mawEnemy.nextIntent = bossVariant ? EnemyIntent::CHARGE : EnemyIntent::CONTROL;
+    mawEnemy.intentStrength = mawEnemy.stats.attack + mawEnemy.trueDamage;
+    if (toLower(mawEnemy.name).find("maw") == std::string::npos) {
+        mawEnemy.name = (bossVariant ? "Maw Sovereign " : "Maw ") + mawEnemy.name;
+    }
+    mawEnemy.dialogue = "The Maw hungers.";
+
+    return mawEnemy;
+}
+
+bool GameEngine::runMawExpedition() {
+    int floor = std::max(1, m_gameState.player.mawDepthReached + 1);
+
+    const std::vector<int> mawRecipePool = {
+        1050, // Maw Reaver
+        1140, // Voidplate Cuirass
+        1210, // Pendant of the Abyss
+        1320, // Abyssal Infusion
+        1321  // Mawfire Tonic
+    };
+
+    std::vector<Item> mawItemTemplates;
+    for (const Item& templateItem : m_gameState.itemTemplates) {
+        if (templateItem.mawOnly) {
+            mawItemTemplates.push_back(templateItem);
+        }
+    }
+
+    clearScreen();
+    displayDivider(80, '=');
+    std::cout << Color::BRIGHT_MAGENTA << centerString("THE MAW", 80) << Color::RESET << "\n";
+    displayDivider(80, '=');
+    std::cout << "\n";
+    std::cout << wrapText("You step through the anomaly and into a realm that should not exist. "
+                          "There is no sky, no horizon, only endless void and hunting shadows.", 78) << "\n\n";
+    waitForEnter();
+
+    while (m_gameState.player.isAlive) {
+        clearScreen();
+        displayDivider(70, '-');
+        std::cout << Color::BRIGHT_RED << centerString("MAW FLOOR " + std::to_string(floor), 70) << Color::RESET << "\n";
+        displayDivider(70, '-');
+        std::cout << "\n";
+
+        const bool bossWave = (floor % 5 == 0);
+        const int enemyCount = bossWave ? (2 + std::min(2, floor / 12)) : std::min(4, 1 + floor / 3);
+
+        std::vector<Enemy> wave;
+        wave.reserve(enemyCount);
+        for (int i = 0; i < enemyCount; ++i) {
+            bool elite = bossWave && i == 0;
+            wave.push_back(createMawEnemy(floor, elite));
+        }
+
+        std::cout << "Maw pressure rises. Enemies gather:\n";
+        for (const Enemy& enemy : wave) {
+            std::cout << "  - " << enemy.name << " (True DMG " << enemy.trueDamage << ")\n";
+        }
+        std::cout << "\n";
+        waitForEnter();
+
+        CombatResult result = m_combatSystem.startCombat(wave);
+        if (result.playerDied) {
+            m_gameState.player.isAlive = false;
+            return false;
+        }
+
+        const int floorXpBonus = floor * 40 + (bossWave ? 200 : 0);
+        const int floorGoldBonus = floor * 25 + (bossWave ? 150 : 0);
+        m_gameState.player.experience += result.experienceGained + floorXpBonus;
+        m_gameState.player.gold += result.goldGained + floorGoldBonus;
+
+        const int ichorDrop = 2 + (floor / 4) + (bossWave ? 2 : 0);
+        const int shardDrop = 1 + (floor / 5) + (bossWave ? 1 : 0);
+        int coreDrop = 0;
+
+        m_craftingSystem.addMaterial(11, ichorDrop);
+        m_craftingSystem.addMaterial(12, shardDrop);
+        if (bossWave || randomChance(20 + std::min(50, floor * 2))) {
+            coreDrop = 1 + (bossWave ? 1 : 0);
+            m_craftingSystem.addMaterial(13, coreDrop);
+        }
+
+        if (!mawRecipePool.empty() && randomChance(35 + (bossWave ? 25 : 0))) {
+            int recipeId = mawRecipePool[randomInt(0, static_cast<int>(mawRecipePool.size()) - 1)];
+            m_craftingSystem.discoverRecipe(recipeId);
+        }
+
+        int salvagedGold = 0;
+        int addedItems = 0;
+        auto addLootToInventory = [&](const Item& lootItem) {
+            if (m_gameState.player.inventory.size() < static_cast<size_t>(m_gameState.player.maxInventorySize)) {
+                m_gameState.player.inventory.push_back(lootItem);
+                ++addedItems;
+            } else {
+                salvagedGold += std::max(50, lootItem.value / 2);
+            }
+        };
+
+        for (Item lootItem : result.loot) {
+            int boostedLevel = std::max(
+                std::max(lootItem.itemLevel, m_gameState.player.level + floor + 8),
+                m_gameState.player.averageItemLevel + floor + 6
+            );
+            applyItemLevelScaling(lootItem, boostedLevel, true);
+            lootItem.rarity = (static_cast<int>(lootItem.rarity) < static_cast<int>(ItemRarity::EPIC))
+                ? (randomChance(35) ? ItemRarity::LEGENDARY : ItemRarity::EPIC)
+                : lootItem.rarity;
+            lootItem.hasUniquePerk = true;
+            if (lootItem.uniquePerkName.empty()) {
+                lootItem.uniquePerkName = "Mawforged";
+            }
+            lootItem.isEnchanted = true;
+            if (lootItem.enchantmentName.empty()) {
+                lootItem.enchantmentName = bossWave ? "Void Sovereign" : "Abyssal Echo";
+            }
+            addLootToInventory(lootItem);
+        }
+
+        ItemRarity rewardRarity = (bossWave || randomChance(45)) ? ItemRarity::LEGENDARY : ItemRarity::EPIC;
+        int rewardLevel = std::max(1, m_gameState.player.level + floor + 10);
+
+        Item mawRelic;
+        if (!mawItemTemplates.empty() && randomChance(80)) {
+            mawRelic = mawItemTemplates[randomInt(0, static_cast<int>(mawItemTemplates.size()) - 1)];
+            int rolledLevel = rollItemLevel(rewardLevel + 4, mawRelic.rarity, true);
+            applyItemLevelScaling(mawRelic, std::max(rewardLevel, rolledLevel), true);
+            if (static_cast<int>(mawRelic.rarity) < static_cast<int>(rewardRarity)) {
+                mawRelic.rarity = rewardRarity;
+            }
+        } else {
+            mawRelic = generateRandomItem(rewardRarity, rewardLevel);
+            applyItemLevelScaling(mawRelic, rollItemLevel(rewardLevel + 3, rewardRarity, true), true);
+        }
+
+        mawRelic.mawOnly = true;
+        mawRelic.hasUniquePerk = true;
+        if (mawRelic.uniquePerkName.empty()) {
+            mawRelic.uniquePerkName = bossWave ? "Maw Sovereign" : "Mawforged";
+        }
+        mawRelic.isEnchanted = true;
+        mawRelic.enchantmentName = bossWave ? "Void Sovereign" : "Abyssal Echo";
+        addLootToInventory(mawRelic);
+
+        m_gameState.player.gold += salvagedGold;
+        m_gameState.player.mawDepthReached = std::max(m_gameState.player.mawDepthReached, floor);
+
+        clearScreen();
+        std::cout << "\n" << Color::BRIGHT_GREEN << "Maw floor " << floor << " cleared!" << Color::RESET << "\n";
+        std::cout << "XP gained: " << (result.experienceGained + floorXpBonus) << "\n";
+        std::cout << "Gold gained: " << (result.goldGained + floorGoldBonus + salvagedGold) << "\n";
+        std::cout << "Maw materials: +" << ichorDrop << " Abyssal Ichor, +"
+                  << shardDrop << " Voidbone Shard";
+        if (coreDrop > 0) {
+            std::cout << ", +" << coreDrop << " Maw Core";
+        }
+        std::cout << "\n";
+        std::cout << "High-tier items secured: " << addedItems << "\n";
+
+        checkLevelUp();
+
+        int ambientTrueDamage = 3 + floor / 2;
+        m_gameState.player.stats.currentHP -= ambientTrueDamage;
+        if (m_gameState.player.stats.currentHP <= 0) {
+            m_gameState.player.stats.currentHP = 0;
+            m_gameState.player.isAlive = false;
+            std::cout << "\nThe Maw itself consumes what remained of your strength...\n";
+            waitForEnter();
+            return false;
+        }
+
+        std::cout << "Ambient true damage suffered: " << ambientTrueDamage
+                  << " (HP now " << m_gameState.player.stats.currentHP << "/"
+                  << m_gameState.player.stats.maxHP << ")\n\n";
+
+        int choice = getValidatedInt(
+            "Choose: 1) Descend deeper  2) Return to the Portal Room : ",
+            1,
+            2
+        );
+
+        if (choice == 2) {
+            return true;
+        }
+
+        ++floor;
+    }
+
+    return false;
+}
+
+void GameEngine::handleMawPortal() {
+    if (!m_gameState.player.mawUnlocked || !m_gameState.player.shadowLordDefeated) {
+        std::cout << "\nThe portal remains dormant.\n";
+        waitForEnter();
+        return;
+    }
+
+    while (m_gameState.player.isAlive && !m_gameState.player.hasWon) {
+        clearScreen();
+        displayDivider(80, '=');
+        std::cout << Color::BRIGHT_MAGENTA << centerString("PORTAL ROOM", 80) << Color::RESET << "\n";
+        displayDivider(80, '=');
+        std::cout << "\n";
+        std::cout << "The Shadow Lord is gone, but the anomaly has awakened.\n";
+        std::cout << "Deepest Maw floor reached: " << m_gameState.player.mawDepthReached << "\n\n";
+        std::cout << "1. Enter The Maw\n";
+        std::cout << "2. Leave the dungeon as victor\n";
+        std::cout << "3. Step away for now\n\n";
+
+        int choice = getValidatedInt("Choose your action: ", 1, 3);
+        if (choice == 1) {
+            bool survived = runMawExpedition();
+            if (!survived) {
+                return;
+            }
+        } else if (choice == 2) {
+            showVictoryCelebration();
+            m_gameState.player.hasWon = true;
+            return;
+        } else {
+            return;
+        }
+    }
+}
+
+void GameEngine::completeMainQuestAfterShadowLord() {
+    bool rewarded = false;
+
+    for (auto it = m_gameState.player.activeQuests.begin();
+         it != m_gameState.player.activeQuests.end();) {
+        if (it->id != 1) {
+            ++it;
+            continue;
+        }
+
+        if (it->status != QuestStatus::COMPLETED) {
+            it->status = QuestStatus::COMPLETED;
+            m_gameState.player.gold += it->goldReward;
+            m_gameState.player.experience += it->experienceReward;
+            rewarded = true;
+        }
+
+        m_gameState.player.completedQuests.push_back(*it);
+        it = m_gameState.player.activeQuests.erase(it);
+    }
+
+    if (rewarded) {
+        std::cout << "\n" << Color::BRIGHT_GREEN
+                  << "*** MAIN QUEST COMPLETE: Defeat the Shadow Lord ***"
+                  << Color::RESET << "\n";
+        std::cout << "Rewards granted and The Maw has awakened.\n";
+        waitForEnter();
+        checkLevelUp();
+    }
 }
 
 void GameEngine::showVictoryCelebration() {

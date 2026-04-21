@@ -19,12 +19,12 @@ Physical strikes consist of evaluating a hit chance, determining base damage rol
    _Constraints_: Minimum 30%, Maximum 98%.
 
 2. **Base Damage Roll**:  
-   $$BaseDamage = AttackerAttack + Random(0, 4) + 2$$  
-   _Variance represents slight differences in weapon strikes (-2 to +2 shifted up)._
+   $$BaseDamage = AttackerAttack + Random(-1, 3) + 1$$  
+   _Variance is tighter to reduce high-roll spikes while keeping attacks punchy._
 
 3. **Defense Mitigation Ratio**:  
-   $$Mitigation = \frac{TargetDefense}{TargetDefense + 60.0}$$  
-   _Constraints_: Bounded between 0% (0.0) and 70% (0.7). Defense provides diminishing returns scaling off the constant `60`.
+   $$Mitigation = \frac{TargetDefense}{TargetDefense + 72.0}$$  
+   _Constraints_: Bounded between 0% (0.0) and 65% (0.65). Defense provides diminishing returns scaling off the constant `72`.
 
 4. **Pre-Mitigation Damage**:  
    $$Damage_{Pre} = BaseDamage \times (isCritical ? 2.0 : 1.0)$$

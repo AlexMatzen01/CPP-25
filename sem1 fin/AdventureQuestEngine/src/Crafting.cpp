@@ -1563,6 +1563,83 @@ void CraftingSystem::initializeRecipes() {
     invisPotion.successChance = 0.65f;
     invisPotion.experienceGained = 95;
     recipes.push_back(invisPotion);
+
+    // ==================== MAW-ONLY RECIPES ====================
+
+    Recipe mawReaver;
+    mawReaver.id = 1050;
+    mawReaver.name = "Maw Reaver";
+    mawReaver.description = "A void-forged weapon that tears through armor.";
+    mawReaver.resultItemId = 501;
+    mawReaver.resultQuantity = 1;
+    mawReaver.requiredMaterials = {{11, 8}, {12, 6}, {13, 2}};
+    mawReaver.requiredGold = 1200;
+    mawReaver.requiredLevel = 18;
+    mawReaver.isDiscovered = false;
+    mawReaver.craftingStation = "Abyss Forge";
+    mawReaver.successChance = 0.62f;
+    mawReaver.experienceGained = 180;
+    recipes.push_back(mawReaver);
+
+    Recipe voidplate;
+    voidplate.id = 1140;
+    voidplate.name = "Voidplate Cuirass";
+    voidplate.description = "Dense void-metal armor tempered by Maw pressure.";
+    voidplate.resultItemId = 502;
+    voidplate.resultQuantity = 1;
+    voidplate.requiredMaterials = {{11, 10}, {12, 8}, {13, 3}};
+    voidplate.requiredGold = 1400;
+    voidplate.requiredLevel = 19;
+    voidplate.isDiscovered = false;
+    voidplate.craftingStation = "Abyss Forge";
+    voidplate.successChance = 0.60f;
+    voidplate.experienceGained = 195;
+    recipes.push_back(voidplate);
+
+    Recipe abyssPendant;
+    abyssPendant.id = 1210;
+    abyssPendant.name = "Pendant of the Abyss";
+    abyssPendant.description = "An unstable relic that sharpens killer instinct.";
+    abyssPendant.resultItemId = 503;
+    abyssPendant.resultQuantity = 1;
+    abyssPendant.requiredMaterials = {{11, 7}, {13, 2}};
+    abyssPendant.requiredGold = 1100;
+    abyssPendant.requiredLevel = 17;
+    abyssPendant.isDiscovered = false;
+    abyssPendant.craftingStation = "Void Altar";
+    abyssPendant.successChance = 0.66f;
+    abyssPendant.experienceGained = 165;
+    recipes.push_back(abyssPendant);
+
+    Recipe abyssalInfusion;
+    abyssalInfusion.id = 1320;
+    abyssalInfusion.name = "Abyssal Infusion";
+    abyssalInfusion.description = "A volatile tonic that restores life and sharpens reflexes.";
+    abyssalInfusion.resultItemId = 504;
+    abyssalInfusion.resultQuantity = 1;
+    abyssalInfusion.requiredMaterials = {{11, 5}, {12, 2}};
+    abyssalInfusion.requiredGold = 420;
+    abyssalInfusion.requiredLevel = 16;
+    abyssalInfusion.isDiscovered = false;
+    abyssalInfusion.craftingStation = "Maw Crucible";
+    abyssalInfusion.successChance = 0.78f;
+    abyssalInfusion.experienceGained = 90;
+    recipes.push_back(abyssalInfusion);
+
+    Recipe mawfireTonic;
+    mawfireTonic.id = 1321;
+    mawfireTonic.name = "Mawfire Tonic";
+    mawfireTonic.description = "A brutal brew that floods the body with raw offensive force.";
+    mawfireTonic.resultItemId = 505;
+    mawfireTonic.resultQuantity = 1;
+    mawfireTonic.requiredMaterials = {{11, 6}, {13, 1}};
+    mawfireTonic.requiredGold = 520;
+    mawfireTonic.requiredLevel = 17;
+    mawfireTonic.isDiscovered = false;
+    mawfireTonic.craftingStation = "Maw Crucible";
+    mawfireTonic.successChance = 0.72f;
+    mawfireTonic.experienceGained = 105;
+    recipes.push_back(mawfireTonic);
 }
 
 void CraftingSystem::initializeMaterials() {
@@ -1646,6 +1723,30 @@ void CraftingSystem::initializeMaterials() {
     crystal.rarity = ItemRarity::RARE;
     crystal.quantity = 0;
     materials[10] = crystal;
+
+    CraftingMaterial abyssalIchor;
+    abyssalIchor.id = 11;
+    abyssalIchor.name = "Abyssal Ichor";
+    abyssalIchor.type = MaterialType::ESSENCE;
+    abyssalIchor.rarity = ItemRarity::EPIC;
+    abyssalIchor.quantity = 0;
+    materials[11] = abyssalIchor;
+
+    CraftingMaterial voidboneShard;
+    voidboneShard.id = 12;
+    voidboneShard.name = "Voidbone Shard";
+    voidboneShard.type = MaterialType::BONE;
+    voidboneShard.rarity = ItemRarity::EPIC;
+    voidboneShard.quantity = 0;
+    materials[12] = voidboneShard;
+
+    CraftingMaterial mawCore;
+    mawCore.id = 13;
+    mawCore.name = "Maw Core";
+    mawCore.type = MaterialType::CRYSTAL;
+    mawCore.rarity = ItemRarity::LEGENDARY;
+    mawCore.quantity = 0;
+    materials[13] = mawCore;
 }
 
 Recipe* CraftingSystem::findRecipe(int recipeId) {

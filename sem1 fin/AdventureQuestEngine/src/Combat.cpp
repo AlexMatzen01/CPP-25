@@ -598,6 +598,22 @@ void CombatSystem::rollEnemyIntents(std::vector<Enemy>& enemies) {
             continue;
         }
 
+        // Maw enemies use a distinct telegraph profile.
+        if (enemy.trueDamage > 0) {
+            int roll = randomInt(1, 100);
+            if (roll <= 30) {
+                enemy.nextIntent = EnemyIntent::CHARGE;
+            } else if (roll <= 55) {
+                enemy.nextIntent = EnemyIntent::CONTROL;
+            } else if (roll <= 80) {
+                enemy.nextIntent = EnemyIntent::ATTACK_HEAVY;
+            } else {
+                enemy.nextIntent = EnemyIntent::ATTACK_LIGHT;
+            }
+            enemy.intentStrength = enemy.stats.attack + enemy.trueDamage;
+            continue;
+        }
+
         // Healing intent if low (very rare — only 5% chance)
         if (enemy.stats.currentHP < enemy.stats.maxHP / 3) {
             bool hasHeal = std::any_of(enemy.abilities.begin(), enemy.abilities.end(),
@@ -678,8 +694,8 @@ AttackResult CombatSystem::playerAttack(Enemy& target) {
     // Roll for critical
     result.critical = rollCritical(pStats.critChance);
     
-    // Calculate damage with better variance and bonus
-    int baseDamage = pStats.attack + randomInt(0, 4) + 2;  // +2 base bonus, 0-4 variance instead of -2 to 2
+    // Use tighter player variance so gear quality matters more than high-roll spikes.
+    int baseDamage = pStats.attack + randomInt(-1, 3) + 1;
     result.rawDamage = baseDamage;
     result.damageDealt = calculateFinalDamage(baseDamage, eStats.defense, result.critical);
 
@@ -718,8 +734,11 @@ AttackResult CombatSystem::enemyAttack(const Enemy& attacker) {
     // Roll for critical
     result.critical = rollCritical(eStats.critChance);
     
-    // Calculate damage with reduced variance
-    int baseDamage = eStats.attack + randomInt(-1, 1);  // Reduced variance from -2/2 to -1/1
+    // Keep enemy damage slightly less swingy while preserving threat consistency.
+    int baseDamage = eStats.attack + randomInt(-1, 2);
+    if (attacker.nextIntent == EnemyIntent::CHARGE) {
+        baseDamage += std::max(1, eStats.attack / 4);
+    }
     result.rawDamage = baseDamage;
     result.damageDealt = calculateFinalDamage(baseDamage, pStats.defense, result.critical);
     
@@ -731,10 +750,25 @@ AttackResult CombatSystem::enemyAttack(const Enemy& attacker) {
     }
 
     result.damageDealt = applyShieldThenDamage(result.damageDealt, playerRef.activeEffects, playerRef.stats.currentHP);
+
+    // The Maw introduces true damage that bypasses mitigation and shields.
+    if (attacker.trueDamage > 0) {
+        int unavoidable = attacker.trueDamage + randomInt(0, std::max(1, attacker.trueDamage / 2));
+        if (attacker.nextIntent == EnemyIntent::CHARGE) {
+            unavoidable += std::max(1, attacker.trueDamage / 2);
+        }
+
+        playerRef.stats.currentHP -= unavoidable;
+        if (playerRef.stats.currentHP < 0) playerRef.stats.currentHP = 0;
+        result.damageDealt += unavoidable;
+    }
     
     // Generate message
     result.message = generateCombatMessage(attacker.name, playerRef.name,
                                            result.damageDealt, result.critical, false);
+    if (attacker.trueDamage > 0) {
+        result.message += "\n" + attacker.name + " rends reality for unavoidable damage!";
+    }
     log(result.message);
     
     return result;
@@ -759,11 +793,12 @@ int CombatSystem::calculateFinalDamage(int baseDamage, int defense, bool isCrit)
         damage *= BASE_CRIT_MULTIPLIER;
     }
 
-    // Diminishing returns on defense for stability
-    const float k = 60.0f; // tuning constant - higher value means defense is less effective
+    // Diminishing returns on defense for stability.
+    // Higher k and a lower cap reduce late-game over-mitigation from stacked armor.
+    const float k = 72.0f;
     float mitigation = static_cast<float>(defense) / (static_cast<float>(defense) + k);
     if (mitigation < 0.0f) mitigation = 0.0f;
-    if (mitigation > 0.70f) mitigation = 0.70f; // keep at least 30% damage always going through
+    if (mitigation > 0.65f) mitigation = 0.65f; // keep at least 35% damage always going through
 
     int finalDamage = static_cast<int>(std::floor(damage * (1.0f - mitigation)));
     if (finalDamage < 1) finalDamage = 1;
