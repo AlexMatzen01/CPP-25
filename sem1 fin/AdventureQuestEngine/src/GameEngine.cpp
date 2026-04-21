@@ -891,6 +891,18 @@ void GameEngine::displayCurrentRoom() {
     clearScreen();
     
     Room& room = getCurrentRoom();
+
+    if (room.id == getActiveExitRoomId()) {
+        if (!m_gameState.player.shadowLordDefeated) {
+            triggerShadowLordEncounterIfNeeded();
+            return;
+        }
+
+        if (m_gameState.player.mawUnlocked) {
+            handleMawPortal();
+            return;
+        }
+    }
     
     // Mark room as explored
     if (!room.isExplored) {
@@ -1117,39 +1129,7 @@ bool GameEngine::movePlayer(char direction) {
     
     // Move player
     m_gameState.player.currentRoomId = newRoomId;
-    const int activeExitRoomId = getActiveExitRoomId();
-    
-    // Check if this is the exit - trigger FINAL BOSS FIGHT once.
-    if (newRoomId == activeExitRoomId && !m_gameState.player.shadowLordDefeated) {
-        clearScreen();
-        displayDivider(80, '=');
-        std::cout << Color::BRIGHT_RED << centerString("THE SHADOW LORD'S CHAMBER", 80) << Color::RESET << std::endl;
-        displayDivider(80, '=');
-        std::cout << "\n";
-        
-        std::cout << Color::YELLOW;
-        std::cout << wrapText("The air grows cold and heavy as you enter the final chamber. "
-                             "Dark energy swirls around a massive throne, and upon it sits the "
-                             "Shadow Lord himself - a towering figure cloaked in darkness, "
-                             "eyes burning with ancient malice.", 78) << "\n\n";
-        std::cout << Color::RESET;
-        
-        std::cout << Color::RED << "\"So, a new fool dares to challenge me? Very well... "
-                  << "LET US END THIS!\"" << Color::RESET << "\n\n";
-        
-        waitForEnter();
-        
-        // Trigger the final boss battle!
-        if (triggerFinalBoss()) {
-            unlockMawPortal();
-            handleMawPortal();
-        } else {
-            // Player died - game over handled in combat
-        }
-    } else if (newRoomId == activeExitRoomId && m_gameState.player.mawUnlocked) {
-        std::cout << "\nThe anomaly portal hums in the center of the chamber.\n";
-        waitForEnter();
-    }
+    triggerShadowLordEncounterIfNeeded();
     
     return true;
 }
@@ -1274,11 +1254,6 @@ void GameEngine::interactWithRoom() {
         }
         
         waitForEnter();
-        return;
-    }
-
-    if (room.id == getActiveExitRoomId() && m_gameState.player.mawUnlocked) {
-        handleMawPortal();
         return;
     }
 
@@ -1656,6 +1631,7 @@ void GameEngine::openCheatMenu() {
                 m_gameState.player.currentRoomId = getActiveExitRoomId();
                 std::cout << "\n" << Color::BRIGHT_MAGENTA << "✨ Teleported to the exit room!" << Color::RESET << "\n";
                 waitForEnter();
+                triggerShadowLordEncounterIfNeeded();
                 displayCurrentRoom();
                 break;
                 
@@ -2013,6 +1989,8 @@ bool GameEngine::loadGame(const std::string& filename) {
     if (m_gameState.player.mawUnlocked) {
         unlockMawPortal();
     }
+
+    triggerShadowLordEncounterIfNeeded();
 
     return true;
 }
@@ -2684,6 +2662,44 @@ bool GameEngine::triggerFinalBoss() {
     }
     
     return false;
+}
+
+void GameEngine::triggerShadowLordEncounterIfNeeded() {
+    const int activeExitRoomId = getActiveExitRoomId();
+    if (m_gameState.player.currentRoomId != activeExitRoomId) {
+        return;
+    }
+
+    if (m_gameState.player.shadowLordDefeated) {
+        if (m_gameState.player.mawUnlocked) {
+            std::cout << "\nThe anomaly portal hums in the center of the chamber.\n";
+            waitForEnter();
+        }
+        return;
+    }
+
+    clearScreen();
+    displayDivider(80, '=');
+    std::cout << Color::BRIGHT_RED << centerString("THE SHADOW LORD'S CHAMBER", 80) << Color::RESET << std::endl;
+    displayDivider(80, '=');
+    std::cout << "\n";
+
+    std::cout << Color::YELLOW;
+    std::cout << wrapText("The air grows cold and heavy as you enter the final chamber. "
+                         "Dark energy swirls around a massive throne, and upon it sits the "
+                         "Shadow Lord himself - a towering figure cloaked in darkness, "
+                         "eyes burning with ancient malice.", 78) << "\n\n";
+    std::cout << Color::RESET;
+
+    std::cout << Color::RED << "\"So, a new fool dares to challenge me? Very well... "
+              << "LET US END THIS!\"" << Color::RESET << "\n\n";
+
+    waitForEnter();
+
+    if (triggerFinalBoss()) {
+        unlockMawPortal();
+        handleMawPortal();
+    }
 }
 
 void GameEngine::unlockMawPortal() {

@@ -517,6 +517,11 @@ private:
     bool triggerFinalBoss();
 
     /**
+// Handles the Shadow Lord encounter if the player is standing in the exit room
+     */
+    void triggerShadowLordEncounterIfNeeded();
+
+    /**
 // Transforms the final chamber into the Portal Room and unlocks Maw access
      */
     void unlockMawPortal();
