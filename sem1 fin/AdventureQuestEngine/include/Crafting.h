@@ -171,7 +171,7 @@ public:
     // Crafting
     void displayRecipes() const;
     void displayDiscoveredRecipes() const;
-    bool craftItem(int recipeId);
+    bool craftItem(int recipeId, int quantity = 1);
     bool canCraft(int recipeId) const;
     void discoverRecipe(int recipeId);
     void learnRecipeFromBook(int recipeBookId);
@@ -202,11 +202,28 @@ private:
     std::map<int, CraftingMaterial> materials;
     std::vector<Recipe> recipes;
     std::vector<EnchantedItem> enchantedItems;
+
+    // Crafting progression and mastery
+    int craftingSkillLevel;
+    int craftingSkillXP;
+    int totalCraftAttempts;
+    int totalCraftSuccesses;
+    int consecutiveFailures;
+    std::map<int, int> recipeMastery;
+    std::map<std::string, int> stationMastery;
     
     void initializeRecipes();
     void initializeMaterials();
     Recipe* findRecipe(int recipeId);
     float calculateSuccessChance(const Recipe& recipe) const;
+    int calculateMaterialPreservationChance(const Recipe& recipe) const;
+    int calculateMaxCraftableByMaterials(const Recipe& recipe) const;
+    int getRecipeMasteryLevel(int recipeId) const;
+    int getStationMasteryLevel(const std::string& stationName) const;
+    int xpToNextCraftingLevel() const;
+    void addCraftingXP(int amount);
+    void displayCraftingProgress() const;
+    Item buildCraftedItem(const Recipe& recipe, bool masterwork) const;
 };
 
 // ---

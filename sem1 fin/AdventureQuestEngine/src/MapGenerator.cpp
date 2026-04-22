@@ -12,6 +12,7 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <cmath>
 
 namespace AQE {
 
@@ -66,16 +67,19 @@ bool MapGenerator::generateMap(GameState& gameState) {
     int secretCount = 1 + randomInt(0, mapWidth * mapHeight / 20);
     placeSecretRooms(secretCount);
     
-    // Step 6: Connect all adjacent rooms
+    // Step 6: Place the unique Shadow Lord chamber as far from the entrance as possible
+    if (!placeShadowLordRoom()) return false;
+    
+    // Step 7: Connect all adjacent rooms
     connectRooms();
     
-    // Step 7: Verify connectivity
+    // Step 8: Verify connectivity
     if (!verifyConnectivity()) {
         // If not connected, regenerate (shouldn't happen with proper algorithm)
         return generateMap(gameState);
     }
     
-    // Step 8: Populate rooms with content
+    // Step 9: Populate rooms with content
     const int dungeonLevel = std::max(1, gameState.currentDungeonLevel);
     for (Room& room : rooms) {
         populateWithEnemies(room, gameState.enemyTemplates);
@@ -127,6 +131,8 @@ void MapGenerator::syncFromDungeon(const std::vector<Room>& dungeon) {
     nextRoomId = 0;
     forgeCount = 0;
 
+    int fallbackExitId = -1;
+
     for (const Room& room : rooms) {
         if (isValidPosition(room.x, room.y)) {
             grid[room.y][room.x] = room.id;
@@ -136,11 +142,17 @@ void MapGenerator::syncFromDungeon(const std::vector<Room>& dungeon) {
 
         if (room.type == RoomType::ENTRANCE) {
             entranceId = room.id;
-        } else if (room.type == RoomType::EXIT) {
+        } else if (room.type == RoomType::SHADOWLORD) {
             exitId = room.id;
+        } else if (room.type == RoomType::EXIT && fallbackExitId < 0) {
+            fallbackExitId = room.id;
         } else if (room.type == RoomType::FORGE) {
             ++forgeCount;
         }
+    }
+
+    if (exitId < 0) {
+        exitId = fallbackExitId;
     }
 }
 
@@ -201,6 +213,10 @@ void MapGenerator::printMap(int currentRoomId) const {
                         case RoomType::EXIT:
                             symbol = " ☆ ";
                             color = Color::BRIGHT_YELLOW;
+                            break;
+                        case RoomType::SHADOWLORD:
+                            symbol = " ☠ ";
+                            color = Color::BRIGHT_MAGENTA;
                             break;
                         case RoomType::BOSS:
                             symbol = " ⚔ ";
@@ -312,30 +328,31 @@ void MapGenerator::printMap(int currentRoomId) const {
     std::cout << "\n" << colorize("◆ LEGEND", Color::BRIGHT_CYAN) << "\n\n";
     
     std::cout << "  " << colorize("⌂", Color::BRIGHT_GREEN) << " Entrance (Start)      ";
-    std::cout << colorize("☆", Color::BRIGHT_YELLOW) << " Exit (Escape!)        ";
-    std::cout << colorize("⚔", Color::BRIGHT_RED) << " Boss Room\n";
+    std::cout << colorize("☆", Color::BRIGHT_YELLOW) << " Exit (Legacy)         ";
+    std::cout << colorize("☠", Color::BRIGHT_MAGENTA) << " Shadow Lord Chamber\n";
+
+    std::cout << "  " << colorize("⚔", Color::BRIGHT_RED) << " Boss Room             ";
+    std::cout << colorize("$", Color::YELLOW) << " Treasure Chest        ";
+    std::cout << colorize("⚠", Color::RED) << " Dangerous Trap\n";
     
-    std::cout << "  " << colorize("$", Color::YELLOW) << " Treasure Chest        ";
-    std::cout << colorize("⚠", Color::RED) << " Dangerous Trap        ";
-    std::cout << colorize("Ω", Color::MAGENTA) << " Puzzle Challenge\n";
+    std::cout << "  " << colorize("Ω", Color::MAGENTA) << " Puzzle Challenge      ";
+    std::cout << colorize("◊", Color::CYAN) << " Secret Room           ";
+    std::cout << colorize("♥", Color::GREEN) << " Safe Rest Area\n";
     
-    std::cout << "  " << colorize("◊", Color::CYAN) << " Secret Room           ";
-    std::cout << colorize("♥", Color::GREEN) << " Safe Rest Area        ";
-    std::cout << colorize("◘", Color::BRIGHT_MAGENTA) << " Merchant Shop\n";
+    std::cout << "  " << colorize("◘", Color::BRIGHT_MAGENTA) << " Merchant Shop         ";
+    std::cout << colorize("▤", Color::BRIGHT_BLUE) << " Library (XP)          ";
+    std::cout << colorize("⚒", Color::BRIGHT_RED) << " Forge (Crafting)\n";
     
-    std::cout << "  " << colorize("▤", Color::BRIGHT_BLUE) << " Library (XP)          ";
-    std::cout << colorize("⚒", Color::BRIGHT_RED) << " Forge (Crafting)      ";
-    std::cout << colorize("⛩", Color::BRIGHT_YELLOW) << " Shrine (Blessing)\n";
+    std::cout << "  " << colorize("⛩", Color::BRIGHT_YELLOW) << " Shrine (Blessing)     ";
+    std::cout << colorize("⚗", Color::BRIGHT_GREEN) << " Laboratory (Potions)  ";
+    std::cout << colorize("⚰", Color::DARK_GRAY) << " Graveyard (Undead)\n";
     
-    std::cout << "  " << colorize("⚗", Color::BRIGHT_GREEN) << " Laboratory (Potions)  ";
-    std::cout << colorize("⚰", Color::DARK_GRAY) << " Graveyard (Undead)    ";
-    std::cout << colorize("⛨", Color::BRIGHT_WHITE) << " Armory (Gear)\n";
+    std::cout << "  " << colorize("⛨", Color::BRIGHT_WHITE) << " Armory (Gear)         ";
+    std::cout << colorize("⛓", Color::RED) << " Prison (Rescue)       ";
+    std::cout << colorize("•", Color::BRIGHT_WHITE) << " Room (Unexplored)\n";
     
-    std::cout << "  " << colorize("⛓", Color::RED) << " Prison (Rescue)       ";
-    std::cout << colorize("•", Color::BRIGHT_WHITE) << " Room (Unexplored)     ";
-    std::cout << colorize("○", Color::WHITE) << " Room (Explored)\n";
-    
-    std::cout << "  " << colorize("·", Color::DARK_GRAY) << " Room (Cleared)\n\n";
+    std::cout << "  " << colorize("○", Color::WHITE) << " Room (Explored)       ";
+    std::cout << colorize("·", Color::DARK_GRAY) << " Room (Cleared)\n\n";
     
     std::cout << "\n";
     displaySeparator(80, '=');
@@ -394,6 +411,108 @@ int MapGenerator::placeExitRoom() {
     grid[y][x] = exitRoom.id;
     
     return exitRoom.id;
+}
+
+bool MapGenerator::placeShadowLordRoom() {
+    int entranceX = -1;
+    int entranceY = -1;
+
+    for (const Room& room : rooms) {
+        if (room.id == entranceId) {
+            entranceX = room.x;
+            entranceY = room.y;
+            break;
+        }
+    }
+
+    if (entranceX < 0 || entranceY < 0) {
+        return false;
+    }
+
+    int bestIndex = -1;
+    int bestDistance = -1;
+    int bestAdjacency = -1;
+
+    for (size_t i = 0; i < rooms.size(); ++i) {
+        const Room& room = rooms[i];
+
+        if (room.id == entranceId || room.type == RoomType::SHOP || room.type == RoomType::FORGE) {
+            continue;
+        }
+
+        const int adjacencyCount = static_cast<int>(getAdjacentRooms(room.x, room.y).size());
+        if (adjacencyCount <= 0) {
+            continue;
+        }
+
+        const bool isEndpointCandidate = (adjacencyCount <= 1);
+        const int distance = std::abs(room.x - entranceX) + std::abs(room.y - entranceY);
+
+        bool better = false;
+        if (bestIndex < 0) {
+            better = true;
+        } else {
+            const Room& bestRoom = rooms[bestIndex];
+            const bool bestIsEndpoint = (bestAdjacency <= 1);
+
+            if (isEndpointCandidate != bestIsEndpoint) {
+                better = isEndpointCandidate;
+            } else if (distance != bestDistance) {
+                better = (distance > bestDistance);
+            } else if (room.y != bestRoom.y) {
+                better = (room.y > bestRoom.y);
+            } else if (room.x != bestRoom.x) {
+                better = (room.x > bestRoom.x);
+            } else {
+                better = (room.id > bestRoom.id);
+            }
+        }
+
+        if (better) {
+            bestIndex = static_cast<int>(i);
+            bestDistance = distance;
+            bestAdjacency = adjacencyCount;
+        }
+    }
+
+    if (bestIndex < 0) {
+        for (size_t i = 0; i < rooms.size(); ++i) {
+            if (rooms[i].id == exitId) {
+                bestIndex = static_cast<int>(i);
+                break;
+            }
+        }
+    }
+
+    if (bestIndex < 0) {
+        return false;
+    }
+
+    const int shadowRoomId = rooms[bestIndex].id;
+
+    for (Room& room : rooms) {
+        if (room.id == shadowRoomId) {
+            continue;
+        }
+
+        if (room.type == RoomType::SHADOWLORD || room.type == RoomType::EXIT) {
+            room.type = RoomType::NORMAL;
+            room.name = generateRoomName(RoomType::NORMAL);
+            room.description = generateRoomDescription(RoomType::NORMAL);
+            room.shortDesc = "A normal room you've visited before.";
+        }
+    }
+
+    Room& shadowRoom = rooms[bestIndex];
+    shadowRoom.type = RoomType::SHADOWLORD;
+    shadowRoom.name = "Shadow Lord Chamber";
+    shadowRoom.shortDesc = "The oppressive final chamber where the Shadow Lord was sealed.";
+    shadowRoom.description = "A colossal obsidian hall drenched in cold shadow. Ancient seals carved into the "
+                             "floor flicker and crackle around a throne of black stone. This is the Shadow Lord's "
+                             "chamber - the final threshold of your journey.";
+
+    exitId = shadowRoom.id;
+    return true;
 }
 
 bool MapGenerator::placeBasicShopNextToEntrance() {
@@ -705,6 +824,8 @@ std::string MapGenerator::generateRoomName(RoomType type) {
             return prefix + " Armory";
         case RoomType::PRISON:
             return "The " + prefix + " Prison";
+        case RoomType::SHADOWLORD:
+            return "Shadow Lord Chamber";
         default:
             return prefix + " " + roomType;
     }
@@ -753,6 +874,9 @@ std::string MapGenerator::generateRoomDescription(RoomType type) {
             break;
         case RoomType::PRISON:
             extra = " Iron bars and heavy chains suggest this was a place of confinement.";
+            break;
+        case RoomType::SHADOWLORD:
+            extra = " The chamber trembles with ancient malice. A final confrontation awaits.";
             break;
         default:
             extra = "";
@@ -840,6 +964,7 @@ void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& tem
     if (room.type == RoomType::SAFE || room.type == RoomType::ENTRANCE || 
         room.type == RoomType::EXIT || room.type == RoomType::TREASURE ||
         room.type == RoomType::SHOP || room.type == RoomType::LIBRARY ||
+        room.type == RoomType::SHADOWLORD ||
         room.type == RoomType::FORGE || room.type == RoomType::SHRINE) {
         return;
     }
@@ -967,6 +1092,7 @@ void MapGenerator::populateWithItems(Room& room, const std::vector<Item>& templa
             break;
         case RoomType::ENTRANCE:
         case RoomType::EXIT:
+        case RoomType::SHADOWLORD:
             // No items at entrance/exit
             break;
         default:

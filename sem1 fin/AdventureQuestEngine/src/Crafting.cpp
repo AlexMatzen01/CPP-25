@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <cstdlib>
+#include <cmath>
 
 namespace AQE {
 
@@ -137,13 +138,53 @@ void configureVendorTemplateItem(Item& item, int dungeonLevel) {
     rebuildItemStatsFromLevel(item);
 }
 
+ItemRarity rarityFromRequiredLevel(int requiredLevel) {
+    if (requiredLevel >= 18) return ItemRarity::LEGENDARY;
+    if (requiredLevel >= 13) return ItemRarity::EPIC;
+    if (requiredLevel >= 8) return ItemRarity::RARE;
+    if (requiredLevel >= 4) return ItemRarity::UNCOMMON;
+    return ItemRarity::COMMON;
+}
+
+ItemRarity promoteRarity(ItemRarity rarity) {
+    switch (rarity) {
+        case ItemRarity::COMMON: return ItemRarity::UNCOMMON;
+        case ItemRarity::UNCOMMON: return ItemRarity::RARE;
+        case ItemRarity::RARE: return ItemRarity::EPIC;
+        case ItemRarity::EPIC: return ItemRarity::LEGENDARY;
+        case ItemRarity::LEGENDARY: return ItemRarity::LEGENDARY;
+    }
+    return rarity;
+}
+
+const char* craftingRankName(int level) {
+    if (level >= 30) return "Grandmaster";
+    if (level >= 24) return "Master";
+    if (level >= 18) return "Artisan";
+    if (level >= 12) return "Journeyman";
+    if (level >= 6) return "Apprentice";
+    return "Novice";
+}
+
+bool isMawRecipe(const Recipe& recipe) {
+    return recipe.requiredMaterials.find(11) != recipe.requiredMaterials.end() ||
+           recipe.requiredMaterials.find(12) != recipe.requiredMaterials.end() ||
+           recipe.requiredMaterials.find(13) != recipe.requiredMaterials.end();
+}
+
 }  // namespace
 
 // ---
 // CraftingSystem Implementation
 // ---
 
-CraftingSystem::CraftingSystem(Player& player) : playerRef(player) {
+CraftingSystem::CraftingSystem(Player& player)
+    : playerRef(player),
+      craftingSkillLevel(1),
+      craftingSkillXP(0),
+      totalCraftAttempts(0),
+      totalCraftSuccesses(0),
+      consecutiveFailures(0) {
     initializeMaterials();
     initializeRecipes();
 }
@@ -255,8 +296,13 @@ void CraftingSystem::displayDiscoveredRecipes() const {
                 std::cout << "None";
             }
             std::cout << "\n";
-            std::cout << "  Success Chance: " << static_cast<int>(calculateSuccessChance(recipe) * 100.0f) << "%\n";
-            std::cout << "  Can craft: " << (canCraft(recipe.id) ? "YES" : "NO") << "\n\n";
+            const int successPercent = static_cast<int>(calculateSuccessChance(recipe) * 100.0f);
+            const int masteryLevel = getRecipeMasteryLevel(recipe.id);
+            const int maxByMaterials = calculateMaxCraftableByMaterials(recipe);
+            std::cout << "  Success Chance: " << successPercent << "%"
+                      << " | Mastery: " << masteryLevel
+                      << " | Max Batch: " << maxByMaterials << "\n";
+            std::cout << "  Can craft now: " << (canCraft(recipe.id) ? "YES" : "NO") << "\n\n";
         }
     }
     
@@ -265,7 +311,61 @@ void CraftingSystem::displayDiscoveredRecipes() const {
     }
 }
 
-bool CraftingSystem::craftItem(int recipeId) {
+Item CraftingSystem::buildCraftedItem(const Recipe& recipe, bool masterwork) const {
+    Item craftedItem;
+    craftedItem.id = recipe.resultItemId;
+    craftedItem.name = recipe.name;
+    craftedItem.description = recipe.description;
+    craftedItem.value = std::max(1, recipe.requiredGold * 3);
+    craftedItem.quantity = std::max(1, recipe.resultQuantity);
+    craftedItem.rarity = rarityFromRequiredLevel(recipe.requiredLevel);
+
+    // Dynamic iLvl baseline tracks current player progression, then mastery nudges it upward.
+    const int playerContextLevel = std::max(playerRef.level, recipe.requiredLevel);
+    const bool bossScaled = isMawRecipe(recipe);
+    int rolledItemLevel = rollItemLevel(playerContextLevel, craftedItem.rarity, bossScaled);
+    rolledItemLevel += std::min(6, craftingSkillLevel / 3);
+    rolledItemLevel += std::min(5, getRecipeMasteryLevel(recipe.id) / 4);
+    craftedItem.itemLevel = std::max(recipe.requiredLevel, std::min(60, rolledItemLevel));
+    craftedItem.mawOnly = isMawRecipe(recipe);
+
+    if (recipe.id >= 1000 && recipe.id < 1100) {
+        craftedItem.type = ItemType::WEAPON;
+        craftedItem.isUsable = false;
+        craftedItem.isStackable = false;
+    } else if (recipe.id >= 1100 && recipe.id < 1200) {
+        craftedItem.type = ItemType::ARMOR;
+        craftedItem.isUsable = false;
+        craftedItem.isStackable = false;
+    } else if (recipe.id >= 1200 && recipe.id < 1300) {
+        craftedItem.type = ItemType::ACCESSORY;
+        craftedItem.isUsable = false;
+        craftedItem.isStackable = false;
+    } else {
+        craftedItem.type = ItemType::CONSUMABLE;
+        craftedItem.isUsable = true;
+        craftedItem.isStackable = true;
+    }
+
+    rebuildItemStatsFromLevel(craftedItem);
+    if (craftedItem.type == ItemType::ACCESSORY) {
+        applyAccessoryStats(craftedItem);
+    }
+
+    if (masterwork) {
+        craftedItem.rarity = promoteRarity(craftedItem.rarity);
+        applyItemLevelScaling(craftedItem, std::min(60, craftedItem.itemLevel + 2), true);
+        craftedItem.name = "Masterwork " + craftedItem.name;
+        craftedItem.value = static_cast<int>(craftedItem.value * 1.5f);
+        if (craftedItem.type == ItemType::CONSUMABLE) {
+            craftedItem.quantity += 1;
+        }
+    }
+
+    return craftedItem;
+}
+
+bool CraftingSystem::craftItem(int recipeId, int quantity) {
     Recipe* recipe = findRecipe(recipeId);
     if (recipe == nullptr) {
         std::cout << "Recipe not found!\n";
@@ -281,90 +381,106 @@ bool CraftingSystem::craftItem(int recipeId) {
         std::cout << "Cannot craft this item - missing requirements!\n";
         return false;
     }
-    
-    // Calculate success chance
-    float successChance = calculateSuccessChance(*recipe);
-    float roll = static_cast<float>(rand() % 100) / 100.0f;
-    
-    // Consume materials regardless
-    consumeMaterials(recipe->requiredMaterials);
-    playerRef.gold -= recipe->requiredGold;
-    
-    if (roll > successChance) {
-        std::cout << "Crafting failed! Materials lost.\n";
-        return false;
-    }
-    
-    // Create the item
-    Item craftedItem;
-    // In a real system, we'd fetch the template for resultItemId
-    // For now, we'll synthesize it from the recipe
-    craftedItem.id = recipe->resultItemId;
-    craftedItem.name = recipe->name;
-    craftedItem.description = recipe->description;
-    craftedItem.quantity = recipe->resultQuantity;
-    craftedItem.value = recipe->requiredGold * 3;
-    craftedItem.durability = 100;
-    craftedItem.maxDurability = 100;
-    
-    // Set stats based on recipe family (keeps accessory effects meaningful)
-    if (recipeId >= 1000 && recipeId < 1100) { // Weapons
-        craftedItem.type = ItemType::WEAPON;
-        craftedItem.isUsable = false;
-        craftedItem.isStackable = false;
-        craftedItem.attackBonus = 5 + (recipeId % 10) * 5;
-    } else if (recipeId >= 1100 && recipeId < 1200) { // Armor
-        craftedItem.type = ItemType::ARMOR;
-        craftedItem.isUsable = false;
-        craftedItem.isStackable = false;
-        craftedItem.defenseBonus = 3 + (recipeId % 10) * 4;
-    } else if (recipeId >= 1200 && recipeId < 1300) { // Accessories
-        craftedItem.type = ItemType::ACCESSORY;
-        applyAccessoryStats(craftedItem);
-    } else { // Consumables
-        craftedItem.type = ItemType::CONSUMABLE;
-        craftedItem.isUsable = true;
-        craftedItem.isStackable = true;
-        craftedItem.healAmount = 20 + (recipeId % 10) * 10;
-    }
 
-    if (recipe->requiredLevel >= 16) {
-        craftedItem.rarity = ItemRarity::LEGENDARY;
-    } else if (recipe->requiredLevel >= 12) {
-        craftedItem.rarity = ItemRarity::EPIC;
-    } else if (recipe->requiredLevel >= 8) {
-        craftedItem.rarity = ItemRarity::RARE;
-    } else if (recipe->requiredLevel >= 4) {
-        craftedItem.rarity = ItemRarity::UNCOMMON;
-    } else {
-        craftedItem.rarity = ItemRarity::COMMON;
-    }
+    const int requestedQuantity = std::max(1, quantity);
+    int completedAttempts = 0;
+    int successes = 0;
+    int failures = 0;
+    int preservedFailures = 0;
+    int masterworkCount = 0;
+    int xpAwarded = 0;
 
-    bool stacked = false;
-    if (craftedItem.isStackable) {
-        for (Item& invItem : playerRef.inventory) {
-            if (invItem.id == craftedItem.id) {
-                invItem.quantity += craftedItem.quantity;
-                stacked = true;
-                break;
+    while (completedAttempts < requestedQuantity) {
+        if (playerRef.level < recipe->requiredLevel ||
+            playerRef.gold < recipe->requiredGold ||
+            !hasMaterials(recipe->requiredMaterials)) {
+            break;
+        }
+
+        totalCraftAttempts++;
+        completedAttempts++;
+        playerRef.gold -= recipe->requiredGold;
+        consumeMaterials(recipe->requiredMaterials);
+
+        const float successChance = calculateSuccessChance(*recipe);
+        const bool success = randomFloat() <= successChance;
+
+        if (!success) {
+            failures++;
+            consecutiveFailures++;
+
+            const int preservationChance = calculateMaterialPreservationChance(*recipe);
+            if (randomChance(preservationChance)) {
+                for (const auto& req : recipe->requiredMaterials) {
+                    const int refunded = std::max(1, static_cast<int>(std::ceil(req.second * 0.5f)));
+                    addMaterial(req.first, refunded);
+                }
+                preservedFailures++;
+            }
+            continue;
+        }
+
+        successes++;
+        totalCraftSuccesses++;
+        consecutiveFailures = 0;
+
+        const int masteryLevel = getRecipeMasteryLevel(recipe->id);
+        const int stationLevel = getStationMasteryLevel(recipe->craftingStation);
+        const int masterworkChance = std::min(40,
+            3 + craftingSkillLevel + (masteryLevel * 2) + (stationLevel / 2));
+        const bool masterwork = randomChance(masterworkChance);
+        if (masterwork) {
+            masterworkCount++;
+        }
+
+        Item craftedItem = buildCraftedItem(*recipe, masterwork);
+        bool stacked = false;
+        if (craftedItem.isStackable) {
+            for (Item& invItem : playerRef.inventory) {
+                if (invItem.id == craftedItem.id) {
+                    invItem.quantity += craftedItem.quantity;
+                    stacked = true;
+                    break;
+                }
             }
         }
+        if (!stacked) {
+            playerRef.inventory.push_back(craftedItem);
+        }
+
+        int gained = recipe->experienceGained + recipe->requiredLevel + (masteryLevel / 2);
+        if (masterwork) {
+            gained += recipe->experienceGained / 2;
+        }
+        xpAwarded += gained;
+
+        recipeMastery[recipe->id] += 1;
+        stationMastery[recipe->craftingStation] += 1;
     }
 
-    if (!stacked) {
-        playerRef.inventory.push_back(craftedItem);
+    if (xpAwarded > 0) {
+        playerRef.experience += xpAwarded;
+        addCraftingXP(std::max(1, xpAwarded / 2));
     }
 
-    playerRef.experience += recipe->experienceGained;
-    
-    std::cout << "Successfully crafted: " << recipe->name;
-    if (craftedItem.quantity > 1) {
-        std::cout << " x" << craftedItem.quantity;
+    if (completedAttempts == 0) {
+        std::cout << "Crafting stopped - requirements were no longer met.\n";
+        return false;
     }
-    std::cout << "!\n";
-    std::cout << "Gained " << recipe->experienceGained << " XP.\n";
-    
-    return true;
+
+    std::cout << "\nCrafting summary for " << recipe->name << ":\n";
+    std::cout << "  Attempts: " << completedAttempts << "\n";
+    std::cout << "  Successes: " << successes << "\n";
+    std::cout << "  Failures: " << failures << "\n";
+    std::cout << "  Masterwork crafts: " << masterworkCount << "\n";
+    if (preservedFailures > 0) {
+        std::cout << "  Material-preserved failures: " << preservedFailures << "\n";
+    }
+    if (xpAwarded > 0) {
+        std::cout << "  Player XP gained: " << xpAwarded << "\n";
+    }
+
+    return successes > 0;
 }
 
 bool CraftingSystem::canCraft(int recipeId) const {
@@ -682,19 +798,21 @@ std::vector<CraftingMaterial> CraftingSystem::disenchantItem(int itemId) {
 }
 
 bool CraftingSystem::convertMaterial(int fromId, int toId, int quantity) {
-    if (getMaterialCount(fromId) < quantity) {
+    if (quantity <= 0) {
+        std::cout << "Conversion amount must be at least 1.\n";
+        return false;
+    }
+
+    const int requiredInput = quantity * 5;
+    if (getMaterialCount(fromId) < requiredInput) {
         std::cout << "Not enough materials to convert!\n";
         return false;
     }
 
-    if (quantity < 5) {
-        std::cout << "Minimum 5 materials required for conversion.\n";
-        return false;
-    }
-
-    consumeMaterials({{fromId, 5}});
-    addMaterial(toId, 1);
-    std::cout << "Converted 5 materials into 1 higher-tier material.\n";
+    consumeMaterials({{fromId, requiredInput}});
+    addMaterial(toId, quantity);
+    std::cout << "Converted " << requiredInput << " base materials into "
+              << quantity << " higher-tier materials.\n";
     return true;
 }
 
@@ -712,9 +830,10 @@ void CraftingSystem::runCraftingMenu() {
         std::cout << "6. Disenchant Item (Break down)\n";
         std::cout << "7. Material Conversion\n";
         std::cout << "8. Reforge Legendary (Raise iLvl)\n";
+        std::cout << "9. Crafting Progress\n";
         std::cout << "0. Exit Crafting\n";
 
-        int choice = getValidatedInt("Choice: ", 0, 8);
+        int choice = getValidatedInt("Choice: ", 0, 9);
 
         switch (choice) {
             case 1:
@@ -724,7 +843,23 @@ void CraftingSystem::runCraftingMenu() {
                 displayDiscoveredRecipes();
                 {
                 int rid = getValidatedInt("Enter Recipe ID to craft (0 to cancel): ", 0, 99999);
-                if (rid != 0) craftItem(rid);
+                if (rid != 0) {
+                    Recipe* recipe = findRecipe(rid);
+                    if (recipe == nullptr || !recipe->isDiscovered) {
+                        std::cout << "Recipe not available.\n";
+                        break;
+                    }
+
+                    int maxBatch = calculateMaxCraftableByMaterials(*recipe);
+                    if (maxBatch <= 0) {
+                        std::cout << "You cannot craft this recipe right now.\n";
+                        break;
+                    }
+
+                    std::cout << "Max craftable now: " << maxBatch << "\n";
+                    int qty = getValidatedInt("Craft quantity: ", 1, maxBatch);
+                    craftItem(rid, qty);
+                }
                 }
                 break;
             case 3:
@@ -775,8 +910,14 @@ void CraftingSystem::runCraftingMenu() {
                 }
                 break;
             case 7:
-                if (getYesNo("Convert 5 Iron Ore into 1 Magical Essence")) {
-                    convertMaterial(1, 6, 5);
+                if (getYesNo("Convert Iron Ore -> Magical Essence (5:1)?")) {
+                    int maxConversions = getMaterialCount(1) / 5;
+                    if (maxConversions <= 0) {
+                        std::cout << "Not enough Iron Ore.\n";
+                        break;
+                    }
+                    int conversions = getValidatedInt("How many conversions? ", 1, maxConversions);
+                    convertMaterial(1, 6, conversions);
                 }
                 break;
             case 8:
@@ -793,6 +934,9 @@ void CraftingSystem::runCraftingMenu() {
                     reforgeItem(selected.id, target);
                 }
                 }
+                break;
+            case 9:
+                displayCraftingProgress();
                 break;
             case 0:
                 inMenu = false;
@@ -814,6 +958,21 @@ std::string CraftingSystem::serializeCrafting() const {
             ss << recipe.id << ",";
         }
     }
+
+    ss << "|v2:" << craftingSkillLevel << ":" << craftingSkillXP << ":"
+       << totalCraftAttempts << ":" << totalCraftSuccesses << ":"
+       << consecutiveFailures;
+
+    ss << ";rm=";
+    for (const auto& masteryPair : recipeMastery) {
+        ss << masteryPair.first << ":" << masteryPair.second << ",";
+    }
+
+    ss << ";sm=";
+    for (const auto& stationPair : stationMastery) {
+        ss << stationPair.first << ":" << stationPair.second << ",";
+    }
+
     return ss.str();
 }
 
@@ -841,7 +1000,16 @@ void CraftingSystem::deserializeCrafting(const std::string& data) {
     }
     
     // Parse discovered recipes
-    std::string recipeData = data.substr(pipePos + 1);
+    std::string tailData = data.substr(pipePos + 1);
+    std::string recipeData = tailData;
+    std::string progressionData;
+
+    size_t secondPipePos = tailData.find('|');
+    if (secondPipePos != std::string::npos) {
+        recipeData = tailData.substr(0, secondPipePos);
+        progressionData = tailData.substr(secondPipePos + 1);
+    }
+
     std::stringstream recipeSs(recipeData);
     
     while (std::getline(recipeSs, token, ',')) {
@@ -850,6 +1018,64 @@ void CraftingSystem::deserializeCrafting(const std::string& data) {
         Recipe* recipe = findRecipe(recipeId);
         if (recipe) {
             recipe->isDiscovered = true;
+        }
+    }
+
+    if (!progressionData.empty() && progressionData.rfind("v2:", 0) == 0) {
+        size_t rmPos = progressionData.find(";rm=");
+        size_t smPos = progressionData.find(";sm=");
+
+        std::string base = progressionData.substr(3,
+            rmPos == std::string::npos ? std::string::npos : (rmPos - 3));
+        std::stringstream baseStream(base);
+        std::vector<int> vals;
+        while (std::getline(baseStream, token, ':')) {
+            if (!token.empty()) {
+                vals.push_back(std::stoi(token));
+            }
+        }
+
+        if (vals.size() >= 5) {
+            craftingSkillLevel = std::max(1, vals[0]);
+            craftingSkillXP = std::max(0, vals[1]);
+            totalCraftAttempts = std::max(0, vals[2]);
+            totalCraftSuccesses = std::max(0, vals[3]);
+            consecutiveFailures = std::max(0, vals[4]);
+        }
+
+        recipeMastery.clear();
+        stationMastery.clear();
+
+        if (rmPos != std::string::npos) {
+            const size_t rmStart = rmPos + 4;
+            const size_t rmEnd = (smPos == std::string::npos) ? progressionData.size() : smPos;
+            const std::string rmData = progressionData.substr(rmStart, rmEnd - rmStart);
+            std::stringstream rmStream(rmData);
+            while (std::getline(rmStream, token, ',')) {
+                if (token.empty()) continue;
+                size_t split = token.find(':');
+                if (split == std::string::npos) continue;
+                int rid = std::stoi(token.substr(0, split));
+                int rank = std::stoi(token.substr(split + 1));
+                if (rank > 0) {
+                    recipeMastery[rid] = rank;
+                }
+            }
+        }
+
+        if (smPos != std::string::npos) {
+            const std::string smData = progressionData.substr(smPos + 4);
+            std::stringstream smStream(smData);
+            while (std::getline(smStream, token, ',')) {
+                if (token.empty()) continue;
+                size_t split = token.find(':');
+                if (split == std::string::npos) continue;
+                std::string station = token.substr(0, split);
+                int rank = std::stoi(token.substr(split + 1));
+                if (!station.empty() && rank > 0) {
+                    stationMastery[station] = rank;
+                }
+            }
         }
     }
 }
@@ -1760,17 +1986,130 @@ Recipe* CraftingSystem::findRecipe(int recipeId) {
 
 float CraftingSystem::calculateSuccessChance(const Recipe& recipe) const {
     float chance = recipe.successChance;
-    
-    // Bonus for higher level
-    int levelDiff = playerRef.level - recipe.requiredLevel;
+
+    const int levelDiff = playerRef.level - recipe.requiredLevel;
     if (levelDiff > 0) {
-        chance += levelDiff * 0.02f;  // 2% per level above requirement
+        chance += levelDiff * 0.02f;
+    } else if (levelDiff < 0) {
+        chance += levelDiff * 0.03f;
     }
-    
-    // Cap at 100%
-    if (chance > 1.0f) chance = 1.0f;
-    
+
+    chance += craftingSkillLevel * 0.012f;
+    chance += std::min(0.18f, getRecipeMasteryLevel(recipe.id) * 0.015f);
+    chance += std::min(0.08f, getStationMasteryLevel(recipe.craftingStation) * 0.004f);
+    chance += std::min(0.15f, consecutiveFailures * 0.03f);
+
+    if (chance > 0.995f) chance = 0.995f;
+    if (chance < 0.10f) chance = 0.10f;
+
     return chance;
+}
+
+int CraftingSystem::calculateMaterialPreservationChance(const Recipe& recipe) const {
+    int chance = 4;
+    chance += craftingSkillLevel;
+    chance += getRecipeMasteryLevel(recipe.id) * 2;
+    chance += std::min(12, consecutiveFailures * 2);
+    chance += std::max(0, playerRef.level - recipe.requiredLevel);
+    return std::min(55, chance);
+}
+
+int CraftingSystem::calculateMaxCraftableByMaterials(const Recipe& recipe) const {
+    if (playerRef.level < recipe.requiredLevel || recipe.requiredGold <= 0) {
+        if (playerRef.level < recipe.requiredLevel) {
+            return 0;
+        }
+    }
+
+    int maxByMaterials = 9999;
+    for (const auto& req : recipe.requiredMaterials) {
+        if (req.second <= 0) {
+            continue;
+        }
+        maxByMaterials = std::min(maxByMaterials, getMaterialCount(req.first) / req.second);
+    }
+
+    if (maxByMaterials == 9999) {
+        maxByMaterials = 1;
+    }
+
+    const int maxByGold = (recipe.requiredGold > 0)
+        ? (playerRef.gold / recipe.requiredGold)
+        : maxByMaterials;
+    return std::max(0, std::min(maxByMaterials, maxByGold));
+}
+
+int CraftingSystem::getRecipeMasteryLevel(int recipeId) const {
+    auto it = recipeMastery.find(recipeId);
+    return (it == recipeMastery.end()) ? 0 : it->second;
+}
+
+int CraftingSystem::getStationMasteryLevel(const std::string& stationName) const {
+    auto it = stationMastery.find(stationName);
+    return (it == stationMastery.end()) ? 0 : it->second;
+}
+
+int CraftingSystem::xpToNextCraftingLevel() const {
+    return 120 + ((craftingSkillLevel - 1) * 55);
+}
+
+void CraftingSystem::addCraftingXP(int amount) {
+    if (amount <= 0) {
+        return;
+    }
+
+    craftingSkillXP += amount;
+    while (craftingSkillLevel < 30 && craftingSkillXP >= xpToNextCraftingLevel()) {
+        craftingSkillXP -= xpToNextCraftingLevel();
+        craftingSkillLevel++;
+        std::cout << "Crafting skill increased to " << craftingSkillLevel
+                  << " (" << craftingRankName(craftingSkillLevel) << ")!\n";
+    }
+}
+
+void CraftingSystem::displayCraftingProgress() const {
+    const int xpNeeded = xpToNextCraftingLevel();
+    const int percent = (xpNeeded > 0)
+        ? static_cast<int>((craftingSkillXP * 100.0f) / xpNeeded)
+        : 100;
+    const float successRate = (totalCraftAttempts > 0)
+        ? (100.0f * static_cast<float>(totalCraftSuccesses) /
+           static_cast<float>(totalCraftAttempts))
+        : 0.0f;
+
+    std::cout << "\n========================================\n";
+    std::cout << "          CRAFTING PROGRESSION\n";
+    std::cout << "========================================\n\n";
+    std::cout << "Rank: " << craftingRankName(craftingSkillLevel)
+              << " (Level " << craftingSkillLevel << ")\n";
+    std::cout << "XP: " << craftingSkillXP << "/" << xpNeeded
+              << " (" << percent << "%)\n";
+    std::cout << "Attempts: " << totalCraftAttempts
+              << " | Successes: " << totalCraftSuccesses
+              << " | Success Rate: " << std::fixed << std::setprecision(1)
+              << successRate << "%\n";
+    std::cout << "Current failure streak: " << consecutiveFailures << "\n\n";
+
+    std::vector<std::pair<int, int>> recipeRanks(recipeMastery.begin(), recipeMastery.end());
+    std::sort(recipeRanks.begin(), recipeRanks.end(),
+              [](const auto& a, const auto& b) { return a.second > b.second; });
+
+    if (!recipeRanks.empty()) {
+        std::cout << "Top recipe mastery:\n";
+        const size_t limit = std::min<size_t>(3, recipeRanks.size());
+        for (size_t i = 0; i < limit; ++i) {
+            const Recipe* recipe = nullptr;
+            for (const auto& r : recipes) {
+                if (r.id == recipeRanks[i].first) {
+                    recipe = &r;
+                    break;
+                }
+            }
+            if (recipe != nullptr) {
+                std::cout << "  - " << recipe->name << ": " << recipeRanks[i].second << " crafts\n";
+            }
+        }
+    }
 }
 
 // ---

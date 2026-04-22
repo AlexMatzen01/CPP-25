@@ -346,6 +346,7 @@ std::string roomTypeToString(RoomType type) {
         case RoomType::SHOP:     return "Shop";
         case RoomType::ENTRANCE: return "Entrance";
         case RoomType::EXIT:     return "Exit";
+        case RoomType::SHADOWLORD: return "Shadow Lord's Chamber";
         default:                 return "Unknown";
     }
 }

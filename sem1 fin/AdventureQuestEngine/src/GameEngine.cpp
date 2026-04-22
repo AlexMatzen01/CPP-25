@@ -131,24 +131,51 @@ void GameEngine::showIntro() {
 
 int GameEngine::showMainMenu() {
     clearScreen();
-    
-    // Create fancy title
-    std::cout << UIManager::createTitle("⚔ ADVENTURE QUEST ENGINE ⚔", 80, UIColor::BRIGHT_CYAN);
+
+    std::cout << UIManager::createTitle("ADVENTURE QUEST ENGINE", 80, UIColor::BRIGHT_CYAN);
     std::cout << "\n";
-    std::cout << UIManager::centerText("✨ A C++ Text-Based Dungeon Crawler ✨", 80) << "\n";
+    std::cout << UIManager::centerText("A C++ Text-Based Dungeon Crawler", 80) << "\n";
     std::cout << UIManager::centerText("Version 1.0", 80) << "\n\n";
-    
-    // Simple menu display  
-    displayDivider(80, '-');
-    std::cout << "\n";
-    std::cout << "  ⚔  1. New Game\n";
-    std::cout << "  💾  2. Load Game\n";
-    std::cout << "  ⚙  3. Settings\n";
-    std::cout << "  🏆  4. Leaderboard\n";
-    std::cout << "  ❌  5. Quit\n\n";
-    displayDivider(80, '-');
-    
-    return getValidatedInt("Enter your choice: ", 1, 5);
+
+    if (!m_activeSaveFile.empty()) {
+        std::cout << UIManager::colorize(" Active Save Slot: ", UIColor::BRIGHT_BLACK)
+                  << UIManager::colorize(getSaveDisplayName(m_activeSaveFile), UIColor::BRIGHT_YELLOW, UIEffect::BOLD)
+                  << "\n\n";
+    }
+
+    Menu menu;
+    menu.title = "Main Menu";
+    menu.titleColor = UIColor::BRIGHT_CYAN;
+    menu.selectedColor = UIColor::BRIGHT_GREEN;
+
+    MenuItem newGame;
+    newGame.icon = "*";
+    newGame.text = "New Game";
+    newGame.description = "Start a fresh adventure from the entrance.";
+
+    MenuItem loadGame;
+    loadGame.icon = "S";
+    loadGame.text = "Load Game";
+    loadGame.description = "Continue from an existing save slot.";
+
+    MenuItem settings;
+    settings.icon = "#";
+    settings.text = "Settings";
+    settings.description = "Adjust difficulty and display options.";
+
+    MenuItem leaderboard;
+    leaderboard.icon = "T";
+    leaderboard.text = "Leaderboard";
+    leaderboard.description = "View top heroes and final scores.";
+
+    MenuItem quit;
+    quit.icon = "X";
+    quit.text = "Quit";
+    quit.description = "Exit Adventure Quest Engine.";
+
+    menu.items = {newGame, loadGame, settings, leaderboard, quit};
+
+    return UIManager::displayMenu(menu);
 }
 
 void GameEngine::startNewGame() {
@@ -218,7 +245,7 @@ void GameEngine::showStoryIntro() {
     std::cout << Color::RESET;
     std::cout << "  1. Navigate through the dungeon, fighting monsters and solving puzzles\n";
     std::cout << "  2. Grow stronger by collecting loot and gaining experience\n";
-    std::cout << "  3. Find the EXIT chamber where the Shadow Lord awaits\n";
+    std::cout << "  3. Find the Shadow Lord Chamber hidden deep in the dungeon\n";
     std::cout << "  4. Defeat the Shadow Lord to complete your quest!\n\n";
     
     std::cout << Color::GREEN;
@@ -240,7 +267,7 @@ void GameEngine::giveStarterQuests() {
     Quest mainQuest;
     mainQuest.id = 1;
     mainQuest.name = "Defeat the Shadow Lord";
-    mainQuest.description = "Navigate through the dungeon, reach the exit chamber, and defeat the Shadow Lord to save the realm!";
+    mainQuest.description = "Navigate through the dungeon, reach the Shadow Lord Chamber, and defeat the Shadow Lord to save the realm!";
     mainQuest.completionText = "You have vanquished the Shadow Lord! The realm is saved!";
     mainQuest.isMainQuest = true;
     mainQuest.requiresBoss = true;
@@ -892,7 +919,7 @@ void GameEngine::displayCurrentRoom() {
     
     Room& room = getCurrentRoom();
 
-    if (room.id == getActiveExitRoomId()) {
+    if (room.id == getActiveShadowLordRoomId()) {
         if (!m_gameState.player.shadowLordDefeated) {
             triggerShadowLordEncounterIfNeeded();
             return;
@@ -910,60 +937,60 @@ void GameEngine::displayCurrentRoom() {
         m_gameState.player.visitedRooms.push_back(room.id);
     }
     
-    displayDivider(80, '=');
-    std::cout << centerString(room.name, 80) << std::endl;
-    displayDivider(80, '=');
+    std::cout << UIManager::createTitle(room.name, 80, UIColor::BRIGHT_CYAN);
     std::cout << "\n";
-    
-    // Display description
+
+    std::cout << UIManager::colorize(" Type: ", UIColor::BRIGHT_BLACK)
+              << UIManager::colorize(getRoomTypeName(room.type), UIColor::BRIGHT_YELLOW, UIEffect::BOLD)
+              << "\n\n";
+
     if (room.isExplored && !room.shortDesc.empty()) {
         std::cout << wrapText(room.shortDesc, 78) << "\n\n";
     } else {
         std::cout << wrapText(room.description, 78) << "\n\n";
     }
-    
-    // Display room type info
-    std::cout << "Room Type: " << getRoomTypeName(room.type) << "\n";
-    
-    // Display enemies
+
     if (!room.enemies.empty()) {
-        std::cout << "\nEnemies present:\n";
+        std::cout << UIManager::colorize("Enemies", UIColor::BRIGHT_RED, UIEffect::BOLD) << "\n";
         for (const auto& enemy : room.enemies) {
-            std::cout << "  - " << enemy.name << " (HP: " << enemy.stats.currentHP << ")\n";
+            std::cout << "  - " << UIManager::colorize(enemy.name, UIColor::BRIGHT_RED)
+                      << " (HP " << enemy.stats.currentHP << ")\n";
         }
+        std::cout << "\n";
     }
-    
-    // Display items
+
     if (!room.items.empty()) {
-        std::cout << "\nItems:\n";
+        std::cout << UIManager::colorize("Items", UIColor::BRIGHT_GREEN, UIEffect::BOLD) << "\n";
         for (size_t i = 0; i < room.items.size(); ++i) {
-            std::cout << "  " << (i+1) << ". " << room.items[i].name
+            std::cout << "  " << (i + 1) << ". " << room.items[i].name
                       << " [iLvl " << room.items[i].itemLevel << "]";
             if (room.items[i].hasUniquePerk && !room.items[i].uniquePerkName.empty()) {
                 std::cout << " <" << room.items[i].uniquePerkName << ">";
             }
             std::cout << "\n";
         }
+        std::cout << "\n";
     }
-    
-    // Display exits
-    std::cout << "\nExits: ";
-    if (room.hasNorth) std::cout << "[N]orth ";
-    if (room.hasSouth) std::cout << "[S]outh ";
-    if (room.hasEast) std::cout << "[E]ast ";
-    if (room.hasWest) std::cout << "[W]est ";
+
+    std::cout << UIManager::colorize("Exits", UIColor::BRIGHT_CYAN, UIEffect::BOLD) << ": ";
+    if (room.hasNorth) std::cout << "[N] ";
+    if (room.hasSouth) std::cout << "[S] ";
+    if (room.hasEast) std::cout << "[E] ";
+    if (room.hasWest) std::cout << "[W] ";
     std::cout << "\n";
-    
+
     displayDivider(80, '-');
-    
-    // Display player status
+
     showPlayerStatus();
-    
+
     displayDivider(80, '-');
 }
 
 std::string GameEngine::getExplorationAction() {
-    std::cout << "\nWhat do you do? ";
+    std::cout << "\n"
+              << UIManager::colorize("Action", UIColor::BRIGHT_CYAN, UIEffect::BOLD)
+              << " [n/s/e/w, look, search, interact, inventory, status, quests, map, menu, help]"
+              << "\n> ";
     std::string action;
     std::getline(std::cin, action);
     return toLower(trim(action));
@@ -1319,13 +1346,35 @@ bool GameEngine::pickupItem(int itemIndex) {
 
 int GameEngine::showGameMenu() {
     clearScreen();
-    std::cout << "\n=== Game Menu ===\n\n";
-    std::cout << "1. Continue\n";
-    std::cout << "2. Save Game\n";
-    std::cout << "3. Settings\n";
-    std::cout << "4. Quit to Main Menu\n\n";
-    
-    int choice = getValidatedInt("Choice: ", 1, 4);
+    std::cout << UIManager::createTitle("Game Menu", 70, UIColor::BRIGHT_CYAN) << "\n";
+
+    Menu menu;
+    menu.title = "Session Options";
+    menu.titleColor = UIColor::CYAN;
+    menu.selectedColor = UIColor::BRIGHT_GREEN;
+
+    MenuItem continueItem;
+    continueItem.icon = ">";
+    continueItem.text = "Continue";
+    continueItem.description = "Return to the dungeon.";
+
+    MenuItem saveItem;
+    saveItem.icon = "S";
+    saveItem.text = "Save Game";
+    saveItem.description = "Write progress to a save slot.";
+
+    MenuItem settingsItem;
+    settingsItem.icon = "#";
+    settingsItem.text = "Settings";
+    settingsItem.description = "Change gameplay/display options.";
+
+    MenuItem quitItem;
+    quitItem.icon = "X";
+    quitItem.text = "Quit to Main Menu";
+    quitItem.description = "Leave the current run.";
+
+    menu.items = {continueItem, saveItem, settingsItem, quitItem};
+    int choice = UIManager::displayMenu(menu);
     
     if (choice == 2) {
         std::string saveFile = selectSaveFileForSave();
@@ -1351,26 +1400,30 @@ int GameEngine::showGameMenu() {
 
 void GameEngine::showPlayerStatus() {
     const Player& p = m_gameState.player;
-    
-    std::cout << "\n" << p.name << " - Level " << p.level << " " << getClassName(p.charClass) << "\n";
-    
-    // HP bar
-    displayProgressBar(p.stats.currentHP, p.stats.maxHP, 30, "HP");
-    
-    // XP bar
-    displayProgressBar(p.experience, p.experienceToLevel, 30, "XP");
-    
-    std::cout << "Gold: " << p.gold << " | Avg iLvl: " << p.averageItemLevel
-              << " | Turns: " << p.totalTurns << "\n";
-    
-    // Status effects
-    if (!p.activeEffects.empty()) {
-        std::cout << "Effects: ";
-        for (const auto& effect : p.activeEffects) {
-            std::cout << effect.name << " (" << effect.turnsRemaining << ") ";
+
+    StatusDisplay status;
+    status.name = p.name + " (" + getClassName(p.charClass) + ")";
+    status.hp = p.stats.currentHP;
+    status.maxHP = p.stats.maxHP;
+    status.mana = p.stats.currentMana;
+    status.maxMana = p.stats.maxMana;
+    status.level = p.level;
+    status.gold = p.gold;
+    status.location = getCurrentRoom().name;
+
+    for (const auto& effect : p.activeEffects) {
+        const std::string entry = effect.name + " (" + std::to_string(effect.turnsRemaining) + "t)";
+        if (effect.isDebuff) {
+            status.activeDebuffs.push_back(entry);
+        } else {
+            status.activeBuffs.push_back(entry);
         }
-        std::cout << "\n";
     }
+
+    UIManager::displayPlayerStatus(status);
+
+    std::cout << " " << UIManager::renderXPBar(p.experience, p.experienceToLevel, 32) << "\n";
+    std::cout << " Avg iLvl: " << p.averageItemLevel << " | Total Turns: " << p.totalTurns << "\n";
 }
 
 void GameEngine::openInventory() {
@@ -1379,30 +1432,38 @@ void GameEngine::openInventory() {
 
 void GameEngine::openQuestLog() {
     clearScreen();
-    displayDivider(80, '=');
-    std::cout << centerString("QUEST LOG", 80) << std::endl;
-    displayDivider(80, '=');
-    std::cout << "\n";
-    
+    std::cout << UIManager::createTitle("Quest Log", 80, UIColor::BRIGHT_MAGENTA) << "\n";
+
     if (m_gameState.player.activeQuests.empty()) {
-        std::cout << "No active quests.\n";
+        std::cout << UIManager::colorize("No active quests.", UIColor::BRIGHT_BLACK) << "\n";
     } else {
+        int index = 1;
         for (const auto& quest : m_gameState.player.activeQuests) {
-            std::cout << "- " << quest.name << "\n";
-            std::cout << "  " << quest.description << "\n";
-            std::cout << "  Status: ";
+            std::cout << UIManager::colorize(std::to_string(index) + ". " + quest.name, UIColor::BRIGHT_YELLOW, UIEffect::BOLD) << "\n";
+            std::cout << "   " << wrapText(quest.description, 74) << "\n";
+            std::cout << "   Status: ";
             switch (quest.status) {
-                case QuestStatus::IN_PROGRESS: std::cout << "In Progress\n"; break;
-                case QuestStatus::COMPLETED: std::cout << "Completed\n"; break;
-                case QuestStatus::FAILED: std::cout << "Failed\n"; break;
-                default: std::cout << "Not Started\n"; break;
+                case QuestStatus::IN_PROGRESS:
+                    std::cout << UIManager::colorize("In Progress", UIColor::BRIGHT_CYAN) << "\n";
+                    break;
+                case QuestStatus::COMPLETED:
+                    std::cout << UIManager::colorize("Completed", UIColor::BRIGHT_GREEN) << "\n";
+                    break;
+                case QuestStatus::FAILED:
+                    std::cout << UIManager::colorize("Failed", UIColor::BRIGHT_RED) << "\n";
+                    break;
+                default:
+                    std::cout << UIManager::colorize("Not Started", UIColor::BRIGHT_BLACK) << "\n";
+                    break;
             }
             std::cout << "\n";
+            ++index;
         }
     }
-    
-    std::cout << "\nCompleted Quests: " << m_gameState.player.completedQuests.size() << "\n";
-    
+
+    std::cout << UIManager::colorize("Completed Quests: ", UIColor::BRIGHT_GREEN)
+              << m_gameState.player.completedQuests.size() << "\n";
+
     displayDivider(80, '-');
     waitForEnter();
 }
@@ -1422,91 +1483,114 @@ void GameEngine::openMap() {
 
 void GameEngine::showHelp() {
     clearScreen();
-    displayDivider(80, '=');
-    std::cout << centerString("HELP - ADVENTURE GUIDE", 80) << std::endl;
-    displayDivider(80, '=');
-    std::cout << "\n";
-    
-    std::cout << Color::YELLOW << "YOUR OBJECTIVE:" << Color::RESET << "\n";
-    std::cout << "  Navigate to the EXIT room and defeat the Shadow Lord to win!\n";
-    std::cout << "  The exit is marked with 'X' on the map.\n\n";
-    
-    std::cout << Color::GREEN << "MOVEMENT COMMANDS:" << Color::RESET << "\n";
-    std::cout << "  n, north     - Move north\n";
-    std::cout << "  s, south     - Move south\n";
-    std::cout << "  e, east      - Move east\n";
-    std::cout << "  w, west      - Move west\n\n";
-    
-    std::cout << Color::CYAN << "ACTION COMMANDS:" << Color::RESET << "\n";
-    std::cout << "  look         - Examine the current room in detail\n";
-    std::cout << "  search       - Search for hidden items and secrets\n";
-    std::cout << "  interact     - Interact with objects in the room\n";
-    std::cout << "  craft        - Open crafting at Forge/Laboratory\n";
-    std::cout << "  pickup [#]   - Pick up a specific item by number\n\n";
-    
-    std::cout << Color::BRIGHT_WHITE << "MENU COMMANDS:" << Color::RESET << "\n";
-    std::cout << "  inventory    - Open your inventory (equip items, use potions)\n";
-    std::cout << "  status       - View your character stats and equipment\n";
-    std::cout << "  quests       - View your active and completed quests\n";
-    std::cout << "  map          - View the dungeon map (E=Entrance, X=Exit)\n";
-    std::cout << "  menu         - Open the game menu\n";
-    std::cout << "  help         - Show this help guide\n\n";
-    
-    std::cout << Color::YELLOW << "GAME COMMANDS:" << Color::RESET << "\n";
-    std::cout << "  save         - Save your game progress\n";
-    std::cout << "  quit         - Exit the game\n\n";
-    
+    std::cout << UIManager::createTitle("Adventure Guide", 80, UIColor::BRIGHT_YELLOW) << "\n";
+
+    std::cout << UIManager::colorize("Objective", UIColor::BRIGHT_YELLOW, UIEffect::BOLD) << "\n";
+    std::cout << "  Reach the Shadow Lord Chamber and win the final battle.\n";
+    std::cout << "  The chamber is marked with the skull symbol on the map.\n\n";
+
+    std::cout << UIManager::colorize("Movement", UIColor::BRIGHT_GREEN, UIEffect::BOLD) << "\n";
+    std::cout << "  n / north   Move north\n";
+    std::cout << "  s / south   Move south\n";
+    std::cout << "  e / east    Move east\n";
+    std::cout << "  w / west    Move west\n\n";
+
+    std::cout << UIManager::colorize("Exploration", UIColor::BRIGHT_CYAN, UIEffect::BOLD) << "\n";
+    std::cout << "  look        Reprint room details\n";
+    std::cout << "  search      Find hidden loot and resources\n";
+    std::cout << "  interact    Use room-specific interactions\n";
+    std::cout << "  craft       Craft at forge/laboratory\n";
+    std::cout << "  pickup [#]  Take a numbered item\n\n";
+
+    std::cout << UIManager::colorize("Menus", UIColor::BRIGHT_WHITE, UIEffect::BOLD) << "\n";
+    std::cout << "  inventory   Open inventory and equipment\n";
+    std::cout << "  status      View character overview\n";
+    std::cout << "  quests      Open quest log\n";
+    std::cout << "  map         View dungeon map\n";
+    std::cout << "  menu        Open game menu\n";
+    std::cout << "  help        Show this guide\n\n";
+
+    std::cout << UIManager::colorize("System", UIColor::BRIGHT_YELLOW, UIEffect::BOLD) << "\n";
+    std::cout << "  save        Save current run\n";
+    std::cout << "  quit        Exit current run\n\n";
+
     if (m_debugMode) {
-        std::cout << Color::BRIGHT_RED << "DEBUG COMMANDS:" << Color::RESET << "\n";
-        std::cout << "  cheats       - Open cheat menu (DEBUG MODE ONLY)\n\n";
+        std::cout << UIManager::colorize("Debug", UIColor::BRIGHT_RED, UIEffect::BOLD) << "\n";
+        std::cout << "  cheats      Open cheat menu (debug only)\n\n";
     }
-    
-    std::cout << Color::BRIGHT_GREEN << "COMBAT TIPS:" << Color::RESET << "\n";
-    std::cout << "  - Use potions during battle by selecting 'Use Item'\n";
-    std::cout << "  - Skills deal more damage but cost mana\n";
-    std::cout << "  - You can try to flee if a battle is too hard\n";
-    std::cout << "  - Bosses are harder to escape from!\n\n";
-    
-    std::cout << Color::BRIGHT_YELLOW << "ROOM TYPES:" << Color::RESET << "\n";
-    std::cout << "  E = Entrance (start)    X = Exit (final boss!)\n";
-    std::cout << "  B = Boss Room           T = Treasure Room\n";
-    std::cout << "  ! = Trap Room           ? = Puzzle Room\n";
-    std::cout << "  S = Secret Room         R = Rest/Safe Room\n";
-    std::cout << "  . = Normal Room\n";
+
+    std::cout << UIManager::colorize("Room Symbols", UIColor::BRIGHT_YELLOW, UIEffect::BOLD) << "\n";
+    std::cout << "  E Entrance  X Exit/Boss  B Boss Room  T Treasure\n";
+    std::cout << "  ! Trap      ? Puzzle     S Secret     R Safe Room\n";
+    std::cout << "  . Normal Room\n";
     
     displayDivider(80, '-');
     waitForEnter();
 }
 
 void GameEngine::showSettings() {
-    clearScreen();
-    displayDivider(80, '=');
-    std::cout << centerString("SETTINGS", 80) << std::endl;
-    displayDivider(80, '=');
-    std::cout << "\n";
-    std::cout << "1. Difficulty: ";
-    switch (m_gameState.difficulty) {
-        case 1: std::cout << "Easy\n"; break;
-        case 2: std::cout << "Normal\n"; break;
-        case 3: std::cout << "Hard\n"; break;
-    }
-    std::cout << "2. Show ASCII Art: " << (m_gameState.showAsciiArt ? "Yes" : "No") << "\n";
-    std::cout << "3. Debug Mode: " << (m_debugMode ? "On" : "Off") << "\n";
-    std::cout << "4. Back\n\n";
-    
-    int choice = getValidatedInt("Choice: ", 1, 4);
-    
-    if (choice == 1) {
-        m_gameState.difficulty = getValidatedInt("Difficulty (1=Easy, 2=Normal, 3=Hard): ", 1, 3);
-    } else if (choice == 2) {
-        m_gameState.showAsciiArt = !m_gameState.showAsciiArt;
-    } else if (choice == 3) {
-        m_debugMode = !m_debugMode;
-        m_gameState.debugMode = m_debugMode;
-    }
-    
-    if (choice != 4) {
-        showSettings();  // Recurse to show menu again
+    bool inSettings = true;
+
+    while (inSettings) {
+        clearScreen();
+        std::cout << UIManager::createTitle("Settings", 72, UIColor::BRIGHT_CYAN) << "\n";
+
+        std::string difficultyLabel = "Normal";
+        if (m_gameState.difficulty == 1) {
+            difficultyLabel = "Easy";
+        } else if (m_gameState.difficulty == 3) {
+            difficultyLabel = "Hard";
+        }
+
+        std::cout << "  Difficulty      : " << UIManager::colorize(difficultyLabel, UIColor::BRIGHT_YELLOW, UIEffect::BOLD) << "\n";
+        std::cout << "  ASCII Art       : "
+                  << UIManager::colorize(m_gameState.showAsciiArt ? "Enabled" : "Disabled",
+                                          m_gameState.showAsciiArt ? UIColor::BRIGHT_GREEN : UIColor::BRIGHT_BLACK)
+                  << "\n";
+        std::cout << "  Debug Mode      : "
+                  << UIManager::colorize(m_debugMode ? "Enabled" : "Disabled",
+                                          m_debugMode ? UIColor::BRIGHT_RED : UIColor::BRIGHT_BLACK)
+                  << "\n\n";
+
+        Menu menu;
+        menu.title = "Settings Menu";
+        menu.titleColor = UIColor::CYAN;
+        menu.selectedColor = UIColor::BRIGHT_GREEN;
+
+        MenuItem item1;
+        item1.icon = "1";
+        item1.text = "Change Difficulty";
+        item1.description = "Set difficulty to Easy, Normal, or Hard.";
+
+        MenuItem item2;
+        item2.icon = "2";
+        item2.text = "Toggle ASCII Art";
+        item2.description = "Enable or disable large ASCII visuals.";
+
+        MenuItem item3;
+        item3.icon = "3";
+        item3.text = "Toggle Debug Mode";
+        item3.description = "Enable cheat/debug commands.";
+
+        MenuItem item4;
+        item4.icon = "4";
+        item4.text = "Back";
+        item4.description = "Return to the previous menu.";
+
+        menu.items = {item1, item2, item3, item4};
+
+        int choice = UIManager::displayMenu(menu);
+
+        if (choice == 1) {
+            m_gameState.difficulty = getValidatedInt("Difficulty (1=Easy, 2=Normal, 3=Hard): ", 1, 3);
+        } else if (choice == 2) {
+            m_gameState.showAsciiArt = !m_gameState.showAsciiArt;
+        } else if (choice == 3) {
+            m_debugMode = !m_debugMode;
+            m_gameState.debugMode = m_debugMode;
+        } else if (choice == 4) {
+            inSettings = false;
+        }
     }
 }
 
@@ -1536,7 +1620,7 @@ void GameEngine::openCheatMenu() {
         std::cout << Color::BRIGHT_CYAN << "ROOM CHEATS:" << Color::RESET << "\n";
         std::cout << "  6. Clear All Enemies in Room\n";
         std::cout << "  7. Reveal All Map Rooms\n";
-        std::cout << "  8. Teleport to Exit Room\n\n";
+        std::cout << "  8. Teleport to Shadow Lord Chamber\n\n";
         
         std::cout << Color::BRIGHT_GREEN << "QUEST CHEATS:" << Color::RESET << "\n";
         std::cout << "  9. Complete All Active Quests\n";
@@ -1627,9 +1711,9 @@ void GameEngine::openCheatMenu() {
                 waitForEnter();
                 break;
                 
-            case 8: // Teleport to Exit
-                m_gameState.player.currentRoomId = getActiveExitRoomId();
-                std::cout << "\n" << Color::BRIGHT_MAGENTA << "✨ Teleported to the exit room!" << Color::RESET << "\n";
+            case 8: // Teleport to Shadow Lord chamber
+                m_gameState.player.currentRoomId = getActiveShadowLordRoomId();
+                std::cout << "\n" << Color::BRIGHT_MAGENTA << "✨ Teleported to the Shadow Lord chamber!" << Color::RESET << "\n";
                 waitForEnter();
                 triggerShadowLordEncounterIfNeeded();
                 displayCurrentRoom();
@@ -1885,36 +1969,36 @@ int GameEngine::calculateFinalScore() {
     if (p.hasSecretEnding) {
         score += 1000;
     }
-    
+
     clearScreen();
-    std::cout << "\n=== FINAL SCORE ===\n\n";
-    std::cout << "Base Score (Level & Gold): " << (p.level * 100 + p.gold) << "\n";
-    std::cout << "Combat: " << (p.totalKills * 10 + p.bossesDefeated * 100) << "\n";
-    std::cout << "Exploration: " << (p.secretsFound * 50 + static_cast<int>(p.visitedRooms.size()) * 5 + p.puzzlesSolved * 75) << "\n";
-    std::cout << "Quests: " << (static_cast<int>(p.completedQuests.size()) * 150) << "\n";
-    std::cout << "The Maw: " << (p.mawDepthReached * 200) << "\n";
-    std::cout << "\nTOTAL SCORE: " << score << "\n\n";
+    std::cout << UIManager::createTitle("Final Score", 70, UIColor::BRIGHT_YELLOW) << "\n";
+    std::cout << "  Base (Level + Gold): " << (p.level * 100 + p.gold) << "\n";
+    std::cout << "  Combat:              " << (p.totalKills * 10 + p.bossesDefeated * 100) << "\n";
+    std::cout << "  Exploration:         " << (p.secretsFound * 50 + static_cast<int>(p.visitedRooms.size()) * 5 + p.puzzlesSolved * 75) << "\n";
+    std::cout << "  Quests:              " << (static_cast<int>(p.completedQuests.size()) * 150) << "\n";
+    std::cout << "  The Maw:             " << (p.mawDepthReached * 200) << "\n\n";
+    std::cout << UIManager::colorize("  TOTAL SCORE: " + std::to_string(score), UIColor::BRIGHT_GREEN, UIEffect::BOLD) << "\n\n";
     
     return score;
 }
 
 void GameEngine::displayGameStats() {
     const Player& p = m_gameState.player;
-    
-    std::cout << "\n=== GAME STATISTICS ===\n\n";
-    std::cout << "Character: " << p.name << " (" << getClassName(p.charClass) << ")\n";
-    std::cout << "Final Level: " << p.level << "\n";
-    std::cout << "Total Turns: " << p.totalTurns << "\n";
-    std::cout << "Rooms Visited: " << p.visitedRooms.size() << "\n";
-    std::cout << "Enemies Defeated: " << p.totalKills << "\n";
-    std::cout << "Bosses Defeated: " << p.bossesDefeated << "\n";
-    std::cout << "Maw Depth Reached: " << p.mawDepthReached << "\n";
-    std::cout << "Secrets Found: " << p.secretsFound << "\n";
-    std::cout << "Puzzles Solved: " << p.puzzlesSolved << "\n";
-    std::cout << "Quests Completed: " << p.completedQuests.size() << "\n";
-    std::cout << "Morality: " << p.moralityScore << "\n";
-    std::cout << "Average Item Level: " << p.averageItemLevel << "\n";
-    std::cout << "Final Gold: " << p.gold << "\n\n";
+
+    std::cout << "\n" << UIManager::createTitle("Game Statistics", 70, UIColor::BRIGHT_CYAN) << "\n";
+    std::cout << "  Character:        " << p.name << " (" << getClassName(p.charClass) << ")\n";
+    std::cout << "  Final Level:      " << p.level << "\n";
+    std::cout << "  Total Turns:      " << p.totalTurns << "\n";
+    std::cout << "  Rooms Visited:    " << p.visitedRooms.size() << "\n";
+    std::cout << "  Enemies Defeated: " << p.totalKills << "\n";
+    std::cout << "  Bosses Defeated:  " << p.bossesDefeated << "\n";
+    std::cout << "  Maw Depth:        " << p.mawDepthReached << "\n";
+    std::cout << "  Secrets Found:    " << p.secretsFound << "\n";
+    std::cout << "  Puzzles Solved:   " << p.puzzlesSolved << "\n";
+    std::cout << "  Quests Completed: " << p.completedQuests.size() << "\n";
+    std::cout << "  Morality:         " << p.moralityScore << "\n";
+    std::cout << "  Average iLvl:     " << p.averageItemLevel << "\n";
+    std::cout << "  Final Gold:       " << p.gold << "\n\n";
 }
 
 bool GameEngine::checkLeaderboard(int score) {
@@ -2121,6 +2205,7 @@ std::string GameEngine::getRoomTypeName(RoomType type) {
         case RoomType::GRAVEYARD: return "Graveyard";
         case RoomType::ARMORY: return "Armory";
         case RoomType::PRISON: return "Prison";
+        case RoomType::SHADOWLORD: return "Shadow Lord Chamber";
         default: return "Unknown";
     }
 }
@@ -2526,12 +2611,28 @@ const Room& GameEngine::getCurrentRoom() const {
 
 int GameEngine::getActiveExitRoomId() const {
     for (const auto& room : m_gameState.dungeon) {
+        if (room.type == RoomType::SHADOWLORD) {
+            return room.id;
+        }
+    }
+
+    for (const auto& room : m_gameState.dungeon) {
         if (room.type == RoomType::EXIT) {
             return room.id;
         }
     }
 
     return m_mapGenerator.getExitRoomId();
+}
+
+int GameEngine::getActiveShadowLordRoomId() const {
+    for (const auto& room : m_gameState.dungeon) {
+        if (room.type == RoomType::SHADOWLORD) {
+            return room.id;
+        }
+    }
+
+    return getActiveExitRoomId();
 }
 
 bool GameEngine::triggerFinalBoss() {
@@ -2665,8 +2766,8 @@ bool GameEngine::triggerFinalBoss() {
 }
 
 void GameEngine::triggerShadowLordEncounterIfNeeded() {
-    const int activeExitRoomId = getActiveExitRoomId();
-    if (m_gameState.player.currentRoomId != activeExitRoomId) {
+    const int shadowRoomId = getActiveShadowLordRoomId();
+    if (m_gameState.player.currentRoomId != shadowRoomId) {
         return;
     }
 
@@ -2707,14 +2808,15 @@ void GameEngine::unlockMawPortal() {
         return;
     }
 
-    const int exitRoomId = getActiveExitRoomId();
+    const int shadowRoomId = getActiveShadowLordRoomId();
     for (Room& room : m_gameState.dungeon) {
-        if (room.id != exitRoomId) {
+        if (room.id != shadowRoomId) {
             continue;
         }
 
-        room.name = "Portal Room";
-        room.shortDesc = "A torn rift to The Maw pulses at the chamber center.";
+        room.type = RoomType::SHADOWLORD;
+        room.name = "Shadow Lord Chamber - Portal Unsealed";
+        room.shortDesc = "A torn rift to The Maw pulses where the Shadow Lord once stood.";
         room.description = "With the Shadow Lord slain, the chamber should be at peace - but a jagged "
                            "anomaly hangs in the air, devouring light and sound. Ancient runes along the "
                            "floor now point toward the breach. Beyond it lies The Maw, an endless death realm.";
@@ -2822,7 +2924,29 @@ Enemy GameEngine::createMawEnemy(int depth, bool bossVariant) const {
 }
 
 bool GameEngine::runMawExpedition() {
-    int floor = std::max(1, m_gameState.player.mawDepthReached + 1);
+    int stratum = std::max(1, m_gameState.player.mawDepthReached + 1);
+    int instability = 0;
+
+    enum class MawRoomKind {
+        ENTRY,
+        HUNT,
+        CACHE,
+        RIFT,
+        ALTAR,
+        FORGE,
+        SANCTUM,
+        DESCENT
+    };
+
+    struct MawRoomState {
+        int id;
+        MawRoomKind kind;
+        std::string name;
+        std::string description;
+        std::vector<int> neighbors;
+        bool explored;
+        bool cleared;
+    };
 
     const std::vector<int> mawRecipePool = {
         1050, // Maw Reaver
@@ -2839,57 +2963,142 @@ bool GameEngine::runMawExpedition() {
         }
     }
 
-    clearScreen();
-    displayDivider(80, '=');
-    std::cout << Color::BRIGHT_MAGENTA << centerString("THE MAW", 80) << Color::RESET << "\n";
-    displayDivider(80, '=');
-    std::cout << "\n";
-    std::cout << wrapText("You step through the anomaly and into a realm that should not exist. "
-                          "There is no sky, no horizon, only endless void and hunting shadows.", 78) << "\n\n";
-    waitForEnter();
+    auto roomKindName = [](MawRoomKind kind) {
+        switch (kind) {
+            case MawRoomKind::ENTRY: return std::string("Maw Breach");
+            case MawRoomKind::HUNT: return std::string("Hunting Ground");
+            case MawRoomKind::CACHE: return std::string("Ruin Cache");
+            case MawRoomKind::RIFT: return std::string("Entropy Rift");
+            case MawRoomKind::ALTAR: return std::string("Echo Altar");
+            case MawRoomKind::FORGE: return std::string("Abyss Forge");
+            case MawRoomKind::SANCTUM: return std::string("Sovereign Sanctum");
+            case MawRoomKind::DESCENT: return std::string("Abyss Stair");
+            default: return std::string("Unknown");
+        }
+    };
 
-    while (m_gameState.player.isAlive) {
-        clearScreen();
-        displayDivider(70, '-');
-        std::cout << Color::BRIGHT_RED << centerString("MAW FLOOR " + std::to_string(floor), 70) << Color::RESET << "\n";
-        displayDivider(70, '-');
+    auto buildRoomDescription = [&](MawRoomKind kind, int depth) {
+        switch (kind) {
+            case MawRoomKind::ENTRY:
+                return std::string("The portal behind you shivers. Ahead lies a living labyrinth of voidstone.");
+            case MawRoomKind::HUNT:
+                return std::string("Predators stalk this chamber. The air itself wants blood.");
+            case MawRoomKind::CACHE:
+                return std::string("Broken reliquaries and twisted chests glitter with salvage from lost expeditions.");
+            case MawRoomKind::RIFT:
+                return std::string("Reality splits at the seams here. Every step deepens the Maw's hunger.");
+            case MawRoomKind::ALTAR:
+                return std::string("A carved monolith hums with echoes. It can bless, or consume, the reckless.");
+            case MawRoomKind::FORGE:
+                return std::string("A cold forge of black iron. Even here, craft can turn fear into power.");
+            case MawRoomKind::SANCTUM:
+                return std::string("A dominion node at depth " + std::to_string(depth) + ". Sovereign horrors gather here.");
+            case MawRoomKind::DESCENT:
+                return std::string("A spiraling maw opens below. Descending will generate a deeper stratum.");
+            default:
+                return std::string("The void shifts restlessly.");
+        }
+    };
+
+    auto generateMawStratum = [&](int depth) {
+        int roomCount = 8 + std::min(10, depth / 2);
+        std::vector<MawRoomState> rooms;
+        rooms.reserve(roomCount);
+
+        for (int i = 0; i < roomCount; ++i) {
+            MawRoomState room;
+            room.id = i;
+            room.kind = MawRoomKind::HUNT;
+            room.explored = false;
+            room.cleared = false;
+            rooms.push_back(room);
+        }
+
+        rooms.front().kind = MawRoomKind::ENTRY;
+        rooms.back().kind = MawRoomKind::DESCENT;
+
+        std::vector<int> mutableIndices;
+        for (int i = 1; i < roomCount - 1; ++i) {
+            mutableIndices.push_back(i);
+        }
+
+        auto claimRandomIndex = [&](MawRoomKind kind) {
+            if (mutableIndices.empty()) return;
+            int pos = randomInt(0, static_cast<int>(mutableIndices.size()) - 1);
+            int index = mutableIndices[pos];
+            rooms[index].kind = kind;
+            mutableIndices.erase(mutableIndices.begin() + pos);
+        };
+
+        claimRandomIndex(MawRoomKind::ALTAR);
+        claimRandomIndex(MawRoomKind::FORGE);
+        claimRandomIndex(MawRoomKind::RIFT);
+        claimRandomIndex(MawRoomKind::SANCTUM);
+        claimRandomIndex(MawRoomKind::CACHE);
+        if (depth >= 4) claimRandomIndex(MawRoomKind::CACHE);
+
+        for (int i = 0; i < roomCount - 1; ++i) {
+            rooms[i].neighbors.push_back(i + 1);
+            rooms[i + 1].neighbors.push_back(i);
+        }
+
+        const int extraLinks = 2 + std::min(8, depth / 2);
+        for (int i = 0; i < extraLinks; ++i) {
+            int a = randomInt(0, roomCount - 1);
+            int b = randomInt(0, roomCount - 1);
+            if (a == b) continue;
+            if (std::find(rooms[a].neighbors.begin(), rooms[a].neighbors.end(), b) != rooms[a].neighbors.end()) {
+                continue;
+            }
+            rooms[a].neighbors.push_back(b);
+            rooms[b].neighbors.push_back(a);
+        }
+
+        for (MawRoomState& room : rooms) {
+            room.name = roomKindName(room.kind);
+            room.description = buildRoomDescription(room.kind, depth);
+        }
+
+        return rooms;
+    };
+
+    auto displayMawChart = [&](const std::vector<MawRoomState>& rooms, int currentRoomId) {
+        std::cout << "\n" << Color::BRIGHT_MAGENTA << "-- MAW CHART --" << Color::RESET << "\n";
+        for (const MawRoomState& room : rooms) {
+            if (!room.explored && room.id != currentRoomId) {
+                continue;
+            }
+
+            std::cout << "[" << room.id << "] " << room.name;
+            if (room.id == currentRoomId) {
+                std::cout << " <YOU>";
+            }
+            if (room.cleared) {
+                std::cout << " [CLEARED]";
+            }
+            std::cout << "\n  Links: ";
+            for (size_t i = 0; i < room.neighbors.size(); ++i) {
+                if (i > 0) std::cout << ", ";
+                std::cout << room.neighbors[i];
+            }
+            std::cout << "\n";
+        }
         std::cout << "\n";
+    };
 
-        const bool bossWave = (floor % 5 == 0);
-        const int enemyCount = bossWave ? (2 + std::min(2, floor / 12)) : std::min(4, 1 + floor / 3);
-
-        std::vector<Enemy> wave;
-        wave.reserve(enemyCount);
-        for (int i = 0; i < enemyCount; ++i) {
-            bool elite = bossWave && i == 0;
-            wave.push_back(createMawEnemy(floor, elite));
-        }
-
-        std::cout << "Maw pressure rises. Enemies gather:\n";
-        for (const Enemy& enemy : wave) {
-            std::cout << "  - " << enemy.name << " (True DMG " << enemy.trueDamage << ")\n";
-        }
-        std::cout << "\n";
-        waitForEnter();
-
-        CombatResult result = m_combatSystem.startCombat(wave);
-        if (result.playerDied) {
-            m_gameState.player.isAlive = false;
-            return false;
-        }
-
-        const int floorXpBonus = floor * 40 + (bossWave ? 200 : 0);
-        const int floorGoldBonus = floor * 25 + (bossWave ? 150 : 0);
+    auto awardMawLoot = [&](const CombatResult& result, int depth, bool bossWave) {
+        const int floorXpBonus = depth * 40 + (bossWave ? 220 : 0);
+        const int floorGoldBonus = depth * 25 + (bossWave ? 170 : 0);
         m_gameState.player.experience += result.experienceGained + floorXpBonus;
         m_gameState.player.gold += result.goldGained + floorGoldBonus;
 
-        const int ichorDrop = 2 + (floor / 4) + (bossWave ? 2 : 0);
-        const int shardDrop = 1 + (floor / 5) + (bossWave ? 1 : 0);
+        const int ichorDrop = 2 + (depth / 4) + (bossWave ? 2 : 0);
+        const int shardDrop = 1 + (depth / 5) + (bossWave ? 1 : 0);
         int coreDrop = 0;
 
         m_craftingSystem.addMaterial(11, ichorDrop);
         m_craftingSystem.addMaterial(12, shardDrop);
-        if (bossWave || randomChance(20 + std::min(50, floor * 2))) {
+        if (bossWave || randomChance(20 + std::min(55, depth * 2))) {
             coreDrop = 1 + (bossWave ? 1 : 0);
             m_craftingSystem.addMaterial(13, coreDrop);
         }
@@ -2912,8 +3121,8 @@ bool GameEngine::runMawExpedition() {
 
         for (Item lootItem : result.loot) {
             int boostedLevel = std::max(
-                std::max(lootItem.itemLevel, m_gameState.player.level + floor + 8),
-                m_gameState.player.averageItemLevel + floor + 6
+                std::max(lootItem.itemLevel, m_gameState.player.level + depth + 8),
+                m_gameState.player.averageItemLevel + depth + 6
             );
             applyItemLevelScaling(lootItem, boostedLevel, true);
             lootItem.rarity = (static_cast<int>(lootItem.rarity) < static_cast<int>(ItemRarity::EPIC))
@@ -2931,7 +3140,7 @@ bool GameEngine::runMawExpedition() {
         }
 
         ItemRarity rewardRarity = (bossWave || randomChance(45)) ? ItemRarity::LEGENDARY : ItemRarity::EPIC;
-        int rewardLevel = std::max(1, m_gameState.player.level + floor + 10);
+        int rewardLevel = std::max(1, m_gameState.player.level + depth + 10);
 
         Item mawRelic;
         if (!mawItemTemplates.empty() && randomChance(80)) {
@@ -2956,10 +3165,9 @@ bool GameEngine::runMawExpedition() {
         addLootToInventory(mawRelic);
 
         m_gameState.player.gold += salvagedGold;
-        m_gameState.player.mawDepthReached = std::max(m_gameState.player.mawDepthReached, floor);
+        m_gameState.player.mawDepthReached = std::max(m_gameState.player.mawDepthReached, depth);
 
-        clearScreen();
-        std::cout << "\n" << Color::BRIGHT_GREEN << "Maw floor " << floor << " cleared!" << Color::RESET << "\n";
+        std::cout << "\n" << Color::BRIGHT_GREEN << "Stratum " << depth << " encounter cleared!" << Color::RESET << "\n";
         std::cout << "XP gained: " << (result.experienceGained + floorXpBonus) << "\n";
         std::cout << "Gold gained: " << (result.goldGained + floorGoldBonus + salvagedGold) << "\n";
         std::cout << "Maw materials: +" << ichorDrop << " Abyssal Ichor, +"
@@ -2969,34 +3177,223 @@ bool GameEngine::runMawExpedition() {
         }
         std::cout << "\n";
         std::cout << "High-tier items secured: " << addedItems << "\n";
+    };
 
-        checkLevelUp();
-
-        int ambientTrueDamage = 3 + floor / 2;
-        m_gameState.player.stats.currentHP -= ambientTrueDamage;
-        if (m_gameState.player.stats.currentHP <= 0) {
-            m_gameState.player.stats.currentHP = 0;
-            m_gameState.player.isAlive = false;
-            std::cout << "\nThe Maw itself consumes what remained of your strength...\n";
-            waitForEnter();
-            return false;
-        }
-
-        std::cout << "Ambient true damage suffered: " << ambientTrueDamage
-                  << " (HP now " << m_gameState.player.stats.currentHP << "/"
-                  << m_gameState.player.stats.maxHP << ")\n\n";
-
-        int choice = getValidatedInt(
-            "Choose: 1) Descend deeper  2) Return to the Portal Room : ",
-            1,
-            2
-        );
-
-        if (choice == 2) {
+    auto resolveRoom = [&](MawRoomState& room, int depth) {
+        if (room.cleared) {
             return true;
         }
 
-        ++floor;
+        if (room.kind == MawRoomKind::ENTRY || room.kind == MawRoomKind::DESCENT) {
+            room.cleared = true;
+            return true;
+        }
+
+        if (room.kind == MawRoomKind::CACHE) {
+            int ichor = randomInt(2, 4 + depth / 3);
+            int shards = randomInt(1, 2 + depth / 4);
+            m_craftingSystem.addMaterial(11, ichor);
+            m_craftingSystem.addMaterial(12, shards);
+            if (randomChance(30 + std::min(40, depth * 2))) {
+                m_craftingSystem.addMaterial(13, 1);
+            }
+            m_gameState.player.gold += 30 + depth * 10;
+            std::cout << "Recovered supplies from the cache.\n";
+            room.cleared = true;
+            return true;
+        }
+
+        if (room.kind == MawRoomKind::ALTAR) {
+            std::cout << "Echo Altar options:\n";
+            std::cout << "1. Restore vitality\n";
+            std::cout << "2. Stabilize the Maw pressure\n";
+            std::cout << "3. Attune to forbidden insight (XP + recipe chance)\n";
+            int altarChoice = getValidatedInt("Choose altar rite: ", 1, 3);
+            if (altarChoice == 1) {
+                int heal = std::max(20, m_gameState.player.stats.maxHP / 3);
+                m_gameState.player.stats.currentHP = std::min(m_gameState.player.stats.maxHP,
+                    m_gameState.player.stats.currentHP + heal);
+                std::cout << "Recovered " << heal << " HP.\n";
+            } else if (altarChoice == 2) {
+                instability = std::max(0, instability - (6 + depth / 2));
+                std::cout << "Instability reduced.\n";
+            } else {
+                int insightXp = 90 + depth * 25;
+                m_gameState.player.experience += insightXp;
+                if (!mawRecipePool.empty() && randomChance(45)) {
+                    int recipeId = mawRecipePool[randomInt(0, static_cast<int>(mawRecipePool.size()) - 1)];
+                    m_craftingSystem.discoverRecipe(recipeId);
+                }
+                std::cout << "You absorb void insight (+" << insightXp << " XP).\n";
+                instability += 2;
+            }
+
+            checkLevelUp();
+            room.cleared = true;
+            return true;
+        }
+
+        if (room.kind == MawRoomKind::FORGE) {
+            std::cout << "Abyss Forge: the metal here sings with hunger.\n";
+            m_craftingSystem.addMaterial(11, 1 + depth / 3);
+            if (randomChance(40)) {
+                m_craftingSystem.addMaterial(13, 1);
+            }
+            if (getYesNo("Open crafting at the Abyss Forge")) {
+                m_craftingSystem.runCraftingMenu();
+            }
+            room.cleared = true;
+            return true;
+        }
+
+        bool bossWave = (room.kind == MawRoomKind::SANCTUM);
+        int enemyCount = 1 + std::min(4, depth / 3);
+        if (room.kind == MawRoomKind::RIFT) {
+            enemyCount += 1;
+            instability += 2;
+            bossWave = bossWave || randomChance(25 + std::min(35, depth * 2));
+        }
+        if (bossWave) {
+            enemyCount = std::max(enemyCount, 2 + std::min(2, depth / 12));
+        }
+
+        std::vector<Enemy> wave;
+        wave.reserve(enemyCount);
+        for (int i = 0; i < enemyCount; ++i) {
+            bool elite = bossWave && i == 0;
+            wave.push_back(createMawEnemy(depth, elite));
+        }
+
+        std::cout << "Maw hostiles detected:\n";
+        for (const Enemy& enemy : wave) {
+            std::cout << "  - " << enemy.name << " (True DMG " << enemy.trueDamage << ")\n";
+        }
+        std::cout << "\n";
+        waitForEnter();
+
+        CombatResult result = m_combatSystem.startCombat(wave);
+        if (result.playerDied) {
+            m_gameState.player.isAlive = false;
+            return false;
+        }
+
+        awardMawLoot(result, depth, bossWave);
+        checkLevelUp();
+
+        if (room.kind == MawRoomKind::SANCTUM) {
+            instability = std::max(0, instability - 3);
+        }
+
+        room.cleared = true;
+        return true;
+    };
+
+    clearScreen();
+    displayDivider(80, '=');
+    std::cout << Color::BRIGHT_MAGENTA << centerString("THE MAW", 80) << Color::RESET << "\n";
+    displayDivider(80, '=');
+    std::cout << "\n";
+    std::cout << wrapText("You cross into a self-reforming abyssal labyrinth. Each stratum is generated "
+                          "separately and shifts as you descend. The deeper you go, the more unstable reality becomes.", 78)
+              << "\n\n";
+    waitForEnter();
+
+    while (m_gameState.player.isAlive) {
+        std::vector<MawRoomState> rooms = generateMawStratum(stratum);
+        int currentRoomId = 0;
+        rooms[currentRoomId].explored = true;
+
+        bool inCurrentStratum = true;
+        while (inCurrentStratum && m_gameState.player.isAlive) {
+            clearScreen();
+            displayDivider(80, '=');
+            std::cout << Color::BRIGHT_RED
+                      << centerString("THE MAW - STRATUM " + std::to_string(stratum), 80)
+                      << Color::RESET << "\n";
+            displayDivider(80, '=');
+
+            std::cout << "\nCurrent Room: [" << currentRoomId << "] "
+                      << rooms[currentRoomId].name << "\n";
+            std::cout << wrapText(rooms[currentRoomId].description, 78) << "\n\n";
+            std::cout << "Instability: " << instability
+                      << " | HP: " << m_gameState.player.stats.currentHP << "/"
+                      << m_gameState.player.stats.maxHP
+                      << " | Deepest Stratum: " << m_gameState.player.mawDepthReached << "\n\n";
+
+            if (!resolveRoom(rooms[currentRoomId], stratum)) {
+                return false;
+            }
+
+            if (!m_gameState.player.isAlive) {
+                return false;
+            }
+
+            std::cout << "\nActions:\n";
+            std::cout << "1. Move to connected room\n";
+            std::cout << "2. View Maw chart\n";
+            std::cout << "3. Open inventory\n";
+            std::cout << "4. Extract to portal room\n";
+            if (rooms[currentRoomId].kind == MawRoomKind::DESCENT) {
+                std::cout << "5. Descend to next generated stratum\n";
+            }
+            std::cout << "\n";
+
+            int maxChoice = (rooms[currentRoomId].kind == MawRoomKind::DESCENT) ? 5 : 4;
+            int actionChoice = getValidatedInt("Choose action: ", 1, maxChoice);
+
+            if (actionChoice == 1) {
+                const std::vector<int>& neighbors = rooms[currentRoomId].neighbors;
+                if (neighbors.empty()) {
+                    std::cout << "No connected paths from this room.\n";
+                    waitForEnter();
+                    continue;
+                }
+
+                std::cout << "\nConnected rooms:\n";
+                for (size_t i = 0; i < neighbors.size(); ++i) {
+                    const MawRoomState& nextRoom = rooms[neighbors[i]];
+                    std::cout << (i + 1) << ". [" << nextRoom.id << "] " << nextRoom.name;
+                    if (nextRoom.explored) {
+                        std::cout << " (explored)";
+                    }
+                    std::cout << "\n";
+                }
+
+                int moveChoice = getValidatedInt("Move to: ", 1, static_cast<int>(neighbors.size()));
+                currentRoomId = neighbors[moveChoice - 1];
+                rooms[currentRoomId].explored = true;
+
+                instability += 1 + (stratum / 3);
+                int ambientTrueDamage = (instability >= 8)
+                    ? std::max(1, (instability / 4) + (stratum / 10))
+                    : 0;
+                if (ambientTrueDamage > 0) {
+                    m_gameState.player.stats.currentHP -= ambientTrueDamage;
+                    if (m_gameState.player.stats.currentHP <= 0) {
+                        m_gameState.player.stats.currentHP = 0;
+                        m_gameState.player.isAlive = false;
+                        std::cout << "\nThe Maw's pressure crushes your remaining strength...\n";
+                        waitForEnter();
+                        return false;
+                    }
+
+                    std::cout << "\nAmbient Maw pressure dealt " << ambientTrueDamage << " true damage.\n";
+                    waitForEnter();
+                }
+            } else if (actionChoice == 2) {
+                displayMawChart(rooms, currentRoomId);
+                waitForEnter();
+            } else if (actionChoice == 3) {
+                openInventory();
+            } else if (actionChoice == 4) {
+                return true;
+            } else if (actionChoice == 5 && rooms[currentRoomId].kind == MawRoomKind::DESCENT) {
+                stratum++;
+                m_gameState.player.mawDepthReached = std::max(m_gameState.player.mawDepthReached, stratum - 1);
+                instability = std::max(0, instability - 2);
+                inCurrentStratum = false;
+            }
+        }
     }
 
     return false;
@@ -3016,7 +3413,7 @@ void GameEngine::handleMawPortal() {
         displayDivider(80, '=');
         std::cout << "\n";
         std::cout << "The Shadow Lord is gone, but the anomaly has awakened.\n";
-        std::cout << "Deepest Maw floor reached: " << m_gameState.player.mawDepthReached << "\n\n";
+        std::cout << "Deepest Maw stratum reached: " << m_gameState.player.mawDepthReached << "\n\n";
         std::cout << "1. Enter The Maw\n";
         std::cout << "2. Leave the dungeon as victor\n";
         std::cout << "3. Step away for now\n\n";

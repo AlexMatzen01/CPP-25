@@ -112,6 +112,12 @@ private:
     int placeExitRoom();
 
     /**
+// Place the unique Shadow Lord chamber far from the entrance
+     * @return True if the room was placed successfully
+     */
+    bool placeShadowLordRoom();
+
+    /**
 // Place a basic shop next to the entrance
      * @return True if shop successfully placed
      */

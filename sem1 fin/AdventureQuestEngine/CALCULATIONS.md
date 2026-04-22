@@ -108,10 +108,67 @@ Enemy profiles are parsed at normal baseline configurations, but adjusted dynami
 ## 6. Crafting & Items
 
 ### Crafting Success Probability
-Every recipe contains a base success factor. Failing to craft destroys the materials unless specifically protected. Over-leveling an item adds a bonus margin to safety.
+Crafting now uses layered progression (player level, crafting rank, recipe mastery, station mastery, and pity from failure streak).
 
-$$CraftSuccessChance (\%) = Recipe.BaseChance + [ (PlayerLevel - RequiredLevel) \times 2\% ]$$  
-_Constraints:_ Capped at 100%.
+$$
+\begin{aligned}
+CraftSuccessChance &= Recipe.BaseChance \\
+&+ 0.02 \cdot \max(0, PlayerLevel - RequiredLevel) \\
+&- 0.03 \cdot \max(0, RequiredLevel - PlayerLevel) \\
+&+ 0.012 \cdot CraftSkillLevel \\
+&+ 0.015 \cdot RecipeMastery \\
+&+ 0.004 \cdot StationMastery \\
+&+ 0.03 \cdot FailureStreak
+\end{aligned}
+$$
+
+_Constraints:_ Minimum 10%, maximum 99.5%.
+
+### Material Preservation on Failed Craft
+Failed attempts can partially refund materials (50% of each input, rounded up) based on progression.
+
+$$
+PreserveChance(\%) = \min\big(55,\; 4 + CraftSkillLevel + 2 \cdot RecipeMastery + 2 \cdot FailureStreak + \max(0, PlayerLevel-RequiredLevel)\big)
+$$
+
+### Masterwork Outcome
+Successful crafts can roll a masterwork result that boosts rarity and item level, with better odds for specialized crafters.
+
+$$
+MasterworkChance(\%) = \min\big(40,\; 3 + CraftSkillLevel + 2 \cdot RecipeMastery + 0.5 \cdot StationMastery\big)
+$$
+
+Masterwork effect summary:
+- Promotes rarity by 1 tier (up to Legendary).
+- Adds +2 item level (capped by normal item scaling caps).
+- Adds +50% value.
+- Consumables gain +1 extra output quantity.
+
+### Crafting Skill Progression
+Crafting has an independent skill track that advances from craft-generated XP.
+
+$$XPToNextCraftLevel = 120 + 55 \cdot (CraftSkillLevel - 1)$$
+
+Craft ranks are title-based by level (Novice -> Apprentice -> Journeyman -> Artisan -> Master -> Grandmaster).
+
+### Batch Crafting Capacity
+Maximum craft batch is constrained by both gold and materials.
+
+$$
+MaxBatch = \min\left(\left\lfloor\frac{Gold}{RecipeGoldCost}\right\rfloor,\;\min_i\left\lfloor\frac{Material_i}{RequiredMaterial_i}\right\rfloor\right)
+$$
+
+### Crafted Item Level Scaling
+Crafted item level is now dynamic and scales from player progression at time of craft.
+
+$$
+CraftedItemLevel = clamp\Big(\max(RequiredLevel,\; RollItemLevel(PlayerLevel, Rarity) + CraftSkillBonus + RecipeMasteryBonus),\; 1,\; 60\Big)
+$$
+
+Implementation notes:
+- `RollItemLevel` introduces small controlled variance around current player level.
+- `CraftSkillBonus` and `RecipeMasteryBonus` provide upward pressure as crafting specialization grows.
+- Maw recipes use boss-style scaling context for stronger endgame rolls.
 
 ### Item Overrides (Effective Stats)
 During all calculations throughout the engine, a unit's `"Effective Stats"` represent their raw base characteristics added mathematically via items equipped and status effects applied.
@@ -123,3 +180,44 @@ Certain map rooms introduce randomized variables interacting instantly with the 
 - **Random Gold Finds**: Typical floors `Random(10, 50)` | Chest Rooms `Random(20, 75)`
 - **Hidden Trap Encounters**: Base Trap applies `Random(10, 20)` Physical Damage.
 - **Room Ambushes**: Unmitigated surprise damage of `Random(5, 15)`.
+
+## 8. The Maw (Infinite Map Mode)
+
+### Separate Maw Map Generation
+The Maw is generated as an independent stratum graph and no longer reuses a simple linear floor loop.
+
+$$
+RoomsPerStratum = 8 + \min\left(10, \left\lfloor\frac{StratumDepth}{2}\right\rfloor\right)
+$$
+
+Each stratum guarantees:
+- `1` Entry room
+- `1` Descent room (to generate next stratum)
+- random specialized rooms (Altar, Forge, Rift, Sanctum, Cache)
+- guaranteed connectivity via base chain + extra randomized links
+
+$$
+ExtraLinks = 2 + \min\left(8, \left\lfloor\frac{StratumDepth}{2}\right\rfloor\right)
+$$
+
+### Maw Instability Pressure
+Instability grows as the player moves and in Rift rooms. At high values it inflicts ambient true damage.
+
+Movement instability increment:
+
+$$
+\Delta Instability = 1 + \left\lfloor\frac{StratumDepth}{3}\right\rfloor
+$$
+
+Ambient true damage when instability is high:
+
+$$
+AmbientTrueDamage = \max\left(1, \left\lfloor\frac{Instability}{4}\right\rfloor + \left\lfloor\frac{StratumDepth}{10}\right\rfloor\right),\;\;Instability \ge 8
+$$
+
+### Maw-Exclusive Features
+- **Echo Altar:** Choose healing, instability reduction, or insight XP + recipe discovery chance.
+- **Abyss Forge:** Access full crafting while inside Maw and gain Maw materials.
+- **Ruin Cache:** Non-combat salvage node for materials and gold.
+- **Sovereign Sanctum:** Elevated combat difficulty/reward node.
+- **Waygate Extraction:** Exit to Portal Room from any explored point without ending your run.

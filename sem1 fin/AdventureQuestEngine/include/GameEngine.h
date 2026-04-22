@@ -489,6 +489,12 @@ private:
      * @return Exit room ID, or -1 if unavailable
      */
     int getActiveExitRoomId() const;
+
+    /**
+// Resolves the active Shadow Lord chamber ID, with exit-room fallback for legacy saves
+     * @return Shadow Lord chamber room ID, or -1 if unavailable
+     */
+    int getActiveShadowLordRoomId() const;
     
     /**
 // Shows the story introduction
@@ -517,7 +523,7 @@ private:
     bool triggerFinalBoss();
 
     /**
-// Handles the Shadow Lord encounter if the player is standing in the exit room
+// Handles the Shadow Lord encounter if the player is standing in the Shadow Lord chamber
      */
     void triggerShadowLordEncounterIfNeeded();
 

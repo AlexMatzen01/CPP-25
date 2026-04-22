@@ -62,7 +62,8 @@ enum class RoomType {
     LABORATORY,   // Laboratory with alchemical items
     GRAVEYARD,    // Graveyard with undead enemies
     ARMORY,       // Armory with weapon/armor loot
-    PRISON        // Prison with hostile NPCs
+    PRISON,       // Prison with hostile NPCs
+    SHADOWLORD    // Unique final boss chamber
 };
 
 /**

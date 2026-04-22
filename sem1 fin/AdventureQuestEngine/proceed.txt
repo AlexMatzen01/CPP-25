@@ -1,0 +1,35 @@
+Plan: Unique Shadowlord Exit Chamber
+
+Goal
+Convert the final encounter flow so the exit room is explicitly the Shadowlord chamber (not a generic boss room), ensure exactly one such chamber is generated per map, and enforce placement far from the entrance. Keep player progression intact by reusing the existing exit-based win flow while making room typing, naming, map symboling, and helper lookups consistent.
+
+Steps
+1. Add/repair core room-placement implementation in MapGenerator: implement MapGenerator::placeShadowLordRoom() in src/MapGenerator.cpp so it deterministically enforces one RoomType::SHADOWLORD room per generated map and places it farthest from the entrance among valid candidates.
+2. In placement logic, make the SHADOWLORD room be the existing exit target: either convert the placed exit room to SHADOWLORD or place SHADOWLORD and bind exitId to that room; maintain a single active endpoint room.
+3. Ensure map connectivity and adjacency guarantees: placement must choose a cell with at least one adjacent room (or replace an existing endpoint room) so connectRooms() can wire doors correctly. Preserve verifyConnectivity behavior and avoid introducing unreachable chambers.
+4. Update room metadata for presentation: set unique name/description/shortDesc for RoomType::SHADOWLORD in generation path and add dedicated map symbol/color in printMap so the chamber is visually distinct.
+5. Align gameplay triggers in GameEngine: replace exit-only checks for boss encounter with a helper that resolves the active Shadowlord chamber room id (scan for RoomType::SHADOWLORD, fallback to prior exit id if absent for backward compatibility). Update triggerShadowLordEncounterIfNeeded(), displayCurrentRoom(), debug teleport option, and direct getActiveExitRoomId() call sites tied to the encounter.
+6. Keep post-victory portal behavior stable: update unlockMawPortal() and related text so they target the Shadowlord chamber id while preserving current mawUnlocked behavior and save/load compatibility.
+7. Add RoomType name mappings for consistency: extend GameEngine::getRoomTypeName and any missing converters so SHADOWLORD prints as Shadow Lord Chamber everywhere room types are shown.
+8. Validate load/save and fallback behavior: when loading older saves without SHADOWLORD type, encounter logic should gracefully fallback to exit room so legacy saves still work.
+
+Relevant files
+- src/MapGenerator.cpp
+- include/MapGenerator.h
+- src/GameEngine.cpp
+- include/GameEngine.h
+- src/Utils.cpp
+
+Verification
+1. Build the project and confirm no linker/compiler errors around MapGenerator::placeShadowLordRoom and GameEngine helper changes.
+2. Start a new game multiple times (at least 10 map generations): verify exactly one SHADOWLORD room exists each run and it is placed far from entrance.
+3. Confirm map rendering visibly distinguishes the Shadowlord chamber symbol/name from normal and boss rooms.
+4. Traverse to the chamber: Shadowlord encounter should trigger there, then portal text/behavior should update in the same chamber after victory.
+5. Validate debug teleport-to-exit behavior lands in the Shadowlord chamber and triggers the same encounter flow.
+6. Load a pre-change save (or synthetic save lacking SHADOWLORD room type) and verify fallback still allows final encounter without softlock.
+
+Decisions
+- Chosen behavior: Exit is the Shadowlord room (single endpoint room).
+- Chosen UX: Distinct map symbol/name for the Shadowlord chamber.
+- In scope: map generation placement rule, encounter targeting, map/UI labeling, debug flow consistency, backward-compatible fallback.
+- Out of scope: redesigning combat stats/abilities, changing overall dungeon size algorithm, adding additional final-boss rooms.
