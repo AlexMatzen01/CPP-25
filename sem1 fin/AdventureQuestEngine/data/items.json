@@ -22,8 +22,7 @@
         "speedBonus": 0,
         "type": "CONSUMABLE",
         "upgradeLevel": 0,
-        "value": 10,
-        "itemLevel": 1
+        "value": 10
     },
     {
         "attackBonus": 0,
@@ -48,8 +47,7 @@
         "speedBonus": 0,
         "type": "CONSUMABLE",
         "upgradeLevel": 0,
-        "value": 25,
-        "itemLevel": 3
+        "value": 25
     },
     {
         "attackBonus": 0,
@@ -74,8 +72,7 @@
         "speedBonus": 0,
         "type": "CONSUMABLE",
         "upgradeLevel": 0,
-        "value": 50,
-        "itemLevel": 6
+        "value": 50
     },
     {
         "attackBonus": 0,
@@ -100,8 +97,7 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 20,
-        "itemLevel": 2
+        "value": 20
     },
     {
         "attackBonus": 0,
@@ -126,8 +122,7 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 85,
-        "itemLevel": 4
+        "value": 85
     },
     {
         "attackBonus": 0,
@@ -152,8 +147,7 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 180,
-        "itemLevel": 7
+        "value": 180
     },
     {
         "attackBonus": 0,
@@ -178,8 +172,7 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 800,
-        "itemLevel": 15
+        "value": 800
     },
     {
         "attackBonus": 0,
@@ -204,8 +197,7 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 1200,
-        "itemLevel": 16
+        "value": 1200
     },
     {
         "attackBonus": 0,
@@ -230,8 +222,7 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 20,
-        "itemLevel": 3
+        "value": 20
     },
     {
         "attackBonus": 0,
@@ -256,8 +247,7 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 95,
-        "itemLevel": 4
+        "value": 95
     },
     {
         "attackBonus": 0,
@@ -282,8 +272,7 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 240,
-        "itemLevel": 9
+        "value": 240
     },
     {
         "attackBonus": 0,
@@ -308,8 +297,7 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 700,
-        "itemLevel": 15
+        "value": 700
     },
     {
         "attackBonus": 0,
@@ -334,8 +322,7 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 1800,
-        "itemLevel": 18
+        "value": 1800
     },
     {
         "attackBonus": 0,
@@ -360,8 +347,7 @@
         "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 90,
-        "itemLevel": 4
+        "value": 90
     },
     {
         "attackBonus": 0,
@@ -386,8 +372,7 @@
         "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 180,
-        "itemLevel": 7
+        "value": 180
     },
     {
         "attackBonus": 0,
@@ -412,8 +397,7 @@
         "speedBonus": 0,
         "type": "KEY",
         "upgradeLevel": 0,
-        "value": 0,
-        "itemLevel": 6
+        "value": 0
     },
     {
         "attackBonus": 0,
@@ -438,8 +422,7 @@
         "speedBonus": 0,
         "type": "SPECIAL",
         "upgradeLevel": 0,
-        "value": 1000,
-        "itemLevel": 16
+        "value": 1000
     },
     {
         "attackBonus": 0,
@@ -464,8 +447,7 @@
         "speedBonus": 0,
         "type": "CONSUMABLE",
         "upgradeLevel": 0,
-        "value": 40,
-        "itemLevel": 3
+        "value": 40
     },
     {
         "attackBonus": 0,
@@ -490,8 +472,7 @@
         "speedBonus": 0,
         "type": "CONSUMABLE",
         "upgradeLevel": 0,
-        "value": 40,
-        "itemLevel": 3
+        "value": 40
     },
     {
         "attackBonus": 0,
@@ -516,8 +497,7 @@
         "speedBonus": 0,
         "type": "CONSUMABLE",
         "upgradeLevel": 0,
-        "value": 60,
-        "itemLevel": 6
+        "value": 60
     },
     {
         "attackBonus": 0,
@@ -542,8 +522,7 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 10,
-        "itemLevel": 1
+        "value": 10
     },
     {
         "attackBonus": 0,
@@ -568,8 +547,7 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 110,
-        "itemLevel": 5
+        "value": 110
     },
     {
         "attackBonus": 0,
@@ -594,8 +572,7 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 320,
-        "itemLevel": 10
+        "value": 320
     },
     {
         "attackBonus": 0,
@@ -620,8 +597,7 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 520,
-        "itemLevel": 11
+        "value": 520
     },
     {
         "attackBonus": 0,
@@ -646,8 +622,7 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 1500,
-        "itemLevel": 17
+        "value": 1500
     },
     {
         "attackBonus": 0,
@@ -672,8 +647,7 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 5,
-        "itemLevel": 1
+        "value": 5
     },
     {
         "attackBonus": 0,
@@ -698,8 +672,7 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 105,
-        "itemLevel": 5
+        "value": 105
     },
     {
         "attackBonus": 0,
@@ -724,8 +697,7 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 280,
-        "itemLevel": 9
+        "value": 280
     },
     {
         "attackBonus": 0,
@@ -750,8 +722,7 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 15,
-        "itemLevel": 2
+        "value": 15
     },
     {
         "attackBonus": 0,
@@ -776,8 +747,7 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 115,
-        "itemLevel": 5
+        "value": 115
     },
     {
         "attackBonus": 0,
@@ -802,8 +772,7 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 380,
-        "itemLevel": 10
+        "value": 380
     },
     {
         "attackBonus": 0,
@@ -828,8 +797,7 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 10,
-        "itemLevel": 2
+        "value": 10
     },
     {
         "attackBonus": 0,
@@ -854,8 +822,7 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 95,
-        "itemLevel": 4
+        "value": 95
     },
     {
         "attackBonus": 0,
@@ -880,8 +847,7 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 280,
-        "itemLevel": 9
+        "value": 280
     },
     {
         "attackBonus": 0,
@@ -906,8 +872,7 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 20,
-        "itemLevel": 3
+        "value": 20
     },
     {
         "attackBonus": 0,
@@ -932,8 +897,7 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 135,
-        "itemLevel": 6
+        "value": 135
     },
     {
         "attackBonus": 0,
@@ -958,8 +922,7 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 300,
-        "itemLevel": 9
+        "value": 300
     },
     {
         "attackBonus": 0,
@@ -984,8 +947,7 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 600,
-        "itemLevel": 13
+        "value": 600
     },
     {
         "attackBonus": 0,
@@ -1010,8 +972,7 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 10,
-        "itemLevel": 2
+        "value": 10
     },
     {
         "attackBonus": 0,
@@ -1036,8 +997,7 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 18,
-        "itemLevel": 2
+        "value": 18
     },
     {
         "attackBonus": 0,
@@ -1062,8 +1022,7 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 28,
-        "itemLevel": 3
+        "value": 28
     },
     {
         "attackBonus": 0,
@@ -1088,8 +1047,7 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 85,
-        "itemLevel": 4
+        "value": 85
     },
     {
         "attackBonus": 0,
@@ -1114,8 +1072,7 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 120,
-        "itemLevel": 6
+        "value": 120
     },
     {
         "attackBonus": 0,
@@ -1140,8 +1097,7 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 135,
-        "itemLevel": 6
+        "value": 135
     },
     {
         "attackBonus": 0,
@@ -1166,8 +1122,7 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 220,
-        "itemLevel": 8
+        "value": 220
     },
     {
         "attackBonus": 0,
@@ -1192,8 +1147,7 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 150,
-        "itemLevel": 6
+        "value": 150
     },
     {
         "attackBonus": 0,
@@ -1218,8 +1172,7 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 260,
-        "itemLevel": 9
+        "value": 260
     },
     {
         "attackBonus": 0,
@@ -1244,8 +1197,7 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 420,
-        "itemLevel": 10
+        "value": 420
     },
     {
         "attackBonus": 0,
@@ -1270,8 +1222,7 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 800,
-        "itemLevel": 14
+        "value": 800
     },
     {
         "attackBonus": 0,
@@ -1296,8 +1247,7 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 2000,
-        "itemLevel": 18
+        "value": 2000
     },
     {
         "attackBonus": 0,
@@ -1322,8 +1272,7 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 12,
-        "itemLevel": 2
+        "value": 12
     },
     {
         "attackBonus": 0,
@@ -1348,8 +1297,7 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 75,
-        "itemLevel": 3
+        "value": 75
     },
     {
         "attackBonus": 0,
@@ -1374,8 +1322,7 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 200,
-        "itemLevel": 7
+        "value": 200
     },
     {
         "attackBonus": 0,
@@ -1400,8 +1347,7 @@
         "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 110,
-        "itemLevel": 5
+        "value": 110
     },
     {
         "attackBonus": 0,
@@ -1426,8 +1372,7 @@
         "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 100,
-        "itemLevel": 5
+        "value": 100
     },
     {
         "attackBonus": 0,
@@ -1452,8 +1397,7 @@
         "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 170,
-        "itemLevel": 7
+        "value": 170
     },
     {
         "attackBonus": 0,
@@ -1478,8 +1422,7 @@
         "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 220,
-        "itemLevel": 8
+        "value": 220
     },
     {
         "attackBonus": 0,
@@ -1504,8 +1447,7 @@
         "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 650,
-        "itemLevel": 13
+        "value": 650
     },
     {
         "attackBonus": 0,
@@ -1530,8 +1472,7 @@
         "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 1200,
-        "itemLevel": 17
+        "value": 1200
     },
     {
         "attackBonus": 0,
@@ -1556,8 +1497,7 @@
         "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 95,
-        "itemLevel": 4
+        "value": 95
     },
     {
         "attackBonus": 0,
@@ -1582,8 +1522,7 @@
         "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 200,
-        "itemLevel": 8
+        "value": 200
     },
     {
         "attackBonus": 0,
@@ -1608,8 +1547,7 @@
         "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 210,
-        "itemLevel": 8
+        "value": 210
     },
     {
         "attackBonus": 0,
@@ -1634,8 +1572,7 @@
         "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 550,
-        "itemLevel": 12
+        "value": 550
     },
     {
         "attackBonus": 0,
@@ -1660,8 +1597,7 @@
         "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 105,
-        "itemLevel": 5
+        "value": 105
     },
     {
         "attackBonus": 0,
@@ -1686,8 +1622,7 @@
         "speedBonus": 0,
         "type": "CONSUMABLE",
         "upgradeLevel": 0,
-        "value": 100,
-        "itemLevel": 10
+        "value": 100
     },
     {
         "attackBonus": 0,
@@ -1712,8 +1647,7 @@
         "speedBonus": 0,
         "type": "CONSUMABLE",
         "upgradeLevel": 0,
-        "value": 250,
-        "itemLevel": 14
+        "value": 250
     },
     {
         "attackBonus": 0,
@@ -1738,8 +1672,7 @@
         "speedBonus": 0,
         "type": "CONSUMABLE",
         "upgradeLevel": 0,
-        "value": 500,
-        "itemLevel": 14
+        "value": 500
     },
     {
         "attackBonus": 0,
@@ -1764,8 +1697,7 @@
         "speedBonus": 0,
         "type": "CONSUMABLE",
         "upgradeLevel": 0,
-        "value": 80,
-        "itemLevel": 7
+        "value": 80
     },
     {
         "attackBonus": 0,
@@ -1790,8 +1722,7 @@
         "speedBonus": 0,
         "type": "CONSUMABLE",
         "upgradeLevel": 0,
-        "value": 150,
-        "itemLevel": 11
+        "value": 150
     },
     {
         "attackBonus": 0,
@@ -1817,8 +1748,7 @@
         "speedBonus": 0,
         "type": "WEAPON",
         "upgradeLevel": 0,
-        "value": 2400,
-        "itemLevel": 26
+        "value": 2400
     },
     {
         "attackBonus": 0,
@@ -1844,8 +1774,7 @@
         "speedBonus": 0,
         "type": "ARMOR",
         "upgradeLevel": 0,
-        "value": 2300,
-        "itemLevel": 25
+        "value": 2300
     },
     {
         "attackBonus": 0,
@@ -1871,8 +1800,7 @@
         "speedBonus": 0,
         "type": "ACCESSORY",
         "upgradeLevel": 0,
-        "value": 1800,
-        "itemLevel": 23
+        "value": 1800
     },
     {
         "attackBonus": 0,
@@ -1898,8 +1826,7 @@
         "speedBonus": 0,
         "type": "CONSUMABLE",
         "upgradeLevel": 0,
-        "value": 420,
-        "itemLevel": 22
+        "value": 420
     },
     {
         "attackBonus": 0,
@@ -1925,7 +1852,6 @@
         "speedBonus": 0,
         "type": "CONSUMABLE",
         "upgradeLevel": 0,
-        "value": 520,
-        "itemLevel": 24
+        "value": 520
     }
 ]

@@ -46,6 +46,24 @@ std::string getSaveDisplayName(const std::string& path) {
     return name;
 }
 
+int getRoomLootLevelBonus(RoomType roomType) {
+    switch (roomType) {
+        case RoomType::TREASURE:
+        case RoomType::SECRET:
+            return 2;
+        case RoomType::BOSS:
+        case RoomType::SHADOWLORD:
+            return 3;
+        case RoomType::PUZZLE:
+        case RoomType::FORGE:
+        case RoomType::LABORATORY:
+        case RoomType::SHRINE:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
 }
 
 // ---
@@ -938,6 +956,7 @@ void GameEngine::displayCurrentRoom() {
     clearScreen();
     
     Room& room = getCurrentRoom();
+    const bool firstVisit = !room.isExplored;
 
     if (!m_isInMawRealm && room.id == getActiveShadowLordRoomId()) {
         if (!m_gameState.player.shadowLordDefeated) {
@@ -952,9 +971,19 @@ void GameEngine::displayCurrentRoom() {
     }
     
     // Mark room as explored
-    if (!room.isExplored) {
+    if (firstVisit) {
         room.isExplored = true;
         m_gameState.player.visitedRooms.push_back(room.id);
+
+        if (!room.items.empty()) {
+            const int contextLevel = std::max(1, m_gameState.player.level + getRoomLootLevelBonus(room.type));
+            const bool bossScaled = (room.type == RoomType::BOSS || room.type == RoomType::SHADOWLORD);
+
+            for (Item& item : room.items) {
+                const int rolledItemLevel = rollItemLevel(contextLevel, item.rarity, bossScaled);
+                applyItemLevelScaling(item, rolledItemLevel, true);
+            }
+        }
     }
     
     std::cout << UIManager::createTitle(room.name, 80, UIColor::BRIGHT_CYAN);

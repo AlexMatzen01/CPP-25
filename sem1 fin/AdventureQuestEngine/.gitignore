@@ -14,7 +14,3 @@ AdventureQuestEngine
 *.swp
 *.swo
 *~
-
-# Save files
-saves/
-*.sav

@@ -5,6 +5,7 @@
 // Achievement system implementation (partially implemented - some features scrapped)
 
 #include "../include/Achievement.h"
+#include "../include/Utils.h"
 #include <iostream>
 #include <sstream>
 #include <algorithm>
@@ -202,9 +203,12 @@ void AchievementManager::claimAchievementReward(int achievementId, Player& playe
         Item reward;
         reward.id = itemId;
         reward.name = "Achievement Reward";
+        reward.rarity = ItemRarity::UNCOMMON;
         reward.value = 100;
+        const int rolledLevel = rollItemLevel(std::max(1, player.level), reward.rarity, false);
+        applyItemLevelScaling(reward, rolledLevel, true);
         player.inventory.push_back(reward);
-        std::cout << "Received item!\n";
+        std::cout << "Received item (iLvl " << reward.itemLevel << ")!\n";
     }
     
     if (!ach->unlockedPerkId.empty()) {
