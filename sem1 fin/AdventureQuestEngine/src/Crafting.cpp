@@ -320,8 +320,12 @@ Item CraftingSystem::buildCraftedItem(const Recipe& recipe, bool masterwork) con
     craftedItem.quantity = std::max(1, recipe.resultQuantity);
     craftedItem.rarity = rarityFromRequiredLevel(recipe.requiredLevel);
 
-    // Dynamic iLvl baseline tracks current player progression, then mastery nudges it upward.
-    const int playerContextLevel = std::max(playerRef.level, recipe.requiredLevel);
+    // Dynamic iLvl baseline tracks both player progression and the strength of currently equipped gear.
+    const int equippedLevel = calculateAverageItemLevel(playerRef);
+    int playerContextLevel = std::max(playerRef.level, recipe.requiredLevel);
+    if (equippedLevel > 0) {
+        playerContextLevel = (playerContextLevel * 2 + equippedLevel) / 3;
+    }
     const bool bossScaled = isMawRecipe(recipe);
     int rolledItemLevel = rollItemLevel(playerContextLevel, craftedItem.rarity, bossScaled);
     rolledItemLevel += std::min(6, craftingSkillLevel / 3);
