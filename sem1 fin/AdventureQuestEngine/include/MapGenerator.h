@@ -38,7 +38,7 @@ public:
      * @param gameState Reference to game state to populate
      * @return True if generation successful
      */
-    bool generateMap(GameState& gameState);
+    bool generateMap(GameState& gameState, bool mawMode = false);
     
     /**
 // Get the generated rooms
@@ -76,6 +76,14 @@ public:
      */
     void printMap(int currentRoomId = -1) const;
 
+    /**
+// Print a Maw-specific map view with optional fog of war
+     * @param currentRoomId ID of the room the player is currently in (for highlighting)
+     * @param stratum Current Maw stratum depth being traversed
+     * @param fogOfWar True to hide unexplored rooms
+     */
+    void printMawMap(int currentRoomId = -1, int stratum = 1, bool fogOfWar = true) const;
+
 private:
     //==========================================================================
     // PRIVATE MEMBER VARIABLES
@@ -89,6 +97,15 @@ private:
     int exitId;
     int nextRoomId;
     int forgeCount;  // Track forge spawn count for balanced distribution
+    bool mawModeActive;
+    int mawIntensityLevel;
+
+    /**
+// Find room pointer by ID
+     * @param roomId Room identifier to find
+     * @return Pointer to room or nullptr if not found
+     */
+    const Room* findRoomById(int roomId) const;
     
     //==========================================================================
     // PRIVATE METHODS - Core Generation
@@ -196,14 +213,14 @@ private:
      * @param room Reference to room to populate
      * @param templates Available enemy templates
      */
-    void populateWithEnemies(Room& room, const std::vector<Enemy>& templates);
+    void populateWithEnemies(Room& room, const std::vector<Enemy>& templates, int contextLevel, bool mawMode);
     
     /**
 // Populate room with items based on type
      * @param room Reference to room to populate
      * @param templates Available item templates
      */
-    void populateWithItems(Room& room, const std::vector<Item>& templates, int contextLevel);
+    void populateWithItems(Room& room, const std::vector<Item>& templates, int contextLevel, bool mawMode);
     
     /**
 // Assign events to room based on type

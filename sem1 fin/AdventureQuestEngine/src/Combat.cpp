@@ -282,8 +282,6 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies) {
                 int action = getPlayerAction();
                 
                 // Adjust case numbers based on whether magic option is available
-                int caseAttack = 1;
-                int caseSkills = 2;
                 int caseCastSpell = -1;  // Set if available
                 int caseUseItem = -1;
                 int caseFlee = -1;
@@ -371,6 +369,7 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies) {
                             break;
                         }
                         // Fall through if no spells
+                        [[fallthrough]];
                     }
                     case 4: {  // Use item or remaining action
                         if (caseUseItem == action) {
@@ -398,6 +397,7 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies) {
                             break;
                         }
                         // Fall through if not item action
+                        [[fallthrough]];
                     }
                     case 5: {  // Flee
                         if (caseFlee == action) {

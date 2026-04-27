@@ -54,6 +54,7 @@ std::string getSaveDisplayName(const std::string& path) {
 
 GameEngine::GameEngine()
     : m_mapGenerator(DEFAULT_MAP_WIDTH, DEFAULT_MAP_HEIGHT),
+    m_mawMapGenerator(DEFAULT_MAP_WIDTH, DEFAULT_MAP_HEIGHT),
       m_combatSystem(m_gameState.player, m_gameState.difficulty),
       m_inventorySystem(m_gameState.player),
       m_eventSystem(m_gameState.player, m_gameState),
@@ -62,6 +63,9 @@ GameEngine::GameEngine()
       m_craftingSystem(m_gameState.player),
       m_isRunning(false),
     m_debugMode(false),
+    m_isInMawRealm(false),
+    m_leaveMawRequested(false),
+    m_currentMawStratum(0),
     m_activeSaveFile(SAVE_FILE) {
     
     initializeRandom(0);  // Use time-based seed
@@ -907,6 +911,22 @@ void GameEngine::displayClassInfo(CharacterClass charClass) {
             std::cout << "A holy warrior with balanced stats and self-healing.\n";
             std::cout << "Versatile and durable for long adventures.\n";
             break;
+        case CharacterClass::RANGER:
+            std::cout << "A swift ranged specialist with high speed and critical hits.\n";
+            std::cout << "Excels at precision damage and battlefield control.\n";
+            break;
+        case CharacterClass::NECROMANCER:
+            std::cout << "A dark spellcaster who weakens foes and drains life.\n";
+            std::cout << "Powerful magic with fragile defenses.\n";
+            break;
+        case CharacterClass::BARBARIAN:
+            std::cout << "A relentless berserker with overwhelming strength and HP.\n";
+            std::cout << "Built to crush enemies in direct combat.\n";
+            break;
+        case CharacterClass::MONK:
+            std::cout << "A disciplined martial artist focused on speed and evasion.\n";
+            std::cout << "Balanced offense with agile survivability.\n";
+            break;
     }
 }
 
@@ -919,7 +939,7 @@ void GameEngine::displayCurrentRoom() {
     
     Room& room = getCurrentRoom();
 
-    if (room.id == getActiveShadowLordRoomId()) {
+    if (!m_isInMawRealm && room.id == getActiveShadowLordRoomId()) {
         if (!m_gameState.player.shadowLordDefeated) {
             triggerShadowLordEncounterIfNeeded();
             return;
@@ -987,9 +1007,14 @@ void GameEngine::displayCurrentRoom() {
 }
 
 std::string GameEngine::getExplorationAction() {
+    std::string actionPrompt = " [n/s/e/w, look, search, interact, inventory, status, quests, map, menu, help]";
+    if (m_isInMawRealm) {
+        actionPrompt = " [n/s/e/w, look, search, interact, inventory, status, quests, map, extract, menu, help]";
+    }
+
     std::cout << "\n"
               << UIManager::colorize("Action", UIColor::BRIGHT_CYAN, UIEffect::BOLD)
-              << " [n/s/e/w, look, search, interact, inventory, status, quests, map, menu, help]"
+              << actionPrompt
               << "\n> ";
     std::string action;
     std::getline(std::cin, action);
@@ -1060,6 +1085,17 @@ bool GameEngine::processAction(const std::string& action) {
         return true;
     } else if (action == "cheats" && m_debugMode) {
         openCheatMenu();
+        return true;
+    } else if (action == "extract" || action == "leave maw") {
+        if (!m_isInMawRealm) {
+            std::cout << "\nThere is nothing to extract from here.\n";
+            waitForEnter();
+            return true;
+        }
+
+        if (getYesNo("\nExtract from The Maw and return to the portal room")) {
+            m_leaveMawRequested = true;
+        }
         return true;
     } else if (action == "menu") {
         int choice = showGameMenu();
@@ -1156,6 +1192,11 @@ bool GameEngine::movePlayer(char direction) {
     
     // Move player
     m_gameState.player.currentRoomId = newRoomId;
+
+    if (m_isInMawRealm) {
+        return advanceMawStratumIfNeeded();
+    }
+
     triggerShadowLordEncounterIfNeeded();
     
     return true;
@@ -1471,11 +1512,15 @@ void GameEngine::openQuestLog() {
 void GameEngine::openMap() {
     clearScreen();
     displayDivider(80, '=');
-    std::cout << centerString("MAP", 80) << std::endl;
+    std::cout << centerString(m_isInMawRealm ? "MAW MAP" : "MAP", 80) << std::endl;
     displayDivider(80, '=');
     std::cout << "\n";
-    
-    m_mapGenerator.printMap(m_gameState.player.currentRoomId);
+
+    if (m_isInMawRealm) {
+        m_mawMapGenerator.printMawMap(m_gameState.player.currentRoomId, m_currentMawStratum, true);
+    } else {
+        m_mapGenerator.printMap(m_gameState.player.currentRoomId);
+    }
     
     displayDivider(80, '-');
     waitForEnter();
@@ -2552,6 +2597,32 @@ void GameEngine::checkLevelUp() {
                 manaGain = 8;
                 defGain = 2;
                 break;
+            case CharacterClass::RANGER:
+                hpGain = 11;
+                manaGain = 7;
+                atkGain = 3;
+                m_gameState.player.stats.critChance += 1;
+                m_gameState.player.stats.speed += 2;
+                break;
+            case CharacterClass::NECROMANCER:
+                hpGain = 9;
+                manaGain = 14;
+                m_gameState.player.stats.magicPower += 3;
+                break;
+            case CharacterClass::BARBARIAN:
+                hpGain = 18;
+                manaGain = 3;
+                atkGain = 4;
+                defGain = 2;
+                break;
+            case CharacterClass::MONK:
+                hpGain = 12;
+                manaGain = 9;
+                atkGain = 2;
+                defGain = 2;
+                m_gameState.player.stats.dodgeChance += 2;
+                m_gameState.player.stats.speed += 2;
+                break;
         }
         
         m_gameState.player.stats.maxHP += hpGain;
@@ -2766,6 +2837,10 @@ bool GameEngine::triggerFinalBoss() {
 }
 
 void GameEngine::triggerShadowLordEncounterIfNeeded() {
+    if (m_isInMawRealm) {
+        return;
+    }
+
     const int shadowRoomId = getActiveShadowLordRoomId();
     if (m_gameState.player.currentRoomId != shadowRoomId) {
         return;
@@ -2842,21 +2917,6 @@ Enemy GameEngine::createMawEnemy(int depth, bool bossVariant) const {
         }
     }
 
-    // Fallback to non-maw templates if dedicated Maw templates are missing.
-    if (pool.empty()) {
-        for (const Enemy& candidate : m_gameState.enemyTemplates) {
-            if (bossVariant && candidate.isBoss) {
-                pool.push_back(candidate);
-            } else if (!bossVariant && !candidate.isBoss) {
-                pool.push_back(candidate);
-            }
-        }
-    }
-
-    if (pool.empty()) {
-        pool = m_gameState.enemyTemplates;
-    }
-
     Enemy mawEnemy;
     if (!pool.empty()) {
         mawEnemy = pool[randomInt(0, static_cast<int>(pool.size()) - 1)];
@@ -2924,479 +2984,136 @@ Enemy GameEngine::createMawEnemy(int depth, bool bossVariant) const {
 }
 
 bool GameEngine::runMawExpedition() {
-    int stratum = std::max(1, m_gameState.player.mawDepthReached + 1);
-    int instability = 0;
+    const std::vector<Room> originalDungeon = m_gameState.dungeon;
+    const int originalRoomId = m_gameState.player.currentRoomId;
+    const std::vector<int> originalVisitedRooms = m_gameState.player.visitedRooms;
+    const int originalDungeonLevel = m_gameState.currentDungeonLevel;
+    const unsigned int originalSeed = m_gameState.randomSeed;
 
-    enum class MawRoomKind {
-        ENTRY,
-        HUNT,
-        CACHE,
-        RIFT,
-        ALTAR,
-        FORGE,
-        SANCTUM,
-        DESCENT
-    };
+    m_leaveMawRequested = false;
+    m_isInMawRealm = true;
+    m_currentMawStratum = std::max(1, m_gameState.player.mawDepthReached + 1);
 
-    struct MawRoomState {
-        int id;
-        MawRoomKind kind;
-        std::string name;
-        std::string description;
-        std::vector<int> neighbors;
-        bool explored;
-        bool cleared;
-    };
-
-    const std::vector<int> mawRecipePool = {
-        1050, // Maw Reaver
-        1140, // Voidplate Cuirass
-        1210, // Pendant of the Abyss
-        1320, // Abyssal Infusion
-        1321  // Mawfire Tonic
-    };
-
-    std::vector<Item> mawItemTemplates;
-    for (const Item& templateItem : m_gameState.itemTemplates) {
-        if (templateItem.mawOnly) {
-            mawItemTemplates.push_back(templateItem);
-        }
-    }
-
-    auto roomKindName = [](MawRoomKind kind) {
-        switch (kind) {
-            case MawRoomKind::ENTRY: return std::string("Maw Breach");
-            case MawRoomKind::HUNT: return std::string("Hunting Ground");
-            case MawRoomKind::CACHE: return std::string("Ruin Cache");
-            case MawRoomKind::RIFT: return std::string("Entropy Rift");
-            case MawRoomKind::ALTAR: return std::string("Echo Altar");
-            case MawRoomKind::FORGE: return std::string("Abyss Forge");
-            case MawRoomKind::SANCTUM: return std::string("Sovereign Sanctum");
-            case MawRoomKind::DESCENT: return std::string("Abyss Stair");
-            default: return std::string("Unknown");
-        }
-    };
-
-    auto buildRoomDescription = [&](MawRoomKind kind, int depth) {
-        switch (kind) {
-            case MawRoomKind::ENTRY:
-                return std::string("The portal behind you shivers. Ahead lies a living labyrinth of voidstone.");
-            case MawRoomKind::HUNT:
-                return std::string("Predators stalk this chamber. The air itself wants blood.");
-            case MawRoomKind::CACHE:
-                return std::string("Broken reliquaries and twisted chests glitter with salvage from lost expeditions.");
-            case MawRoomKind::RIFT:
-                return std::string("Reality splits at the seams here. Every step deepens the Maw's hunger.");
-            case MawRoomKind::ALTAR:
-                return std::string("A carved monolith hums with echoes. It can bless, or consume, the reckless.");
-            case MawRoomKind::FORGE:
-                return std::string("A cold forge of black iron. Even here, craft can turn fear into power.");
-            case MawRoomKind::SANCTUM:
-                return std::string("A dominion node at depth " + std::to_string(depth) + ". Sovereign horrors gather here.");
-            case MawRoomKind::DESCENT:
-                return std::string("A spiraling maw opens below. Descending will generate a deeper stratum.");
-            default:
-                return std::string("The void shifts restlessly.");
-        }
-    };
-
-    auto generateMawStratum = [&](int depth) {
-        int roomCount = 8 + std::min(10, depth / 2);
-        std::vector<MawRoomState> rooms;
-        rooms.reserve(roomCount);
-
-        for (int i = 0; i < roomCount; ++i) {
-            MawRoomState room;
-            room.id = i;
-            room.kind = MawRoomKind::HUNT;
-            room.explored = false;
-            room.cleared = false;
-            rooms.push_back(room);
-        }
-
-        rooms.front().kind = MawRoomKind::ENTRY;
-        rooms.back().kind = MawRoomKind::DESCENT;
-
-        std::vector<int> mutableIndices;
-        for (int i = 1; i < roomCount - 1; ++i) {
-            mutableIndices.push_back(i);
-        }
-
-        auto claimRandomIndex = [&](MawRoomKind kind) {
-            if (mutableIndices.empty()) return;
-            int pos = randomInt(0, static_cast<int>(mutableIndices.size()) - 1);
-            int index = mutableIndices[pos];
-            rooms[index].kind = kind;
-            mutableIndices.erase(mutableIndices.begin() + pos);
-        };
-
-        claimRandomIndex(MawRoomKind::ALTAR);
-        claimRandomIndex(MawRoomKind::FORGE);
-        claimRandomIndex(MawRoomKind::RIFT);
-        claimRandomIndex(MawRoomKind::SANCTUM);
-        claimRandomIndex(MawRoomKind::CACHE);
-        if (depth >= 4) claimRandomIndex(MawRoomKind::CACHE);
-
-        for (int i = 0; i < roomCount - 1; ++i) {
-            rooms[i].neighbors.push_back(i + 1);
-            rooms[i + 1].neighbors.push_back(i);
-        }
-
-        const int extraLinks = 2 + std::min(8, depth / 2);
-        for (int i = 0; i < extraLinks; ++i) {
-            int a = randomInt(0, roomCount - 1);
-            int b = randomInt(0, roomCount - 1);
-            if (a == b) continue;
-            if (std::find(rooms[a].neighbors.begin(), rooms[a].neighbors.end(), b) != rooms[a].neighbors.end()) {
-                continue;
-            }
-            rooms[a].neighbors.push_back(b);
-            rooms[b].neighbors.push_back(a);
-        }
-
-        for (MawRoomState& room : rooms) {
-            room.name = roomKindName(room.kind);
-            room.description = buildRoomDescription(room.kind, depth);
-        }
-
-        return rooms;
-    };
-
-    auto displayMawChart = [&](const std::vector<MawRoomState>& rooms, int currentRoomId) {
-        std::cout << "\n" << Color::BRIGHT_MAGENTA << "-- MAW CHART --" << Color::RESET << "\n";
-        for (const MawRoomState& room : rooms) {
-            if (!room.explored && room.id != currentRoomId) {
-                continue;
-            }
-
-            std::cout << "[" << room.id << "] " << room.name;
-            if (room.id == currentRoomId) {
-                std::cout << " <YOU>";
-            }
-            if (room.cleared) {
-                std::cout << " [CLEARED]";
-            }
-            std::cout << "\n  Links: ";
-            for (size_t i = 0; i < room.neighbors.size(); ++i) {
-                if (i > 0) std::cout << ", ";
-                std::cout << room.neighbors[i];
-            }
-            std::cout << "\n";
-        }
-        std::cout << "\n";
-    };
-
-    auto awardMawLoot = [&](const CombatResult& result, int depth, bool bossWave) {
-        const int floorXpBonus = depth * 40 + (bossWave ? 220 : 0);
-        const int floorGoldBonus = depth * 25 + (bossWave ? 170 : 0);
-        m_gameState.player.experience += result.experienceGained + floorXpBonus;
-        m_gameState.player.gold += result.goldGained + floorGoldBonus;
-
-        const int ichorDrop = 2 + (depth / 4) + (bossWave ? 2 : 0);
-        const int shardDrop = 1 + (depth / 5) + (bossWave ? 1 : 0);
-        int coreDrop = 0;
-
-        m_craftingSystem.addMaterial(11, ichorDrop);
-        m_craftingSystem.addMaterial(12, shardDrop);
-        if (bossWave || randomChance(20 + std::min(55, depth * 2))) {
-            coreDrop = 1 + (bossWave ? 1 : 0);
-            m_craftingSystem.addMaterial(13, coreDrop);
-        }
-
-        if (!mawRecipePool.empty() && randomChance(35 + (bossWave ? 25 : 0))) {
-            int recipeId = mawRecipePool[randomInt(0, static_cast<int>(mawRecipePool.size()) - 1)];
-            m_craftingSystem.discoverRecipe(recipeId);
-        }
-
-        int salvagedGold = 0;
-        int addedItems = 0;
-        auto addLootToInventory = [&](const Item& lootItem) {
-            if (m_gameState.player.inventory.size() < static_cast<size_t>(m_gameState.player.maxInventorySize)) {
-                m_gameState.player.inventory.push_back(lootItem);
-                ++addedItems;
-            } else {
-                salvagedGold += std::max(50, lootItem.value / 2);
-            }
-        };
-
-        for (Item lootItem : result.loot) {
-            int boostedLevel = std::max(
-                std::max(lootItem.itemLevel, m_gameState.player.level + depth + 8),
-                m_gameState.player.averageItemLevel + depth + 6
-            );
-            applyItemLevelScaling(lootItem, boostedLevel, true);
-            lootItem.rarity = (static_cast<int>(lootItem.rarity) < static_cast<int>(ItemRarity::EPIC))
-                ? (randomChance(35) ? ItemRarity::LEGENDARY : ItemRarity::EPIC)
-                : lootItem.rarity;
-            lootItem.hasUniquePerk = true;
-            if (lootItem.uniquePerkName.empty()) {
-                lootItem.uniquePerkName = "Mawforged";
-            }
-            lootItem.isEnchanted = true;
-            if (lootItem.enchantmentName.empty()) {
-                lootItem.enchantmentName = bossWave ? "Void Sovereign" : "Abyssal Echo";
-            }
-            addLootToInventory(lootItem);
-        }
-
-        ItemRarity rewardRarity = (bossWave || randomChance(45)) ? ItemRarity::LEGENDARY : ItemRarity::EPIC;
-        int rewardLevel = std::max(1, m_gameState.player.level + depth + 10);
-
-        Item mawRelic;
-        if (!mawItemTemplates.empty() && randomChance(80)) {
-            mawRelic = mawItemTemplates[randomInt(0, static_cast<int>(mawItemTemplates.size()) - 1)];
-            int rolledLevel = rollItemLevel(rewardLevel + 4, mawRelic.rarity, true);
-            applyItemLevelScaling(mawRelic, std::max(rewardLevel, rolledLevel), true);
-            if (static_cast<int>(mawRelic.rarity) < static_cast<int>(rewardRarity)) {
-                mawRelic.rarity = rewardRarity;
-            }
-        } else {
-            mawRelic = generateRandomItem(rewardRarity, rewardLevel);
-            applyItemLevelScaling(mawRelic, rollItemLevel(rewardLevel + 3, rewardRarity, true), true);
-        }
-
-        mawRelic.mawOnly = true;
-        mawRelic.hasUniquePerk = true;
-        if (mawRelic.uniquePerkName.empty()) {
-            mawRelic.uniquePerkName = bossWave ? "Maw Sovereign" : "Mawforged";
-        }
-        mawRelic.isEnchanted = true;
-        mawRelic.enchantmentName = bossWave ? "Void Sovereign" : "Abyssal Echo";
-        addLootToInventory(mawRelic);
-
-        m_gameState.player.gold += salvagedGold;
-        m_gameState.player.mawDepthReached = std::max(m_gameState.player.mawDepthReached, depth);
-
-        std::cout << "\n" << Color::BRIGHT_GREEN << "Stratum " << depth << " encounter cleared!" << Color::RESET << "\n";
-        std::cout << "XP gained: " << (result.experienceGained + floorXpBonus) << "\n";
-        std::cout << "Gold gained: " << (result.goldGained + floorGoldBonus + salvagedGold) << "\n";
-        std::cout << "Maw materials: +" << ichorDrop << " Abyssal Ichor, +"
-                  << shardDrop << " Voidbone Shard";
-        if (coreDrop > 0) {
-            std::cout << ", +" << coreDrop << " Maw Core";
-        }
-        std::cout << "\n";
-        std::cout << "High-tier items secured: " << addedItems << "\n";
-    };
-
-    auto resolveRoom = [&](MawRoomState& room, int depth) {
-        if (room.cleared) {
-            return true;
-        }
-
-        if (room.kind == MawRoomKind::ENTRY || room.kind == MawRoomKind::DESCENT) {
-            room.cleared = true;
-            return true;
-        }
-
-        if (room.kind == MawRoomKind::CACHE) {
-            int ichor = randomInt(2, 4 + depth / 3);
-            int shards = randomInt(1, 2 + depth / 4);
-            m_craftingSystem.addMaterial(11, ichor);
-            m_craftingSystem.addMaterial(12, shards);
-            if (randomChance(30 + std::min(40, depth * 2))) {
-                m_craftingSystem.addMaterial(13, 1);
-            }
-            m_gameState.player.gold += 30 + depth * 10;
-            std::cout << "Recovered supplies from the cache.\n";
-            room.cleared = true;
-            return true;
-        }
-
-        if (room.kind == MawRoomKind::ALTAR) {
-            std::cout << "Echo Altar options:\n";
-            std::cout << "1. Restore vitality\n";
-            std::cout << "2. Stabilize the Maw pressure\n";
-            std::cout << "3. Attune to forbidden insight (XP + recipe chance)\n";
-            int altarChoice = getValidatedInt("Choose altar rite: ", 1, 3);
-            if (altarChoice == 1) {
-                int heal = std::max(20, m_gameState.player.stats.maxHP / 3);
-                m_gameState.player.stats.currentHP = std::min(m_gameState.player.stats.maxHP,
-                    m_gameState.player.stats.currentHP + heal);
-                std::cout << "Recovered " << heal << " HP.\n";
-            } else if (altarChoice == 2) {
-                instability = std::max(0, instability - (6 + depth / 2));
-                std::cout << "Instability reduced.\n";
-            } else {
-                int insightXp = 90 + depth * 25;
-                m_gameState.player.experience += insightXp;
-                if (!mawRecipePool.empty() && randomChance(45)) {
-                    int recipeId = mawRecipePool[randomInt(0, static_cast<int>(mawRecipePool.size()) - 1)];
-                    m_craftingSystem.discoverRecipe(recipeId);
-                }
-                std::cout << "You absorb void insight (+" << insightXp << " XP).\n";
-                instability += 2;
-            }
-
-            checkLevelUp();
-            room.cleared = true;
-            return true;
-        }
-
-        if (room.kind == MawRoomKind::FORGE) {
-            std::cout << "Abyss Forge: the metal here sings with hunger.\n";
-            m_craftingSystem.addMaterial(11, 1 + depth / 3);
-            if (randomChance(40)) {
-                m_craftingSystem.addMaterial(13, 1);
-            }
-            if (getYesNo("Open crafting at the Abyss Forge")) {
-                m_craftingSystem.runCraftingMenu();
-            }
-            room.cleared = true;
-            return true;
-        }
-
-        bool bossWave = (room.kind == MawRoomKind::SANCTUM);
-        int enemyCount = 1 + std::min(4, depth / 3);
-        if (room.kind == MawRoomKind::RIFT) {
-            enemyCount += 1;
-            instability += 2;
-            bossWave = bossWave || randomChance(25 + std::min(35, depth * 2));
-        }
-        if (bossWave) {
-            enemyCount = std::max(enemyCount, 2 + std::min(2, depth / 12));
-        }
-
-        std::vector<Enemy> wave;
-        wave.reserve(enemyCount);
-        for (int i = 0; i < enemyCount; ++i) {
-            bool elite = bossWave && i == 0;
-            wave.push_back(createMawEnemy(depth, elite));
-        }
-
-        std::cout << "Maw hostiles detected:\n";
-        for (const Enemy& enemy : wave) {
-            std::cout << "  - " << enemy.name << " (True DMG " << enemy.trueDamage << ")\n";
-        }
-        std::cout << "\n";
+    if (!generateMawStratum()) {
+        m_isInMawRealm = false;
+        m_leaveMawRequested = false;
+        m_currentMawStratum = 0;
+        m_gameState.dungeon = originalDungeon;
+        m_gameState.player.currentRoomId = originalRoomId;
+        m_gameState.player.visitedRooms = originalVisitedRooms;
+        m_gameState.currentDungeonLevel = originalDungeonLevel;
+        m_gameState.randomSeed = originalSeed;
+        m_mapGenerator.syncFromDungeon(m_gameState.dungeon);
+        std::cout << "\nThe Maw resists your entry and collapses back into static.\n";
         waitForEnter();
-
-        CombatResult result = m_combatSystem.startCombat(wave);
-        if (result.playerDied) {
-            m_gameState.player.isAlive = false;
-            return false;
-        }
-
-        awardMawLoot(result, depth, bossWave);
-        checkLevelUp();
-
-        if (room.kind == MawRoomKind::SANCTUM) {
-            instability = std::max(0, instability - 3);
-        }
-
-        room.cleared = true;
         return true;
-    };
+    }
 
     clearScreen();
     displayDivider(80, '=');
     std::cout << Color::BRIGHT_MAGENTA << centerString("THE MAW", 80) << Color::RESET << "\n";
     displayDivider(80, '=');
     std::cout << "\n";
-    std::cout << wrapText("You cross into a self-reforming abyssal labyrinth. Each stratum is generated "
-                          "separately and shifts as you descend. The deeper you go, the more unstable reality becomes.", 78)
+    std::cout << wrapText("The layout shifts into a hostile mirror of the main dungeon. "
+                          "Every Descent Rift leads to a deeper stratum, so the Maw can continue forever. "
+                          "Type 'extract' at any time to return to the portal room.", 78)
               << "\n\n";
     waitForEnter();
 
-    while (m_gameState.player.isAlive) {
-        std::vector<MawRoomState> rooms = generateMawStratum(stratum);
-        int currentRoomId = 0;
-        rooms[currentRoomId].explored = true;
+    while (m_isRunning && m_gameState.player.isAlive && !m_gameState.player.hasWon && !m_leaveMawRequested) {
+        updateStatusEffects();
+        checkQuestProgress();
 
-        bool inCurrentStratum = true;
-        while (inCurrentStratum && m_gameState.player.isAlive) {
-            clearScreen();
-            displayDivider(80, '=');
-            std::cout << Color::BRIGHT_RED
-                      << centerString("THE MAW - STRATUM " + std::to_string(stratum), 80)
-                      << Color::RESET << "\n";
-            displayDivider(80, '=');
+        m_gameState.player.explorationTurns++;
+        m_gameState.player.totalTurns = m_gameState.player.explorationTurns + m_gameState.player.combatTurns;
 
-            std::cout << "\nCurrent Room: [" << currentRoomId << "] "
-                      << rooms[currentRoomId].name << "\n";
-            std::cout << wrapText(rooms[currentRoomId].description, 78) << "\n\n";
-            std::cout << "Instability: " << instability
-                      << " | HP: " << m_gameState.player.stats.currentHP << "/"
-                      << m_gameState.player.stats.maxHP
-                      << " | Deepest Stratum: " << m_gameState.player.mawDepthReached << "\n\n";
+        displayCurrentRoom();
 
-            if (!resolveRoom(rooms[currentRoomId], stratum)) {
-                return false;
-            }
+        std::string action = getExplorationAction();
+        if (!processAction(action)) {
+            std::cout << "\nInvalid action. Type 'help' for commands.\n";
+            waitForEnter();
+        }
 
-            if (!m_gameState.player.isAlive) {
-                return false;
-            }
-
-            std::cout << "\nActions:\n";
-            std::cout << "1. Move to connected room\n";
-            std::cout << "2. View Maw chart\n";
-            std::cout << "3. Open inventory\n";
-            std::cout << "4. Extract to portal room\n";
-            if (rooms[currentRoomId].kind == MawRoomKind::DESCENT) {
-                std::cout << "5. Descend to next generated stratum\n";
-            }
-            std::cout << "\n";
-
-            int maxChoice = (rooms[currentRoomId].kind == MawRoomKind::DESCENT) ? 5 : 4;
-            int actionChoice = getValidatedInt("Choose action: ", 1, maxChoice);
-
-            if (actionChoice == 1) {
-                const std::vector<int>& neighbors = rooms[currentRoomId].neighbors;
-                if (neighbors.empty()) {
-                    std::cout << "No connected paths from this room.\n";
-                    waitForEnter();
-                    continue;
-                }
-
-                std::cout << "\nConnected rooms:\n";
-                for (size_t i = 0; i < neighbors.size(); ++i) {
-                    const MawRoomState& nextRoom = rooms[neighbors[i]];
-                    std::cout << (i + 1) << ". [" << nextRoom.id << "] " << nextRoom.name;
-                    if (nextRoom.explored) {
-                        std::cout << " (explored)";
-                    }
-                    std::cout << "\n";
-                }
-
-                int moveChoice = getValidatedInt("Move to: ", 1, static_cast<int>(neighbors.size()));
-                currentRoomId = neighbors[moveChoice - 1];
-                rooms[currentRoomId].explored = true;
-
-                instability += 1 + (stratum / 3);
-                int ambientTrueDamage = (instability >= 8)
-                    ? std::max(1, (instability / 4) + (stratum / 10))
-                    : 0;
-                if (ambientTrueDamage > 0) {
-                    m_gameState.player.stats.currentHP -= ambientTrueDamage;
-                    if (m_gameState.player.stats.currentHP <= 0) {
-                        m_gameState.player.stats.currentHP = 0;
-                        m_gameState.player.isAlive = false;
-                        std::cout << "\nThe Maw's pressure crushes your remaining strength...\n";
-                        waitForEnter();
-                        return false;
-                    }
-
-                    std::cout << "\nAmbient Maw pressure dealt " << ambientTrueDamage << " true damage.\n";
-                    waitForEnter();
-                }
-            } else if (actionChoice == 2) {
-                displayMawChart(rooms, currentRoomId);
-                waitForEnter();
-            } else if (actionChoice == 3) {
-                openInventory();
-            } else if (actionChoice == 4) {
-                return true;
-            } else if (actionChoice == 5 && rooms[currentRoomId].kind == MawRoomKind::DESCENT) {
-                stratum++;
-                m_gameState.player.mawDepthReached = std::max(m_gameState.player.mawDepthReached, stratum - 1);
-                instability = std::max(0, instability - 2);
-                inCurrentStratum = false;
-            }
+        if (!m_leaveMawRequested && m_gameState.player.isAlive && !m_gameState.player.hasWon) {
+            checkRoomEvents();
         }
     }
 
-    return false;
+    if (m_gameState.player.isAlive) {
+        m_gameState.player.mawDepthReached = std::max(
+            m_gameState.player.mawDepthReached,
+            std::max(1, m_currentMawStratum)
+        );
+    }
+
+    const bool survived = m_gameState.player.isAlive;
+
+    m_isInMawRealm = false;
+    m_leaveMawRequested = false;
+    m_currentMawStratum = 0;
+
+    m_gameState.dungeon = originalDungeon;
+    m_gameState.player.currentRoomId = originalRoomId;
+    m_gameState.player.visitedRooms = originalVisitedRooms;
+    m_gameState.currentDungeonLevel = originalDungeonLevel;
+    m_gameState.randomSeed = originalSeed;
+    m_mapGenerator.syncFromDungeon(m_gameState.dungeon);
+
+    return survived;
+}
+
+bool GameEngine::generateMawStratum() {
+    unsigned int mawSeed = static_cast<unsigned int>(
+        std::chrono::high_resolution_clock::now().time_since_epoch().count());
+    mawSeed ^= static_cast<unsigned int>(m_currentMawStratum * 2654435761u);
+    if (mawSeed == 0) {
+        mawSeed = 1;
+    }
+
+    m_gameState.randomSeed = mawSeed;
+    initializeRandom(mawSeed);
+    m_gameState.currentDungeonLevel = std::max(2, m_gameState.player.level + m_currentMawStratum);
+
+    if (!m_mawMapGenerator.generateMap(m_gameState, true)) {
+        return false;
+    }
+
+    m_gameState.player.currentRoomId = m_mawMapGenerator.getEntranceRoomId();
+    m_gameState.player.visitedRooms.clear();
+
+    return true;
+}
+
+bool GameEngine::advanceMawStratumIfNeeded() {
+    const Room& room = getCurrentRoom();
+    if (room.type != RoomType::EXIT) {
+        return true;
+    }
+
+    clearScreen();
+    displayDivider(80, '=');
+    std::cout << Color::BRIGHT_MAGENTA
+              << centerString("DESCENT RIFT", 80)
+              << Color::RESET << "\n";
+    displayDivider(80, '=');
+    std::cout << "\n";
+    std::cout << wrapText("You step into the rift and feel reality shear apart. "
+                          "The Maw folds and rewrites itself below you.", 78)
+              << "\n\n";
+
+    ++m_currentMawStratum;
+
+    if (!generateMawStratum()) {
+        std::cout << "The next stratum fails to stabilize. You are forced to extract.\n\n";
+        m_leaveMawRequested = true;
+        waitForEnter();
+        return false;
+    }
+
+    std::cout << "You descend to Maw Stratum " << m_currentMawStratum << ".\n\n";
+    waitForEnter();
+    return true;
 }
 
 void GameEngine::handleMawPortal() {

@@ -38,6 +38,18 @@ void SkillTreeManager::initializeTalentTree() {
         case CharacterClass::PALADIN:
             buildPaladinTree();
             break;
+        case CharacterClass::RANGER:
+            buildRogueTree();
+            break;
+        case CharacterClass::NECROMANCER:
+            buildMageTree();
+            break;
+        case CharacterClass::BARBARIAN:
+            buildWarriorTree();
+            break;
+        case CharacterClass::MONK:
+            buildPaladinTree();
+            break;
     }
     
     // Initialize combo chains
@@ -192,6 +204,34 @@ std::string SkillTreeManager::getCurrentSpecialization() const {
                 case 0: return "Crusader";
                 case 1: return "Protector";
                 case 2: return "Justicar";
+            }
+            break;
+        case CharacterClass::RANGER:
+            switch (selectedSpecialization) {
+                case 0: return "Sharpshooter";
+                case 1: return "Beastmaster";
+                case 2: return "Skirmisher";
+            }
+            break;
+        case CharacterClass::NECROMANCER:
+            switch (selectedSpecialization) {
+                case 0: return "Deathbinder";
+                case 1: return "Plaguecaller";
+                case 2: return "Soulweaver";
+            }
+            break;
+        case CharacterClass::BARBARIAN:
+            switch (selectedSpecialization) {
+                case 0: return "Ravager";
+                case 1: return "Juggernaut";
+                case 2: return "Warcry";
+            }
+            break;
+        case CharacterClass::MONK:
+            switch (selectedSpecialization) {
+                case 0: return "Windwalker";
+                case 1: return "Iron Body";
+                case 2: return "Spirit Fist";
             }
             break;
     }

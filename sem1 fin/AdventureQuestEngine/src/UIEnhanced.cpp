@@ -146,8 +146,8 @@ std::string UIManager::renderXPBar(int current, int needed, int width) {
     bar.maximum = needed;
     bar.width = width;
     bar.barColor = UIColor::BRIGHT_YELLOW;
-    bar.fillChar = '▓';
-    bar.emptyChar = '░';
+    bar.fillChar = '=';
+    bar.emptyChar = '.';
     bar.label = "✨";
     
     return renderProgressBar(bar);
@@ -531,7 +531,7 @@ void UIManager::renderMenu(const Menu& menu) {
     }
     
     std::cout << "\n";
-    drawDivider(menuWidth, '─');
+    drawDivider(menuWidth, '-');
 }
 
 int UIManager::selectFromList(const std::vector<std::string>& items, const std::string& title) {

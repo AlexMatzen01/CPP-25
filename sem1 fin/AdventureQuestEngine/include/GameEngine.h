@@ -386,6 +386,7 @@ private:
     
     GameState m_gameState;          // Complete game state
     MapGenerator m_mapGenerator;    // Dungeon generator
+    MapGenerator m_mawMapGenerator; // Dedicated Maw generator
     CombatSystem m_combatSystem;    // Combat handler
     InventorySystem m_inventorySystem; // Inventory handler
     EventSystem m_eventSystem;      // Event handler
@@ -395,6 +396,9 @@ private:
     
     bool m_isRunning;               // Game running flag
     bool m_debugMode;               // Debug mode flag
+    bool m_isInMawRealm;            // True while traversing a generated Maw dungeon
+    bool m_leaveMawRequested;       // Set when player chooses to extract from Maw
+    int m_currentMawStratum;        // Current Maw floor depth during expedition
     std::string m_activeSaveFile;   // Current save file path for quick saves
     
     //==========================================================================
@@ -542,6 +546,18 @@ private:
      * @return True if player returned alive, false if slain
      */
     bool runMawExpedition();
+
+    /**
+// Generates a fresh Maw stratum and places the player at its breach
+     * @return True on success, false if generation fails
+     */
+    bool generateMawStratum();
+
+    /**
+// Advances the run to the next Maw stratum when stepping into a descent rift
+     * @return True if movement should continue, false if Maw run should terminate
+     */
+    bool advanceMawStratumIfNeeded();
 
     /**
 // Builds a scaled Maw enemy for the provided floor depth

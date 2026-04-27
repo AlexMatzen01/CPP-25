@@ -1,14 +1,16 @@
 # Adventure Quest Engine Leaderboard
 # Format: name|score|turns|class|ending|date
 
+Alex|2420|2|Necromancer|Neutral|
+Alex|2270|81|Necromancer|Neutral|
 Alex|2190|55|Warrior|Victory|
 Luke|1475|16|Mage|Speedrun|
 Hays|1379|75|Rogue|Victory|
 Luke|1235|28|Mage|Speedrun|
 Alex|1145|1|Warrior|Neutral|
 Alex|1140|2|Warrior|Neutral|
-test|1140|2|Warrior|Neutral|
 Alex|1140|2|Warrior|Neutral|
+test|1140|2|Warrior|Neutral|
 Alex|1135|3|Warrior|Neutral|
 Alex|1135|3|Warrior|Neutral|
 TestHero|1120|6|Warrior|Neutral|

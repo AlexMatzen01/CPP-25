@@ -21,7 +21,7 @@ namespace AQE {
 // ---
 
 MapGenerator::MapGenerator(int width, int height)
-    : mapWidth(width), mapHeight(height), entranceId(-1), exitId(-1), nextRoomId(0), forgeCount(0) {
+    : mapWidth(width), mapHeight(height), entranceId(-1), exitId(-1), nextRoomId(0), forgeCount(0), mawModeActive(false), mawIntensityLevel(0) {
     // Clamp dimensions to valid range
     if (mapWidth < MIN_MAP_WIDTH) mapWidth = MIN_MAP_WIDTH;
     if (mapWidth > MAX_MAP_WIDTH) mapWidth = MAX_MAP_WIDTH;
@@ -33,7 +33,10 @@ MapGenerator::MapGenerator(int width, int height)
 // PUBLIC METHODS
 // ---
 
-bool MapGenerator::generateMap(GameState& gameState) {
+bool MapGenerator::generateMap(GameState& gameState, bool mawMode) {
+    mawModeActive = mawMode;
+    mawIntensityLevel = mawModeActive ? std::max(1, gameState.currentDungeonLevel) : 0;
+
     // Store map dimensions in game state
     gameState.mapWidth = mapWidth;
     gameState.mapHeight = mapHeight;
@@ -68,7 +71,7 @@ bool MapGenerator::generateMap(GameState& gameState) {
     placeSecretRooms(secretCount);
     
     // Step 6: Place the unique Shadow Lord chamber as far from the entrance as possible
-    if (!placeShadowLordRoom()) return false;
+    if (!mawModeActive && !placeShadowLordRoom()) return false;
     
     // Step 7: Connect all adjacent rooms
     connectRooms();
@@ -76,14 +79,14 @@ bool MapGenerator::generateMap(GameState& gameState) {
     // Step 8: Verify connectivity
     if (!verifyConnectivity()) {
         // If not connected, regenerate (shouldn't happen with proper algorithm)
-        return generateMap(gameState);
+        return generateMap(gameState, mawMode);
     }
     
     // Step 9: Populate rooms with content
     const int dungeonLevel = std::max(1, gameState.currentDungeonLevel);
     for (Room& room : rooms) {
-        populateWithEnemies(room, gameState.enemyTemplates);
-        populateWithItems(room, gameState.itemTemplates, dungeonLevel);
+        populateWithEnemies(room, gameState.enemyTemplates, dungeonLevel, mawModeActive);
+        populateWithItems(room, gameState.itemTemplates, dungeonLevel, mawModeActive);
         assignEvents(room, gameState.eventTemplates);
         
         if (room.type == RoomType::PUZZLE) {
@@ -156,6 +159,15 @@ void MapGenerator::syncFromDungeon(const std::vector<Room>& dungeon) {
     }
 }
 
+const Room* MapGenerator::findRoomById(int roomId) const {
+    for (const Room& room : rooms) {
+        if (room.id == roomId) {
+            return &room;
+        }
+    }
+    return nullptr;
+}
+
 void MapGenerator::printMap(int currentRoomId) const {
     std::cout << "\n";
     displaySeparator(80, '=');
@@ -192,14 +204,7 @@ void MapGenerator::printMap(int currentRoomId) const {
         for (int x = 0; x < mapWidth; ++x) {
             if (grid[y][x] >= 0) {
                 int roomId = grid[y][x];
-                const Room* room = nullptr;
-                
-                for (const Room& r : rooms) {
-                    if (r.id == roomId) {
-                        room = &r;
-                        break;
-                    }
-                }
+                const Room* room = findRoomById(roomId);
                 
                 if (room) {
                     std::string symbol;
@@ -359,6 +364,189 @@ void MapGenerator::printMap(int currentRoomId) const {
     std::cout << "\n";
 }
 
+void MapGenerator::printMawMap(int currentRoomId, int stratum, bool fogOfWar) const {
+    std::cout << "\n";
+    displaySeparator(80, '=');
+    printColor(centerString("◆◆◆ THE MAW CARTOGRAPH ◆◆◆", 80), Color::BRIGHT_MAGENTA);
+    displaySeparator(80, '=');
+    std::cout << "\n";
+    std::cout << "  Stratum: " << colorize(std::to_string(std::max(1, stratum)), Color::BRIGHT_MAGENTA)
+              << "    Fog of War: " << colorize(fogOfWar ? "ACTIVE" : "DISABLED", Color::BRIGHT_CYAN)
+              << "\n\n";
+
+    std::cout << "    ";
+    for (int x = 0; x < mapWidth; ++x) {
+        std::cout << "  " << colorize(std::to_string(x), Color::DARK_GRAY) << " ";
+    }
+    std::cout << "\n";
+
+    for (int y = mapHeight - 1; y >= 0; --y) {
+        std::cout << "    ";
+        for (int x = 0; x < mapWidth; ++x) {
+            if (grid[y][x] >= 0) {
+                if (grid[y][x] == currentRoomId) {
+                    std::cout << colorize("╔═══", Color::BRIGHT_GREEN);
+                } else {
+                    std::cout << colorize("╭───", Color::MAGENTA);
+                }
+            } else {
+                std::cout << "    ";
+            }
+        }
+        std::cout << "\n";
+
+        std::cout << " " << colorize(std::to_string(y), Color::DARK_GRAY) << "  ";
+        for (int x = 0; x < mapWidth; ++x) {
+            if (grid[y][x] < 0) {
+                std::cout << "    ";
+                continue;
+            }
+
+            const Room* room = findRoomById(grid[y][x]);
+            if (!room) {
+                std::cout << colorize("│ ? ", Color::BRIGHT_BLACK);
+                continue;
+            }
+
+            const bool isCurrentRoom = room->id == currentRoomId;
+            const bool visible = !fogOfWar || room->isExplored || isCurrentRoom;
+
+            if (!visible) {
+                std::cout << colorize("│", Color::MAGENTA)
+                          << colorize(" ▒ ", Color::BRIGHT_BLACK);
+                continue;
+            }
+
+            std::string symbol;
+            std::string color;
+
+            switch (room->type) {
+                case RoomType::ENTRANCE:
+                    symbol = " ⌂ ";
+                    color = Color::BRIGHT_CYAN;
+                    break;
+                case RoomType::EXIT:
+                    symbol = " ⌯ ";
+                    color = Color::BRIGHT_MAGENTA;
+                    break;
+                case RoomType::BOSS:
+                    symbol = " ☣ ";
+                    color = Color::BRIGHT_RED;
+                    break;
+                case RoomType::TREASURE:
+                    symbol = " ✧ ";
+                    color = Color::BRIGHT_YELLOW;
+                    break;
+                case RoomType::TRAP:
+                    symbol = " ⛧ ";
+                    color = Color::RED;
+                    break;
+                case RoomType::PUZZLE:
+                    symbol = " ⌘ ";
+                    color = Color::CYAN;
+                    break;
+                case RoomType::SECRET:
+                    symbol = " ✶ ";
+                    color = Color::BRIGHT_CYAN;
+                    break;
+                case RoomType::SAFE:
+                    symbol = " ◇ ";
+                    color = Color::GREEN;
+                    break;
+                case RoomType::SHOP:
+                    symbol = " § ";
+                    color = Color::YELLOW;
+                    break;
+                case RoomType::FORGE:
+                    symbol = " ⚒ ";
+                    color = Color::BRIGHT_RED;
+                    break;
+                case RoomType::SHRINE:
+                    symbol = " ☾ ";
+                    color = Color::BRIGHT_YELLOW;
+                    break;
+                case RoomType::LABORATORY:
+                    symbol = " ⚗ ";
+                    color = Color::BRIGHT_GREEN;
+                    break;
+                case RoomType::GRAVEYARD:
+                    symbol = " ⚱ ";
+                    color = Color::DARK_GRAY;
+                    break;
+                case RoomType::ARMORY:
+                    symbol = " ⛨ ";
+                    color = Color::BRIGHT_WHITE;
+                    break;
+                case RoomType::PRISON:
+                    symbol = " ⛓ ";
+                    color = Color::RED;
+                    break;
+                default:
+                    if (room->enemies.empty() && room->isCleared) {
+                        symbol = " · ";
+                        color = Color::DARK_GRAY;
+                    } else if (room->enemies.empty()) {
+                        symbol = " ○ ";
+                        color = Color::WHITE;
+                    } else {
+                        symbol = " • ";
+                        color = Color::BRIGHT_WHITE;
+                    }
+                    break;
+            }
+
+            if (isCurrentRoom) {
+                std::cout << colorize("║", Color::BRIGHT_GREEN)
+                          << "\033[7m" << colorize(symbol, color) << "\033[27m";
+            } else {
+                std::cout << colorize("│", Color::MAGENTA)
+                          << colorize(symbol, color);
+            }
+        }
+        std::cout << "\n";
+
+        std::cout << "    ";
+        for (int x = 0; x < mapWidth; ++x) {
+            if (grid[y][x] >= 0) {
+                if (grid[y][x] == currentRoomId) {
+                    std::cout << colorize("╚═══", Color::BRIGHT_GREEN);
+                } else {
+                    std::cout << colorize("╰───", Color::MAGENTA);
+                }
+            } else {
+                std::cout << "    ";
+            }
+        }
+        std::cout << "\n";
+    }
+
+    std::cout << "\n";
+    displaySeparator(80, '-');
+
+    std::cout << "\n" << colorize("◆ MAW LEGEND", Color::BRIGHT_MAGENTA) << "\n\n";
+    std::cout << "  " << colorize("⌂", Color::BRIGHT_CYAN) << " Breach Start          ";
+    std::cout << colorize("⌯", Color::BRIGHT_MAGENTA) << " Descent Rift (Next)   ";
+    std::cout << colorize("☣", Color::BRIGHT_RED) << " Apex Predator\n";
+    std::cout << "  " << colorize("✧", Color::BRIGHT_YELLOW) << " Relic Cache           ";
+    std::cout << colorize("⛧", Color::RED) << " Hazard Nexus          ";
+    std::cout << colorize("⌘", Color::CYAN) << " Glyph Trial\n";
+    std::cout << "  " << colorize("✶", Color::BRIGHT_CYAN) << " Hidden Vein           ";
+    std::cout << colorize("◇", Color::GREEN) << " Calm Pocket           ";
+    std::cout << colorize("▒", Color::BRIGHT_BLACK) << " Fog (Unseen Room)\n";
+    std::cout << "  " << colorize("§", Color::YELLOW) << " Bazaar                ";
+    std::cout << colorize("⚒", Color::BRIGHT_RED) << " Forge                 ";
+    std::cout << colorize("☾", Color::BRIGHT_YELLOW) << " Void Altar\n";
+    std::cout << "  " << colorize("⚗", Color::BRIGHT_GREEN) << " Fleshcraft Lab        ";
+    std::cout << colorize("⚱", Color::DARK_GRAY) << " Bonefield             ";
+    std::cout << colorize("⛓", Color::RED) << " Echo Cells\n";
+    std::cout << "  " << colorize("•", Color::BRIGHT_WHITE) << " Hostile Room          ";
+    std::cout << colorize("○", Color::WHITE) << " Explored Room         ";
+    std::cout << colorize("·", Color::DARK_GRAY) << " Cleared Room\n";
+    std::cout << "\n";
+    displaySeparator(80, '=');
+    std::cout << "\n";
+}
+
 // ---
 // PRIVATE METHODS - Core Generation
 // ---
@@ -378,10 +566,16 @@ int MapGenerator::placeEntranceRoom() {
     int y = randomInt(0, mapHeight / 3);
     
     Room entrance = createRoom(x, y, RoomType::ENTRANCE);
-    entrance.name = "Dungeon Entrance";
-    entrance.description = "You stand at the entrance of a dark, foreboding dungeon. "
-                          "Cold air flows from within, carrying the scent of ancient stone and forgotten secrets. "
-                          "There's no turning back now.";
+    if (mawModeActive) {
+        entrance.name = "Maw Breach";
+        entrance.description = "A wound in reality seals behind you as void pressure settles over the chamber. "
+                              "This is the last stable foothold before the abyss starts rewriting itself.";
+    } else {
+        entrance.name = "Dungeon Entrance";
+        entrance.description = "You stand at the entrance of a dark, foreboding dungeon. "
+                              "Cold air flows from within, carrying the scent of ancient stone and forgotten secrets. "
+                              "There's no turning back now.";
+    }
     entrance.isExplored = true;  // Player starts here
     
     rooms.push_back(entrance);
@@ -402,10 +596,16 @@ int MapGenerator::placeExitRoom() {
     }
     
     Room exitRoom = createRoom(x, y, RoomType::EXIT);
-    exitRoom.name = "Chamber of Escape";
-    exitRoom.description = "A grand chamber stretches before you, ancient runes glowing on the walls. "
-                          "In the center stands a magnificent portal, swirling with ethereal light. "
-                          "This is the exit - your path to freedom and glory!";
+    if (mawModeActive) {
+        exitRoom.name = "Descent Rift";
+        exitRoom.description = "A jagged rift vibrates with downward pull. "
+                               "Crossing it will collapse this layout and drag you into a deeper stratum.";
+    } else {
+        exitRoom.name = "Chamber of Escape";
+        exitRoom.description = "A grand chamber stretches before you, ancient runes glowing on the walls. "
+                              "In the center stands a magnificent portal, swirling with ethereal light. "
+                              "This is the exit - your path to freedom and glory!";
+    }
     
     rooms.push_back(exitRoom);
     grid[y][x] = exitRoom.id;
@@ -786,7 +986,9 @@ Room MapGenerator::createRoom(int x, int y, RoomType type) {
     room.type = type;
     room.name = generateRoomName(type);
     room.description = generateRoomDescription(type);
-    room.shortDesc = "A " + toLower(roomTypeToString(type)) + " you've visited before.";
+    room.shortDesc = mawModeActive
+        ? "The Maw reshapes this chamber, but its scars are still familiar."
+        : "A " + toLower(roomTypeToString(type)) + " you've visited before.";
     room.isExplored = false;
     room.isCleared = (type == RoomType::SAFE || type == RoomType::ENTRANCE);
     
@@ -794,6 +996,29 @@ Room MapGenerator::createRoom(int x, int y, RoomType type) {
 }
 
 std::string MapGenerator::generateRoomName(RoomType type) {
+    if (mawModeActive) {
+        switch (type) {
+            case RoomType::ENTRANCE: return "Maw Breach";
+            case RoomType::EXIT: return "Extraction Rift";
+            case RoomType::TREASURE: return "Ruin Cache";
+            case RoomType::BOSS: return "Sovereign Crucible";
+            case RoomType::TRAP: return "Entropy Snare";
+            case RoomType::PUZZLE: return "Echo Sigil Vault";
+            case RoomType::SECRET: return "Hidden Null Vein";
+            case RoomType::SAFE: return "Stillness Pocket";
+            case RoomType::SHOP: return "Abyss Bazaar";
+            case RoomType::LIBRARY: return "Whisper Archive";
+            case RoomType::FORGE: return "Abyss Forge";
+            case RoomType::SHRINE: return "Void Altar";
+            case RoomType::LABORATORY: return "Fleshcraft Lab";
+            case RoomType::GRAVEYARD: return "Bonefield Hollow";
+            case RoomType::ARMORY: return "Relic Arsenal";
+            case RoomType::PRISON: return "Chains of Echoes";
+            case RoomType::SHADOWLORD: return "Sovereign Rift";
+            default: return "Maw Corridor";
+        }
+    }
+
     std::string prefix = randomElement(ROOM_PREFIXES);
     std::string roomType = randomElement(ROOM_TYPES_TEXT);
     
@@ -832,6 +1057,47 @@ std::string MapGenerator::generateRoomName(RoomType type) {
 }
 
 std::string MapGenerator::generateRoomDescription(RoomType type) {
+    if (mawModeActive) {
+        switch (type) {
+            case RoomType::ENTRANCE:
+                return "The portal seals behind you as voidstone pulses underfoot.";
+            case RoomType::EXIT:
+                return "A stable rift trembles here. You can extract back to the portal room.";
+            case RoomType::TREASURE:
+                return "Fractured reliquaries spill relics from failed expeditions.";
+            case RoomType::BOSS:
+                return "Pressure thickens into malice. A sovereign predator dominates this chamber.";
+            case RoomType::TRAP:
+                return "The floor is lined with predatory sigils waiting for a careless step.";
+            case RoomType::PUZZLE:
+                return "Interlocking glyphs hum in dissonant rhythm, demanding precise attunement.";
+            case RoomType::SECRET:
+                return "This hidden seam in reality shelters contraband of the abyss.";
+            case RoomType::SAFE:
+                return "For a brief moment, the Maw's hunger recedes and the air goes still.";
+            case RoomType::SHOP:
+                return "A hooded scavenger trades in void salvage and forbidden materials.";
+            case RoomType::LIBRARY:
+                return "Floating tablets whisper strategies from heroes who never returned.";
+            case RoomType::FORGE:
+                return "Black iron tools glow without flame, eager for new signatures of war.";
+            case RoomType::SHRINE:
+                return "A monolith offers power at a cost only the desperate can afford.";
+            case RoomType::LABORATORY:
+                return "Vats of volatile ichor churn beside instruments made from bone and glass.";
+            case RoomType::GRAVEYARD:
+                return "Shattered memorial stones drift in a gravity well of ash and regret.";
+            case RoomType::ARMORY:
+                return "Weapon racks hold relics warped by endless exposure to the abyss.";
+            case RoomType::PRISON:
+                return "Cells of black chain hold echoes of captives that are no longer human.";
+            case RoomType::SHADOWLORD:
+                return "A crown-shaped tear in space marks a throne abandoned by lesser tyrants.";
+            default:
+                return "The walls flex and breathe as the Maw rewrites this corridor.";
+        }
+    }
+
     std::string base = randomElement(ROOM_DESCRIPTORS);
     std::string extra;
     
@@ -886,6 +1152,74 @@ std::string MapGenerator::generateRoomDescription(RoomType type) {
 }
 
 RoomType MapGenerator::determineRoomType(int x, int y, bool isMainPath) {
+    (void)x;
+    (void)y;
+
+    if (mawModeActive) {
+        std::map<RoomType, int> roomCounts;
+        for (const Room& room : rooms) {
+            roomCounts[room.type]++;
+        }
+
+        const int tier = std::max(1, mawIntensityLevel);
+        const int intensityBand = std::min(5, tier / 5);
+
+        struct MawChoice {
+            RoomType type;
+            int weight;
+            int cap;
+            bool allowMainPath;
+        };
+
+        std::vector<MawChoice> choices = {
+            {RoomType::BOSS,       8 + intensityBand * 2, 2 + intensityBand, false},
+            {RoomType::TRAP,      14 + intensityBand * 2, 6 + intensityBand * 2, true},
+            {RoomType::PRISON,    11 + intensityBand,     5 + intensityBand, true},
+            {RoomType::GRAVEYARD, 10 + intensityBand,     5 + intensityBand, true},
+            {RoomType::ARMORY,     9 + intensityBand,     4 + intensityBand, true},
+            {RoomType::LABORATORY, 7 + intensityBand,     4 + intensityBand, true},
+            {RoomType::PUZZLE,     8 + intensityBand,     4 + intensityBand, true},
+            {RoomType::TREASURE,   9,                     4 + intensityBand, true},
+            {RoomType::SECRET,     6,                     3 + intensityBand / 2, false},
+            {RoomType::FORGE,      4,                     2 + intensityBand / 2, true},
+            {RoomType::SHRINE,     4,                     2 + intensityBand / 2, true},
+            {RoomType::SAFE,       std::max(1, 4 - intensityBand), 2, true},
+            {RoomType::LIBRARY,    std::max(1, 3 - intensityBand / 2), 2, true},
+        };
+
+        int totalWeight = 0;
+        for (const MawChoice& choice : choices) {
+            if (!choice.allowMainPath && isMainPath) {
+                continue;
+            }
+            if (roomCounts[choice.type] >= choice.cap) {
+                continue;
+            }
+            totalWeight += std::max(0, choice.weight);
+        }
+
+        if (totalWeight > 0) {
+            int roll = randomInt(1, totalWeight);
+            int cumulative = 0;
+
+            for (const MawChoice& choice : choices) {
+                if (!choice.allowMainPath && isMainPath) {
+                    continue;
+                }
+                if (roomCounts[choice.type] >= choice.cap) {
+                    continue;
+                }
+
+                cumulative += std::max(0, choice.weight);
+                if (roll <= cumulative) {
+                    return choice.type;
+                }
+            }
+        }
+
+        return RoomType::NORMAL;
+    }
+
     // Count existing rooms to balance distribution
     std::map<RoomType, int> roomCounts;
     for (const Room& room : rooms) {
@@ -959,7 +1293,7 @@ RoomType MapGenerator::determineRoomType(int x, int y, bool isMainPath) {
 // PRIVATE METHODS - Population
 // ---
 
-void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& templates) {
+void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& templates, int contextLevel, bool mawMode) {
     // Skip certain room types
     if (room.type == RoomType::SAFE || room.type == RoomType::ENTRANCE || 
         room.type == RoomType::EXIT || room.type == RoomType::TREASURE ||
@@ -1011,12 +1345,46 @@ void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& tem
         default:
             break;
     }
+
+    if (mawMode) {
+        switch (room.type) {
+            case RoomType::BOSS:
+                needsBoss = true;
+                enemyCount = std::max(enemyCount, randomInt(2, 3));
+                break;
+            case RoomType::NORMAL:
+                enemyCount = randomInt(2, 4);
+                break;
+            case RoomType::TRAP:
+                enemyCount = randomInt(2, 3);
+                break;
+            case RoomType::PRISON:
+            case RoomType::GRAVEYARD:
+                enemyCount = randomInt(3, 5);
+                break;
+            case RoomType::ARMORY:
+            case RoomType::LABORATORY:
+                enemyCount = randomInt(2, 4);
+                break;
+            case RoomType::SECRET:
+                enemyCount = randomInt(1, 2);
+                break;
+            default:
+                break;
+        }
+
+        const int densityBonus = std::max(0, contextLevel / 6);
+        enemyCount += densityBonus;
+    }
     
     for (int i = 0; i < enemyCount; ++i) {
         // Find appropriate enemy
         std::vector<const Enemy*> validEnemies;
         for (const Enemy& e : templates) {
-            if (e.mawOnly) {
+            if (mawMode && !e.mawOnly) {
+                continue;
+            }
+            if (!mawMode && e.mawOnly) {
                 continue;
             }
             if (needsBoss && e.isBoss) {
@@ -1029,12 +1397,49 @@ void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& tem
         if (!validEnemies.empty()) {
             int idx = randomInt(0, static_cast<int>(validEnemies.size()) - 1);
             Enemy enemy = *validEnemies[idx];  // Copy the template
+
+            if (mawMode) {
+                const float hpScale = 1.15f + (static_cast<float>(contextLevel) * 0.055f);
+                const float atkScale = 1.10f + (static_cast<float>(contextLevel) * 0.045f);
+                const float defScale = 1.05f + (static_cast<float>(contextLevel) * 0.035f);
+
+                enemy.stats.maxHP = std::max(50, static_cast<int>(enemy.stats.maxHP * hpScale));
+                enemy.stats.currentHP = enemy.stats.maxHP;
+                enemy.stats.attack = std::max(10, static_cast<int>(enemy.stats.attack * atkScale));
+                enemy.stats.defense = std::max(6, static_cast<int>(enemy.stats.defense * defScale));
+                enemy.stats.magicPower = std::max(8, static_cast<int>(enemy.stats.magicPower * atkScale));
+                enemy.stats.magicResist = std::max(5, static_cast<int>(enemy.stats.magicResist * defScale));
+                enemy.stats.speed = std::max(8, enemy.stats.speed + contextLevel / 4);
+                enemy.stats.critChance = std::min(MAX_CRIT_CHANCE, enemy.stats.critChance + contextLevel / 5);
+                enemy.stats.dodgeChance = std::min(MAX_DODGE_CHANCE, enemy.stats.dodgeChance + contextLevel / 6);
+                enemy.trueDamage = std::max(enemy.trueDamage, 1 + contextLevel / 7 + (needsBoss ? 4 : 1));
+                enemy.experienceReward += contextLevel * (needsBoss ? 35 : 16);
+                enemy.goldReward += contextLevel * (needsBoss ? 22 : 9);
+            }
+
             room.enemies.push_back(enemy);
+        } else if (mawMode) {
+            Enemy fallback;
+            fallback.name = needsBoss ? "Maw Sovereign" : "Abyss Wraith";
+            fallback.description = "A nightmare entity formed from concentrated void pressure.";
+            fallback.isBoss = needsBoss;
+            fallback.mawOnly = true;
+            fallback.stats.maxHP = (needsBoss ? 280 : 140) + contextLevel * (needsBoss ? 24 : 12);
+            fallback.stats.currentHP = fallback.stats.maxHP;
+            fallback.stats.attack = (needsBoss ? 44 : 24) + contextLevel * (needsBoss ? 3 : 2);
+            fallback.stats.defense = (needsBoss ? 18 : 10) + contextLevel;
+            fallback.stats.speed = (needsBoss ? 20 : 14) + contextLevel / 4;
+            fallback.stats.magicPower = (needsBoss ? 36 : 20) + contextLevel * 2;
+            fallback.stats.magicResist = (needsBoss ? 16 : 10) + contextLevel / 2;
+            fallback.trueDamage = (needsBoss ? 8 : 3) + contextLevel / 6;
+            fallback.experienceReward = (needsBoss ? 700 : 180) + contextLevel * (needsBoss ? 40 : 18);
+            fallback.goldReward = (needsBoss ? 350 : 90) + contextLevel * (needsBoss ? 24 : 10);
+            room.enemies.push_back(fallback);
         }
     }
 }
 
-void MapGenerator::populateWithItems(Room& room, const std::vector<Item>& templates, int contextLevel) {
+void MapGenerator::populateWithItems(Room& room, const std::vector<Item>& templates, int contextLevel, bool mawMode) {
     if (templates.empty()) return;
 
     const int floorLevel = std::max(1, contextLevel);
@@ -1115,7 +1520,10 @@ void MapGenerator::populateWithItems(Room& room, const std::vector<Item>& templa
         // Weight by rarity
         std::vector<const Item*> validItems;
         for (const Item& item : templates) {
-            if (item.mawOnly) {
+            if (mawMode && !item.mawOnly) {
+                continue;
+            }
+            if (!mawMode && item.mawOnly) {
                 continue;
             }
             int effectiveRarity = static_cast<int>(item.rarity) - rarityBoost;
