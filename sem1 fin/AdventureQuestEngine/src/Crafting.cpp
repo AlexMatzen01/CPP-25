@@ -122,17 +122,15 @@ void applyAccessoryStats(Item& item) {
 }
 
 void configureVendorTemplateItem(Item& item, int dungeonLevel) {
+    const int baseLevel = std::max(1, dungeonLevel);
+    const int rolledLevel = rollItemLevel(baseLevel, item.rarity, false);
+    const int minLevel = std::max(1, rolledLevel - 4);
+    const int maxLevel = std::min(MAX_ITEM_LEVEL, rolledLevel + 4);
+
     if (item.itemLevel <= 0) {
-        int rarityOffset = 0;
-        switch (item.rarity) {
-            case ItemRarity::COMMON: rarityOffset = 0; break;
-            case ItemRarity::UNCOMMON: rarityOffset = 2; break;
-            case ItemRarity::RARE: rarityOffset = 4; break;
-            case ItemRarity::EPIC: rarityOffset = 6; break;
-            case ItemRarity::LEGENDARY: rarityOffset = 8; break;
-            default: break;
-        }
-        item.itemLevel = std::max(1, dungeonLevel + rarityOffset);
+        item.itemLevel = rolledLevel;
+    } else {
+        item.itemLevel = std::max(minLevel, std::min(item.itemLevel, maxLevel));
     }
 
     rebuildItemStatsFromLevel(item);
@@ -330,7 +328,7 @@ Item CraftingSystem::buildCraftedItem(const Recipe& recipe, bool masterwork) con
     int rolledItemLevel = rollItemLevel(playerContextLevel, craftedItem.rarity, bossScaled);
     rolledItemLevel += std::min(6, craftingSkillLevel / 3);
     rolledItemLevel += std::min(5, getRecipeMasteryLevel(recipe.id) / 4);
-    craftedItem.itemLevel = std::max(recipe.requiredLevel, std::min(60, rolledItemLevel));
+    craftedItem.itemLevel = std::max(recipe.requiredLevel, std::min(MAX_ITEM_LEVEL, rolledItemLevel));
     craftedItem.mawOnly = isMawRecipe(recipe);
 
     if (recipe.id >= 1000 && recipe.id < 1100) {
@@ -358,7 +356,7 @@ Item CraftingSystem::buildCraftedItem(const Recipe& recipe, bool masterwork) con
 
     if (masterwork) {
         craftedItem.rarity = promoteRarity(craftedItem.rarity);
-        applyItemLevelScaling(craftedItem, std::min(60, craftedItem.itemLevel + 2), true);
+        applyItemLevelScaling(craftedItem, std::min(MAX_ITEM_LEVEL, craftedItem.itemLevel + 2), true);
         craftedItem.name = "Masterwork " + craftedItem.name;
         craftedItem.value = static_cast<int>(craftedItem.value * 1.5f);
         if (craftedItem.type == ItemType::CONSUMABLE) {

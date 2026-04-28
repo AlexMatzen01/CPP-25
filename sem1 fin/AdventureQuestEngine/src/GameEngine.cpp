@@ -46,24 +46,6 @@ std::string getSaveDisplayName(const std::string& path) {
     return name;
 }
 
-int getRoomLootLevelBonus(RoomType roomType) {
-    switch (roomType) {
-        case RoomType::TREASURE:
-        case RoomType::SECRET:
-            return 2;
-        case RoomType::BOSS:
-        case RoomType::SHADOWLORD:
-            return 3;
-        case RoomType::PUZZLE:
-        case RoomType::FORGE:
-        case RoomType::LABORATORY:
-        case RoomType::SHRINE:
-            return 1;
-        default:
-            return 0;
-    }
-}
-
 }
 
 // ---
@@ -976,7 +958,7 @@ void GameEngine::displayCurrentRoom() {
         m_gameState.player.visitedRooms.push_back(room.id);
 
         if (!room.items.empty()) {
-            const int contextLevel = std::max(1, m_gameState.player.level + getRoomLootLevelBonus(room.type));
+            const int contextLevel = std::max(1, m_gameState.player.level);
             const bool bossScaled = (room.type == RoomType::BOSS || room.type == RoomType::SHADOWLORD);
 
             for (Item& item : room.items) {
@@ -1242,8 +1224,7 @@ void GameEngine::searchRoom() {
     // Chance to find hidden items
     if (randomChance(30)) {
         std::cout << "\nYou found a hidden item!\n";
-        const int contextLevel = std::max(1, m_gameState.player.level +
-            ((room.type == RoomType::TREASURE || room.type == RoomType::SECRET) ? 2 : 0));
+        const int contextLevel = std::max(1, m_gameState.player.level);
 
         Item hiddenItem;
         std::vector<Item> nonMawTemplates;
@@ -2594,6 +2575,10 @@ void GameEngine::checkQuestProgress() {
 
 void GameEngine::checkLevelUp() {
     while (m_gameState.player.experience >= m_gameState.player.experienceToLevel) {
+        if (m_gameState.player.level >= MAX_LEVEL) {
+            break;
+        }
+
         m_gameState.player.experience -= m_gameState.player.experienceToLevel;
         m_gameState.player.level++;
         
@@ -2843,7 +2828,7 @@ bool GameEngine::triggerFinalBoss() {
         legendaryWeapon.value = 5000;
         legendaryWeapon.quantity = 1;
         const int legendaryTargetLevel = rollItemLevel(
-            std::max(1, m_gameState.player.level + 6),
+            std::max(1, m_gameState.player.level),
             ItemRarity::LEGENDARY,
             true
         );

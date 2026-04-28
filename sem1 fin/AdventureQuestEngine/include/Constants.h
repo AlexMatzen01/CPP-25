@@ -78,7 +78,8 @@ constexpr int SPEED_FLEE_BONUS = 2;  // Per point of speed difference
 // Experience and leveling
 constexpr int BASE_XP_TO_LEVEL = 100;
 constexpr float XP_MULTIPLIER_PER_LEVEL = 1.5f;
-constexpr int MAX_LEVEL = 20;
+constexpr int MAX_LEVEL = 60;
+constexpr int MAX_ITEM_LEVEL = 120;
 constexpr int STAT_POINTS_PER_LEVEL = 5;
 
 // Inventory limits

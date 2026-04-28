@@ -8,6 +8,7 @@
 #include "../include/Utils.h"
 #include "../include/Constants.h"
 #include <queue>
+#include <set>
 #include <algorithm>
 #include <iostream>
 #include <sstream>
@@ -86,7 +87,7 @@ bool MapGenerator::generateMap(GameState& gameState, bool mawMode) {
     const int dungeonLevel = std::max(1, gameState.currentDungeonLevel);
     for (Room& room : rooms) {
         populateWithEnemies(room, gameState.enemyTemplates, dungeonLevel, mawModeActive, gameState.player.level);
-        populateWithItems(room, gameState.itemTemplates, dungeonLevel, mawModeActive);
+        populateWithItems(room, gameState.itemTemplates, mawModeActive, gameState.player.level);
         assignEvents(room, gameState.eventTemplates);
         
         if (room.type == RoomType::PUZZLE) {
@@ -1468,10 +1469,10 @@ void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& tem
     }
 }
 
-void MapGenerator::populateWithItems(Room& room, const std::vector<Item>& templates, int contextLevel, bool mawMode) {
+void MapGenerator::populateWithItems(Room& room, const std::vector<Item>& templates, bool mawMode, int playerLevel) {
     if (templates.empty()) return;
 
-    const int floorLevel = std::max(1, contextLevel);
+    const int floorLevel = std::max(1, playerLevel);
     
     int itemCount = 0;
     
@@ -1545,8 +1546,11 @@ void MapGenerator::populateWithItems(Room& room, const std::vector<Item>& templa
     if (room.type == RoomType::SHRINE) rarityBoost = 1;
     if (room.type == RoomType::GRAVEYARD) rarityBoost = 1;
     
+    // Track used templates to prevent duplicates
+    std::set<const Item*> usedTemplates;
+    
     for (int i = 0; i < itemCount; ++i) {
-        // Weight by rarity
+        // Weight by rarity, excluding non-stackable duplicates
         std::vector<const Item*> validItems;
         for (const Item& item : templates) {
             if (mawMode && !item.mawOnly) {
@@ -1555,6 +1559,12 @@ void MapGenerator::populateWithItems(Room& room, const std::vector<Item>& templa
             if (!mawMode && item.mawOnly) {
                 continue;
             }
+            
+            // Skip non-stackable items that have already been used
+            if (!item.isStackable && usedTemplates.count(&item) > 0) {
+                continue;
+            }
+            
             int effectiveRarity = static_cast<int>(item.rarity) - rarityBoost;
             if (effectiveRarity < static_cast<int>(ItemRarity::COMMON)) {
                 effectiveRarity = static_cast<int>(ItemRarity::COMMON);
@@ -1569,11 +1579,17 @@ void MapGenerator::populateWithItems(Room& room, const std::vector<Item>& templa
         
         if (!validItems.empty()) {
             int idx = randomInt(0, static_cast<int>(validItems.size()) - 1);
-            Item item = *validItems[idx];  // Copy
+            const Item* selectedTemplate = validItems[idx];
+            Item item = *selectedTemplate;  // Copy
             item.quantity = 1;
             const int rolledItemLevel = rollItemLevel(floorLevel, item.rarity, false);
             applyItemLevelScaling(item, rolledItemLevel, true);
             room.items.push_back(item);
+            
+            // Track non-stackable templates to prevent duplicates
+            if (!item.isStackable) {
+                usedTemplates.insert(selectedTemplate);
+            }
         }
     }
 }

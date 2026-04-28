@@ -1282,8 +1282,7 @@ std::vector<Item> CombatSystem::generateLoot(const std::vector<Enemy>& enemies) 
 
 std::vector<Item> CombatSystem::rollLootTable(const Enemy& enemy) {
     std::vector<Item> drops;
-    const int enemyPowerLevel = estimateEnemyPowerLevel(enemy);
-    const int contextLevel = std::max(playerRef.level, enemyPowerLevel);
+    const int contextLevel = std::max(1, playerRef.level);
     
     // Use enemy's loot table if available
     for (size_t i = 0; i < enemy.lootTable.size() && i < enemy.lootChances.size(); ++i) {
@@ -1310,8 +1309,7 @@ std::vector<Item> CombatSystem::rollLootTable(const Enemy& enemy) {
                 else rolledRarity = ItemRarity::COMMON;
             }
 
-            const int dropContextLevel = contextLevel + (enemy.isBoss ? 3 : 0);
-            Item drop = generateRandomItem(rolledRarity, std::max(1, dropContextLevel));
+            Item drop = generateRandomItem(rolledRarity, contextLevel);
             if (enemy.lootTable[i] > 0) {
                 drop.id = enemy.lootTable[i];
             }

@@ -566,21 +566,46 @@ int estimateEnemyPowerLevel(const Enemy& enemy) {
 }
 
 int rollItemLevel(int contextLevel, ItemRarity rarity, bool isBoss) {
-    int base = std::max(1, contextLevel);
-    base += (rarityRank(rarity) - 2);
-    if (isBoss) {
-        base += 1;
+    const int normalizedContext = std::max(1, std::min(contextLevel, MAX_LEVEL));
+
+    // Convert the source level into the current iLvl curve (L60 -> iLvl120).
+    const int baseline = (normalizedContext * MAX_ITEM_LEVEL + (MAX_LEVEL / 2)) / MAX_LEVEL;
+
+    int rarityOffset = 0;
+    switch (rarity) {
+        case ItemRarity::COMMON: rarityOffset = -2; break;
+        case ItemRarity::UNCOMMON: rarityOffset = 0; break;
+        case ItemRarity::RARE: rarityOffset = 2; break;
+        case ItemRarity::EPIC: rarityOffset = 4; break;
+        case ItemRarity::LEGENDARY: rarityOffset = 6; break;
     }
 
-    const int variance = std::max(1, base / 10);
-    const int rolled = base + randomInt(-variance, variance);
-    return std::max(1, rolled);
+    int center = baseline + rarityOffset + (isBoss ? 4 : 0);
+    center = std::max(1, std::min(center, MAX_ITEM_LEVEL));
+
+    const int spread = 5 + std::min(3, normalizedContext / 20);
+    int minLevel = center - spread;
+    int maxLevel = center + spread;
+
+    // Keep loot in a safe power envelope around the player's progression.
+    const int powerFloor = std::max(1, baseline - 8);
+    const int powerCeil = std::min(MAX_ITEM_LEVEL, baseline + 10 + (isBoss ? 3 : 0));
+
+    minLevel = std::max(minLevel, powerFloor);
+    maxLevel = std::min(maxLevel, powerCeil);
+
+    if (minLevel > maxLevel) {
+        minLevel = std::max(1, std::min(powerFloor, MAX_ITEM_LEVEL));
+        maxLevel = std::max(minLevel, std::min(powerCeil, MAX_ITEM_LEVEL));
+    }
+
+    return randomInt(minLevel, maxLevel);
 }
 
 int getItemLevelTier(int itemLevel) {
-    if (itemLevel < 10) return 1;
-    if (itemLevel < 20) return 2;
-    if (itemLevel < 35) return 3;
+    if (itemLevel < 30) return 1;
+    if (itemLevel < 60) return 2;
+    if (itemLevel < 90) return 3;
     return 4;
 }
 
@@ -710,12 +735,12 @@ int estimateItemLevelFromLegacyStats(const Item& item) {
     }
 
     if (estimated < 1) estimated = 1;
-    if (estimated > 60) estimated = 60;
+    if (estimated > MAX_ITEM_LEVEL) estimated = MAX_ITEM_LEVEL;
     return estimated;
 }
 
 void rebuildItemStatsFromLevel(Item& item) {
-    item.itemLevel = std::max(1, std::min(item.itemLevel, 60));
+    item.itemLevel = std::max(1, std::min(item.itemLevel, MAX_ITEM_LEVEL));
     item.quantity = std::max(1, item.quantity);
 
     const int level = item.itemLevel;

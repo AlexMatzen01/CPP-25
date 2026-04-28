@@ -220,7 +220,7 @@ private:
      * @param room Reference to room to populate
      * @param templates Available item templates
      */
-    void populateWithItems(Room& room, const std::vector<Item>& templates, int contextLevel, bool mawMode);
+    void populateWithItems(Room& room, const std::vector<Item>& templates, bool mawMode, int playerLevel);
     
     /**
 // Assign events to room based on type
