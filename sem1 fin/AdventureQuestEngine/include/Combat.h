@@ -257,7 +257,7 @@ private:
      * @param enemies Enemies in combat
      * @return True if player won
      */
-    bool combatLoop(std::vector<Enemy>& enemies);
+    bool combatLoop(std::vector<Enemy>& enemies, std::vector<Enemy>& defeatedEnemies);
     
     /**
 // Display combat status

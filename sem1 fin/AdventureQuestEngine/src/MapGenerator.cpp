@@ -85,7 +85,7 @@ bool MapGenerator::generateMap(GameState& gameState, bool mawMode) {
     // Step 9: Populate rooms with content
     const int dungeonLevel = std::max(1, gameState.currentDungeonLevel);
     for (Room& room : rooms) {
-        populateWithEnemies(room, gameState.enemyTemplates, dungeonLevel, mawModeActive);
+        populateWithEnemies(room, gameState.enemyTemplates, dungeonLevel, mawModeActive, gameState.player.level);
         populateWithItems(room, gameState.itemTemplates, dungeonLevel, mawModeActive);
         assignEvents(room, gameState.eventTemplates);
         
@@ -1293,7 +1293,7 @@ RoomType MapGenerator::determineRoomType(int x, int y, bool isMainPath) {
 // PRIVATE METHODS - Population
 // ---
 
-void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& templates, int contextLevel, bool mawMode) {
+void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& templates, int contextLevel, bool mawMode, int playerLevel) {
     // Skip certain room types
     if (room.type == RoomType::SAFE || room.type == RoomType::ENTRANCE || 
         room.type == RoomType::EXIT || room.type == RoomType::TREASURE ||
@@ -1398,10 +1398,14 @@ void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& tem
             int idx = randomInt(0, static_cast<int>(validEnemies.size()) - 1);
             Enemy enemy = *validEnemies[idx];  // Copy the template
 
+            // Determine effective level for scaling: prefer player's level, but respect dungeon context for Maw
+            int effectiveLevel = std::max(1, playerLevel);
+            if (mawMode) effectiveLevel = std::max(effectiveLevel, contextLevel);
+
             if (mawMode) {
-                const float hpScale = 1.15f + (static_cast<float>(contextLevel) * 0.055f);
-                const float atkScale = 1.10f + (static_cast<float>(contextLevel) * 0.045f);
-                const float defScale = 1.05f + (static_cast<float>(contextLevel) * 0.035f);
+                const float hpScale = 1.15f + (static_cast<float>(effectiveLevel) * 0.055f);
+                const float atkScale = 1.10f + (static_cast<float>(effectiveLevel) * 0.045f);
+                const float defScale = 1.05f + (static_cast<float>(effectiveLevel) * 0.035f);
 
                 enemy.stats.maxHP = std::max(50, static_cast<int>(enemy.stats.maxHP * hpScale));
                 enemy.stats.currentHP = enemy.stats.maxHP;
@@ -1409,12 +1413,37 @@ void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& tem
                 enemy.stats.defense = std::max(6, static_cast<int>(enemy.stats.defense * defScale));
                 enemy.stats.magicPower = std::max(8, static_cast<int>(enemy.stats.magicPower * atkScale));
                 enemy.stats.magicResist = std::max(5, static_cast<int>(enemy.stats.magicResist * defScale));
-                enemy.stats.speed = std::max(8, enemy.stats.speed + contextLevel / 4);
-                enemy.stats.critChance = std::min(MAX_CRIT_CHANCE, enemy.stats.critChance + contextLevel / 5);
-                enemy.stats.dodgeChance = std::min(MAX_DODGE_CHANCE, enemy.stats.dodgeChance + contextLevel / 6);
-                enemy.trueDamage = std::max(enemy.trueDamage, 1 + contextLevel / 7 + (needsBoss ? 4 : 1));
-                enemy.experienceReward += contextLevel * (needsBoss ? 35 : 16);
-                enemy.goldReward += contextLevel * (needsBoss ? 22 : 9);
+                enemy.stats.speed = std::max(8, enemy.stats.speed + effectiveLevel / 4);
+                enemy.stats.critChance = std::min(MAX_CRIT_CHANCE, enemy.stats.critChance + effectiveLevel / 5);
+                enemy.stats.dodgeChance = std::min(MAX_DODGE_CHANCE, enemy.stats.dodgeChance + effectiveLevel / 6);
+                enemy.trueDamage = std::max(enemy.trueDamage, 1 + effectiveLevel / 7 + (needsBoss ? 4 : 1));
+                enemy.experienceReward += effectiveLevel * (needsBoss ? 35 : 16);
+                enemy.goldReward += effectiveLevel * (needsBoss ? 22 : 9);
+            } else {
+                // Non-Maw: scale enemies primarily with player's level to keep combat balanced
+                int levelDelta = std::max(0, playerLevel - 1);
+                const float hpScale = 1.0f + levelDelta * 0.06f;   // ~6% HP per level
+                const float atkScale = 1.0f + levelDelta * 0.045f; // ~4.5% ATK per level
+                const float defScale = 1.0f + levelDelta * 0.035f; // ~3.5% DEF per level
+
+                enemy.stats.maxHP = std::max(20, static_cast<int>(enemy.stats.maxHP * hpScale));
+                enemy.stats.currentHP = enemy.stats.maxHP;
+                enemy.stats.attack = std::max(6, static_cast<int>(enemy.stats.attack * atkScale));
+                enemy.stats.defense = std::max(2, static_cast<int>(enemy.stats.defense * defScale));
+                enemy.stats.magicPower = std::max(4, static_cast<int>(enemy.stats.magicPower * atkScale));
+                enemy.stats.magicResist = std::max(2, static_cast<int>(enemy.stats.magicResist * defScale));
+                enemy.stats.speed = std::max(4, enemy.stats.speed + playerLevel / 4);
+                enemy.stats.critChance = std::min(MAX_CRIT_CHANCE, enemy.stats.critChance + playerLevel / 5);
+                enemy.stats.dodgeChance = std::min(MAX_DODGE_CHANCE, enemy.stats.dodgeChance + playerLevel / 6);
+                enemy.experienceReward += playerLevel * (needsBoss ? 30 : 10);
+                enemy.goldReward += playerLevel * (needsBoss ? 18 : 6);
+
+                for (EnemyAbility& ability : enemy.abilities) {
+                    ability.damage += playerLevel * (needsBoss ? 6 : 2);
+                    ability.healAmount += playerLevel * (needsBoss ? 3 : 1);
+                    ability.currentCooldown = 0;
+                    ability.triggerChance = std::min(0.8f, ability.triggerChance + (needsBoss ? 0.12f : 0.06f));
+                }
             }
 
             room.enemies.push_back(enemy);

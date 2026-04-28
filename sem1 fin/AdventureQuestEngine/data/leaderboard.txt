@@ -15,5 +15,6 @@ Alex|1135|3|Warrior|Neutral|
 Alex|1135|3|Warrior|Neutral|
 TestHero|1120|6|Warrior|Neutral|
 Gage|1090|42|Rogue|Speedrun|
+Test|1075|20|Mage|Neutral|
 test|1065|95|Necromancer|Victory|
 Alex|1060|83|Barbarian|Victory|

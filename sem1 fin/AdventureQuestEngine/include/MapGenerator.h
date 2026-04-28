@@ -213,7 +213,7 @@ private:
      * @param room Reference to room to populate
      * @param templates Available enemy templates
      */
-    void populateWithEnemies(Room& room, const std::vector<Enemy>& templates, int contextLevel, bool mawMode);
+    void populateWithEnemies(Room& room, const std::vector<Enemy>& templates, int contextLevel, bool mawMode, int playerLevel);
     
     /**
 // Populate room with items based on type

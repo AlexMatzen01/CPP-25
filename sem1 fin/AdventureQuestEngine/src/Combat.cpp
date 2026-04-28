@@ -72,6 +72,7 @@ CombatResult CombatSystem::startCombat(std::vector<Enemy>& enemies) {
     combatLog.clear();
     combatEnded = false;
     playerVictory = false;
+    std::vector<Enemy> defeatedEnemies;
     
     // Filter out dead enemies
     enemies.erase(
@@ -107,22 +108,22 @@ CombatResult CombatSystem::startCombat(std::vector<Enemy>& enemies) {
     pause("\nPress Enter to begin combat...");
     
     // Main combat loop
-    result.playerWon = combatLoop(enemies);
+    result.playerWon = combatLoop(enemies, defeatedEnemies);
     result.playerDied = !playerRef.isAlive;
     result.playerFled = combatEnded && !result.playerWon && playerRef.isAlive;
     
     // Calculate rewards if won
     if (result.playerWon) {
-        result.experienceGained = calculateExperience(enemies);
-        result.goldGained = calculateGold(enemies);
-        result.loot = generateLoot(enemies);
+        result.experienceGained = calculateExperience(defeatedEnemies);
+        result.goldGained = calculateGold(defeatedEnemies);
+        result.loot = generateLoot(defeatedEnemies);
         
         // Apply rewards
         playerRef.experience += result.experienceGained;
         playerRef.gold += result.goldGained;
         
         // Count kills
-        for (const Enemy& enemy : enemies) {
+        for (const Enemy& enemy : defeatedEnemies) {
             playerRef.totalKills++;
             if (enemy.isBoss) {
                 playerRef.bossesDefeated++;
@@ -231,7 +232,7 @@ CombatStats CombatSystem::getEffectiveEnemyStats(const Enemy& enemy) const {
 // PRIVATE METHODS - Combat Flow
 // ---
 
-bool CombatSystem::combatLoop(std::vector<Enemy>& enemies) {
+bool CombatSystem::combatLoop(std::vector<Enemy>& enemies, std::vector<Enemy>& defeatedEnemies) {
     while (!combatEnded) {
         // Process status effects
         processPlayerStatuses();
@@ -456,6 +457,13 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies) {
             }
         }
         
+        // Capture defeated enemies before removing them from active combat.
+        for (const Enemy& enemy : enemies) {
+            if (enemy.stats.currentHP <= 0) {
+                defeatedEnemies.push_back(enemy);
+            }
+        }
+
         // Remove dead enemies
         enemies.erase(
             std::remove_if(enemies.begin(), enemies.end(),

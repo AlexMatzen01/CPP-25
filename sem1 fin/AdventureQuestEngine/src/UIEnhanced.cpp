@@ -1,5 +1,5 @@
 //! Copyright (c) Alexander Matzen. All rights reserved.
-//! Author: Alexander Matzen
+//! Author: Alexander   Matzen
 //! Licensed under the MIT license
 
 // Enhanced UI system implementation (partially implemented - many features scrapped)
