@@ -73,6 +73,7 @@ bool MapGenerator::generateMap(GameState& gameState, bool mawMode) {
     
     // Step 6: Place the unique Shadow Lord chamber as far from the entrance as possible
     if (!mawModeActive && !placeShadowLordRoom()) return false;
+    if (mawModeActive) ensureMawExitRoom();
     
     // Step 7: Connect all adjacent rooms
     connectRooms();
@@ -1295,6 +1296,8 @@ RoomType MapGenerator::determineRoomType(int x, int y, bool isMainPath) {
 // ---
 
 void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& templates, int contextLevel, bool mawMode, int playerLevel) {
+    (void)contextLevel;
+
     // Skip certain room types
     if (room.type == RoomType::SAFE || room.type == RoomType::ENTRANCE || 
         room.type == RoomType::EXIT || room.type == RoomType::TREASURE ||
@@ -1308,6 +1311,12 @@ void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& tem
     
     int enemyCount = 0;
     bool needsBoss = false;
+    enum class MawEncounterSize {
+        WEAK_PACK,
+        MEDIUM_PACK,
+        STRONG_SINGLE
+    };
+    MawEncounterSize mawEncounterSize = MawEncounterSize::MEDIUM_PACK;
     
     switch (room.type) {
         case RoomType::BOSS:
@@ -1350,37 +1359,65 @@ void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& tem
     if (mawMode) {
         switch (room.type) {
             case RoomType::BOSS:
-                needsBoss = true;
-                enemyCount = std::max(enemyCount, randomInt(2, 3));
-                break;
-            case RoomType::NORMAL:
-                enemyCount = randomInt(2, 4);
-                break;
-            case RoomType::TRAP:
-                enemyCount = randomInt(2, 3);
-                break;
-            case RoomType::PRISON:
-            case RoomType::GRAVEYARD:
-                enemyCount = randomInt(3, 5);
-                break;
-            case RoomType::ARMORY:
-            case RoomType::LABORATORY:
-                enemyCount = randomInt(2, 4);
+                mawEncounterSize = MawEncounterSize::STRONG_SINGLE;
                 break;
             case RoomType::SECRET:
-                enemyCount = randomInt(1, 2);
+            case RoomType::ARMORY:
+            case RoomType::LABORATORY:
+            case RoomType::PRISON:
+            case RoomType::GRAVEYARD:
+                mawEncounterSize = MawEncounterSize::MEDIUM_PACK;
                 break;
             default:
+                mawEncounterSize = MawEncounterSize::WEAK_PACK;
                 break;
         }
 
-        const int densityBonus = std::max(0, contextLevel / 6);
-        enemyCount += densityBonus;
+        switch (mawEncounterSize) {
+            case MawEncounterSize::STRONG_SINGLE:
+                enemyCount = 1;
+                needsBoss = true;
+                break;
+            case MawEncounterSize::MEDIUM_PACK:
+                enemyCount = 2;
+                break;
+            case MawEncounterSize::WEAK_PACK:
+                enemyCount = 3;
+                break;
+        }
     }
+
+    auto getEnemyPowerScore = [](const Enemy& enemy) {
+        const int baseScore = (enemy.stats.maxHP / 10)
+            + (enemy.stats.attack * 2)
+            + enemy.stats.defense
+            + (enemy.stats.magicPower / 2)
+            + (enemy.trueDamage * 8)
+            + (enemy.isBoss ? 20 : 0);
+        return baseScore;
+    };
+
+    auto getMawEnemyTier = [&](const Enemy& enemy) {
+        const int playerPower = std::max(1, playerLevel);
+        const int weakThreshold = playerPower * 8;
+        const int mediumThreshold = playerPower * 14;
+        const int score = getEnemyPowerScore(enemy);
+
+        if (score <= weakThreshold) {
+            return 0;
+        }
+        if (score <= mediumThreshold) {
+            return 1;
+        }
+        return 2;
+    };
     
     for (int i = 0; i < enemyCount; ++i) {
         // Find appropriate enemy
         std::vector<const Enemy*> validEnemies;
+        std::vector<const Enemy*> weakEnemies;
+        std::vector<const Enemy*> mediumEnemies;
+        std::vector<const Enemy*> strongEnemies;
         for (const Enemy& e : templates) {
             if (mawMode && !e.mawOnly) {
                 continue;
@@ -1388,10 +1425,40 @@ void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& tem
             if (!mawMode && e.mawOnly) {
                 continue;
             }
-            if (needsBoss && e.isBoss) {
+
+            if (mawMode) {
+                if (e.isBoss) {
+                    strongEnemies.push_back(&e);
+                } else {
+                    const int tier = getMawEnemyTier(e);
+                    if (tier == 0) {
+                        weakEnemies.push_back(&e);
+                    } else if (tier == 1) {
+                        mediumEnemies.push_back(&e);
+                    } else {
+                        strongEnemies.push_back(&e);
+                    }
+                }
+            } else if (needsBoss && e.isBoss) {
                 validEnemies.push_back(&e);
             } else if (!needsBoss && !e.isBoss) {
                 validEnemies.push_back(&e);
+            }
+        }
+
+        if (mawMode) {
+            if (mawEncounterSize == MawEncounterSize::WEAK_PACK) {
+                validEnemies = weakEnemies;
+                if (validEnemies.empty()) validEnemies = mediumEnemies;
+                if (validEnemies.empty()) validEnemies = strongEnemies;
+            } else if (mawEncounterSize == MawEncounterSize::MEDIUM_PACK) {
+                validEnemies = mediumEnemies;
+                if (validEnemies.empty()) validEnemies = strongEnemies;
+                if (validEnemies.empty()) validEnemies = weakEnemies;
+            } else {
+                validEnemies = strongEnemies;
+                if (validEnemies.empty()) validEnemies = mediumEnemies;
+                if (validEnemies.empty()) validEnemies = weakEnemies;
             }
         }
         
@@ -1399,9 +1466,8 @@ void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& tem
             int idx = randomInt(0, static_cast<int>(validEnemies.size()) - 1);
             Enemy enemy = *validEnemies[idx];  // Copy the template
 
-            // Determine effective level for scaling: prefer player's level, but respect dungeon context for Maw
+            // Determine effective level for scaling: Maw now follows the player's level directly.
             int effectiveLevel = std::max(1, playerLevel);
-            if (mawMode) effectiveLevel = std::max(effectiveLevel, contextLevel);
 
             if (mawMode) {
                 const float hpScale = 1.15f + (static_cast<float>(effectiveLevel) * 0.055f);
@@ -1409,6 +1475,7 @@ void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& tem
                 const float defScale = 1.05f + (static_cast<float>(effectiveLevel) * 0.035f);
 
                 enemy.stats.maxHP = std::max(50, static_cast<int>(enemy.stats.maxHP * hpScale));
+                enemy.stats.maxHP = std::max(1, static_cast<int>(enemy.stats.maxHP * 0.65f));
                 enemy.stats.currentHP = enemy.stats.maxHP;
                 enemy.stats.attack = std::max(10, static_cast<int>(enemy.stats.attack * atkScale));
                 enemy.stats.defense = std::max(6, static_cast<int>(enemy.stats.defense * defScale));
@@ -1454,16 +1521,18 @@ void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& tem
             fallback.description = "A nightmare entity formed from concentrated void pressure.";
             fallback.isBoss = needsBoss;
             fallback.mawOnly = true;
-            fallback.stats.maxHP = (needsBoss ? 280 : 140) + contextLevel * (needsBoss ? 24 : 12);
+            const int mawLevel = std::max(1, playerLevel);
+            fallback.stats.maxHP = (needsBoss ? 280 : 140) + mawLevel * (needsBoss ? 24 : 12);
+            fallback.stats.maxHP = std::max(1, static_cast<int>(fallback.stats.maxHP * 0.65f));
             fallback.stats.currentHP = fallback.stats.maxHP;
-            fallback.stats.attack = (needsBoss ? 44 : 24) + contextLevel * (needsBoss ? 3 : 2);
-            fallback.stats.defense = (needsBoss ? 18 : 10) + contextLevel;
-            fallback.stats.speed = (needsBoss ? 20 : 14) + contextLevel / 4;
-            fallback.stats.magicPower = (needsBoss ? 36 : 20) + contextLevel * 2;
-            fallback.stats.magicResist = (needsBoss ? 16 : 10) + contextLevel / 2;
-            fallback.trueDamage = (needsBoss ? 8 : 3) + contextLevel / 6;
-            fallback.experienceReward = (needsBoss ? 700 : 180) + contextLevel * (needsBoss ? 40 : 18);
-            fallback.goldReward = (needsBoss ? 350 : 90) + contextLevel * (needsBoss ? 24 : 10);
+            fallback.stats.attack = (needsBoss ? 44 : 24) + mawLevel * (needsBoss ? 3 : 2);
+            fallback.stats.defense = (needsBoss ? 18 : 10) + mawLevel;
+            fallback.stats.speed = (needsBoss ? 20 : 14) + mawLevel / 4;
+            fallback.stats.magicPower = (needsBoss ? 36 : 20) + mawLevel * 2;
+            fallback.stats.magicResist = (needsBoss ? 16 : 10) + mawLevel / 2;
+            fallback.trueDamage = (needsBoss ? 8 : 3) + mawLevel / 6;
+            fallback.experienceReward = (needsBoss ? 700 : 180) + mawLevel * (needsBoss ? 40 : 18);
+            fallback.goldReward = (needsBoss ? 350 : 90) + mawLevel * (needsBoss ? 24 : 10);
             room.enemies.push_back(fallback);
         }
     }
@@ -1655,6 +1724,61 @@ void MapGenerator::setupTrap(Room& room) {
     };
     
     room.description += " " + randomElement(trapDescs);
+}
+
+void MapGenerator::ensureMawExitRoom() {
+    if (!mawModeActive) {
+        return;
+    }
+
+    Room* exitRoom = nullptr;
+    for (Room& room : rooms) {
+        if (room.type == RoomType::EXIT) {
+            exitRoom = &room;
+            break;
+        }
+    }
+
+    if (!exitRoom) {
+        int entranceX = -1;
+        int entranceY = -1;
+        for (const Room& room : rooms) {
+            if (room.id == entranceId) {
+                entranceX = room.x;
+                entranceY = room.y;
+                break;
+            }
+        }
+
+        int bestIndex = -1;
+        int bestDistance = -1;
+
+        for (size_t i = 0; i < rooms.size(); ++i) {
+            Room& room = rooms[i];
+            if (room.id == entranceId || room.type == RoomType::SHOP || room.type == RoomType::FORGE) {
+                continue;
+            }
+
+            const int distance = std::abs(room.x - entranceX) + std::abs(room.y - entranceY);
+            if (distance > bestDistance) {
+                bestDistance = distance;
+                bestIndex = static_cast<int>(i);
+            }
+        }
+
+        if (bestIndex >= 0) {
+            exitRoom = &rooms[bestIndex];
+            exitId = exitRoom->id;
+            exitRoom->type = RoomType::EXIT;
+        }
+    }
+
+    if (exitRoom) {
+        exitRoom->name = "Descent Rift";
+        exitRoom->description = "A jagged rift vibrates with downward pull. Crossing it will collapse this layout and drag you into a deeper stratum.";
+        exitRoom->shortDesc = "A Maw rift leading to the next stratum.";
+        exitRoom->isCleared = true;
+    }
 }
 
 // ---

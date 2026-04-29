@@ -6,6 +6,7 @@
 
 #include "../include/FileIO.h"
 #include "../include/Types.h"
+#include "../include/Magic.h"
 #include "../include/Utils.h"
 #include "../include/json.hpp"
 
@@ -13,6 +14,70 @@
 using json = nlohmann::json;
 
 namespace AQE {
+
+namespace {
+
+bool createSpellFromId(int spellId, Spell& spell) {
+    switch (spellId) {
+        case 101: spell = SpellLibrary::createFirebolt(); return true;
+        case 102: spell = SpellLibrary::createFrostbolt(); return true;
+        case 103: spell = SpellLibrary::createChainLightning(); return true;
+        case 104: spell = SpellLibrary::createInferno(); return true;
+        case 105: spell = SpellLibrary::createBlizzard(); return true;
+        case 201: spell = SpellLibrary::createMagicShield(); return true;
+        case 202: spell = SpellLibrary::createReflectionAura(); return true;
+        case 301: spell = SpellLibrary::createStrengthBoost(); return true;
+        case 302: spell = SpellLibrary::createEnfeeblement(); return true;
+        case 303: spell = SpellLibrary::createHaste(); return true;
+        case 304: spell = SpellLibrary::createSlowness(); return true;
+        case 401: spell = SpellLibrary::createDrainLife(); return true;
+        case 402: spell = SpellLibrary::createCurseOfWeakness(); return true;
+        case 403: spell = SpellLibrary::createUndeadSummon(); return true;
+        case 404: spell = SpellLibrary::createDeathWish(); return true;
+        case 501: spell = SpellLibrary::createHeal(); return true;
+        case 502: spell = SpellLibrary::createGreaterHeal(); return true;
+        case 503: spell = SpellLibrary::createDispelMagic(); return true;
+        case 601: spell = SpellLibrary::createArcaneMissiles(); return true;
+        case 602: spell = SpellLibrary::createMeteorShower(); return true;
+        case 701: spell = SpellLibrary::createAnalyzeWeakness(); return true;
+        case 801: spell = SpellLibrary::createFascinate(); return true;
+        default: return false;
+    }
+}
+
+void populateDefaultSpellsForClass(Player& player) {
+    player.learnedSpells.clear();
+
+    switch (player.charClass) {
+        case CharacterClass::MAGE:
+            player.learnedSpells.push_back(SpellLibrary::createFirebolt());
+            player.learnedSpells.push_back(SpellLibrary::createMagicShield());
+            player.learnedSpells.push_back(SpellLibrary::createArcaneMissiles());
+            break;
+        case CharacterClass::PALADIN:
+            player.learnedSpells.push_back(SpellLibrary::createHeal());
+            player.learnedSpells.push_back(SpellLibrary::createMagicShield());
+            player.learnedSpells.push_back(SpellLibrary::createStrengthBoost());
+            break;
+        case CharacterClass::NECROMANCER:
+            player.learnedSpells.push_back(SpellLibrary::createDrainLife());
+            player.learnedSpells.push_back(SpellLibrary::createCurseOfWeakness());
+            player.learnedSpells.push_back(SpellLibrary::createEnfeeblement());
+            break;
+        case CharacterClass::RANGER:
+            player.learnedSpells.push_back(SpellLibrary::createHeal());
+            player.learnedSpells.push_back(SpellLibrary::createAnalyzeWeakness());
+            player.learnedSpells.push_back(SpellLibrary::createHaste());
+            break;
+        default:
+            break;
+    }
+
+    player.spellsLearned = static_cast<int>(player.learnedSpells.size());
+}
+
+} // namespace
+
     NLOHMANN_JSON_SERIALIZE_ENUM(ItemType, {
         {ItemType::CONSUMABLE, "CONSUMABLE"},
         {ItemType::WEAPON, "WEAPON"},
@@ -448,6 +513,13 @@ bool FileIO::saveGame(const GameState& gameState, const std::string& filename) {
     for (int roomId : p.visitedRooms) {
         file << "room=" << roomId << "\n";
     }
+
+    // Save learned spells
+    file << "\n[SPELLS]\n";
+    file << "count=" << p.learnedSpells.size() << "\n";
+    for (const Spell& spell : p.learnedSpells) {
+        file << "spell=" << spell.id << "," << spell.currentCooldown << "\n";
+    }
     
     // Save game state
     file << "\n[GAMESTATE]\n";
@@ -455,6 +527,8 @@ bool FileIO::saveGame(const GameState& gameState, const std::string& filename) {
     file << "mapHeight=" << gameState.mapHeight << "\n";
     file << "dungeonLevel=" << gameState.currentDungeonLevel << "\n";
     file << "seed=" << gameState.randomSeed << "\n";
+    file << "isInMawRealm=" << (gameState.isInMawRealm ? 1 : 0) << "\n";
+    file << "currentMawStratum=" << gameState.currentMawStratum << "\n";
     file << "difficulty=" << gameState.difficulty << "\n";
     
     // Save dungeon rooms (simplified - just cleared status)
@@ -493,6 +567,11 @@ bool FileIO::loadGame(GameState& gameState, const std::string& filename) {
     };
 
     std::vector<LoadedRoomState> loadedRoomStates;
+    struct LoadedSpellState {
+        int spellId;
+        int currentCooldown;
+    };
+    std::vector<LoadedSpellState> loadedSpells;
     std::string line;
     std::string section;
     
@@ -572,11 +651,21 @@ bool FileIO::loadGame(GameState& gameState, const std::string& filename) {
                 p.visitedRooms.push_back(std::stoi(value));
             }
         }
+        else if (section == "[SPELLS]") {
+            if (key == "spell") {
+                std::vector<std::string> parts = split(value, ',');
+                if (parts.size() >= 2) {
+                    loadedSpells.push_back({std::stoi(parts[0]), std::stoi(parts[1])});
+                }
+            }
+        }
         else if (section == "[GAMESTATE]") {
             if (key == "mapWidth") gameState.mapWidth = std::stoi(value);
             else if (key == "mapHeight") gameState.mapHeight = std::stoi(value);
             else if (key == "dungeonLevel") gameState.currentDungeonLevel = std::stoi(value);
             else if (key == "seed") gameState.randomSeed = std::stoul(value);
+            else if (key == "isInMawRealm") gameState.isInMawRealm = (std::stoi(value) != 0);
+            else if (key == "currentMawStratum") gameState.currentMawStratum = std::max(0, std::stoi(value));
             else if (key == "difficulty") gameState.difficulty = std::stoi(value);
         }
         else if (section == "[DUNGEON]") {
@@ -631,6 +720,21 @@ bool FileIO::loadGame(GameState& gameState, const std::string& filename) {
             }
         }
     }
+
+    p.learnedSpells.clear();
+    if (!loadedSpells.empty()) {
+        for (const LoadedSpellState& savedSpell : loadedSpells) {
+            Spell spell;
+            if (createSpellFromId(savedSpell.spellId, spell)) {
+                spell.currentCooldown = std::max(0, savedSpell.currentCooldown);
+                p.learnedSpells.push_back(spell);
+            }
+        }
+    } else {
+        populateDefaultSpellsForClass(p);
+    }
+
+    p.spellsLearned = static_cast<int>(p.learnedSpells.size());
 
     gameState.roomMap.clear();
     for (Room& room : gameState.dungeon) {

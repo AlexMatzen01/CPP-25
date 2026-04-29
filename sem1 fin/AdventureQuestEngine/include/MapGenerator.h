@@ -135,6 +135,11 @@ private:
     bool placeShadowLordRoom();
 
     /**
+// Ensure the Maw has a valid exit room for stratum transitions
+     */
+    void ensureMawExitRoom();
+
+    /**
 // Place a basic shop next to the entrance
      * @return True if shop successfully placed
      */

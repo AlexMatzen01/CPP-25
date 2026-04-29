@@ -1527,7 +1527,7 @@ void GameEngine::openMap() {
     std::cout << "\n";
 
     if (m_isInMawRealm) {
-        m_mawMapGenerator.printMawMap(m_gameState.player.currentRoomId, m_currentMawStratum, true);
+        m_mawMapGenerator.printMawMap(m_gameState.player.currentRoomId, m_currentMawStratum, false);
     } else {
         m_mapGenerator.printMap(m_gameState.player.currentRoomId);
     }
@@ -2086,6 +2086,8 @@ void GameEngine::displayLeaderboard() {
 // ---
 
 bool GameEngine::saveGame(const std::string& filename) {
+    m_gameState.isInMawRealm = m_isInMawRealm;
+    m_gameState.currentMawStratum = m_currentMawStratum;
     return m_fileIO.saveGame(m_gameState, filename);
 }
 
@@ -2098,6 +2100,10 @@ bool GameEngine::loadGame(const std::string& filename) {
         return false;
     }
 
+    m_isInMawRealm = m_gameState.isInMawRealm;
+    m_currentMawStratum = std::max(0, m_gameState.currentMawStratum);
+    m_leaveMawRequested = false;
+
     if (!m_gameState.dungeon.empty()) {
         const int width = (m_gameState.mapWidth > 0) ? m_gameState.mapWidth : DEFAULT_MAP_WIDTH;
         const int height = (m_gameState.mapHeight > 0) ? m_gameState.mapHeight : DEFAULT_MAP_HEIGHT;
@@ -2105,12 +2111,19 @@ bool GameEngine::loadGame(const std::string& filename) {
         m_mapGenerator = MapGenerator(width, height);
         m_mapGenerator.syncFromDungeon(m_gameState.dungeon);
 
+        m_mawMapGenerator = MapGenerator(width, height);
+        m_mawMapGenerator.syncFromDungeon(m_gameState.dungeon);
+
         if (m_gameState.roomMap.size() != m_gameState.dungeon.size()) {
             m_gameState.roomMap.clear();
             for (Room& room : m_gameState.dungeon) {
                 m_gameState.roomMap[room.id] = &room;
             }
         }
+    }
+
+    if (!m_isInMawRealm) {
+        m_currentMawStratum = 0;
     }
 
     bool hasCurrentRoom = false;
@@ -2304,6 +2317,11 @@ void GameEngine::initializeGame() {
     m_gameState.player.mawUnlocked = false;
     m_gameState.player.mawDepthReached = 0;
     m_gameState.player.totalTurns = 0;
+    m_gameState.isInMawRealm = false;
+    m_gameState.currentMawStratum = 0;
+    m_isInMawRealm = false;
+    m_leaveMawRequested = false;
+    m_currentMawStratum = 0;
 }
 
 void GameEngine::checkRoomEvents() {
@@ -2955,6 +2973,7 @@ Enemy GameEngine::createMawEnemy(int depth, bool bossVariant) const {
     const float defenseScale = (bossVariant ? 1.55f : 1.18f) + (static_cast<float>(depth) * (bossVariant ? 0.08f : 0.05f));
 
     mawEnemy.stats.maxHP = std::max(40, static_cast<int>(mawEnemy.stats.maxHP * hpScale));
+    mawEnemy.stats.maxHP = std::max(1, static_cast<int>(mawEnemy.stats.maxHP * 0.65f));
     mawEnemy.stats.currentHP = mawEnemy.stats.maxHP;
     mawEnemy.stats.attack = std::max(8, static_cast<int>(mawEnemy.stats.attack * attackScale));
     mawEnemy.stats.defense = std::max(4, static_cast<int>(mawEnemy.stats.defense * defenseScale));

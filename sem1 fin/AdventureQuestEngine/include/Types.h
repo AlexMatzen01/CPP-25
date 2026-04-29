@@ -626,6 +626,8 @@ struct GameState {
     int mapHeight;
     int currentDungeonLevel;
     unsigned int randomSeed;
+    bool isInMawRealm;
+    int currentMawStratum;
     
     // Game settings
     bool debugMode;
@@ -636,8 +638,8 @@ struct GameState {
     std::vector<std::pair<std::string, int>> leaderboard;  // Name, Score
     
     GameState() : mapWidth(8), mapHeight(8), currentDungeonLevel(1),
-                  randomSeed(0), debugMode(false), showAsciiArt(true),
-                  difficulty(2) {}
+                  randomSeed(0), isInMawRealm(false), currentMawStratum(0),
+                  debugMode(false), showAsciiArt(true), difficulty(2) {}
 };
 
 // ---
