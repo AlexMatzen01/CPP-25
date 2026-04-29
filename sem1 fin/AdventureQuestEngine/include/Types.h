@@ -594,6 +594,12 @@ struct Player {
     bool mawUnlocked;                // Portal Room / The Maw access unlocked
     int mawDepthReached;             // Deepest cleared Maw floor
     
+    // Talent System
+    std::vector<int> unlockedTalentIds;     // IDs of unlocked talents
+    int selectedSpecialization;             // Currently selected specialization (0-2)
+    int talentPoints;                       // Total talent points available
+    int spentTalentPoints;                  // Talent points already spent
+    
     Player() : charClass(CharacterClass::WARRIOR), level(1), experience(0),
                experienceToLevel(100), gold(50), maxInventorySize(30),
                equippedWeaponId(-1), equippedArmorId(-1), equippedAccessoryId(-1),
@@ -602,7 +608,7 @@ struct Player {
                combatTurns(0), totalTurns(0), secretsFound(0), puzzlesSolved(0),
                bossesDefeated(0), deathCount(0), hasWon(false), isAlive(true),
                hasSecretEnding(false), shadowLordDefeated(false), mawUnlocked(false),
-               mawDepthReached(0) {}
+               mawDepthReached(0), selectedSpecialization(0), talentPoints(1), spentTalentPoints(0) {}
 };
 
 // ---

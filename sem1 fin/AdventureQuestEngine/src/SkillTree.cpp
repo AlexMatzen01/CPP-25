@@ -59,41 +59,70 @@ void SkillTreeManager::initializeTalentTree() {
 }
 
 void SkillTreeManager::displayTalentTree() const {
-    std::cout << "\n========================================\n";
-    std::cout << "         TALENT TREE\n";
-    std::cout << "========================================\n\n";
+    std::cout << "\n" << std::string(60, '=') << "\n";
+    std::cout << "                    TALENT TREE\n";
+    std::cout << std::string(60, '=') << "\n\n";
     
-    std::cout << "Available Talent Points: " << getAvailableTalentPoints() << "\n";
-    std::cout << "Current Specialization: " << getCurrentSpecialization() << "\n\n";
+    std::cout << "Class: " << (playerRef.charClass == CharacterClass::WARRIOR ? "Warrior" :
+                            playerRef.charClass == CharacterClass::MAGE ? "Mage" :
+                            playerRef.charClass == CharacterClass::ROGUE ? "Rogue" :
+                            playerRef.charClass == CharacterClass::PALADIN ? "Paladin" :
+                            playerRef.charClass == CharacterClass::RANGER ? "Ranger" :
+                            playerRef.charClass == CharacterClass::NECROMANCER ? "Necromancer" :
+                            playerRef.charClass == CharacterClass::BARBARIAN ? "Barbarian" : "Monk") << "\n";
+    std::cout << "Level: " << playerRef.level << " | Available Points: " << getAvailableTalentPoints() << "\n";
+    std::cout << "Specialization: " << getCurrentSpecialization() << "\n\n";
     
     // Display talents by tier
     for (int tier = 1; tier <= 7; ++tier) {
-        std::cout << "--- Tier " << tier << " ---\n";
-        bool hasTalent = false;
+        std::cout << "\n=== TIER " << tier << " ===";
+        int talentsInTier = 0;
+        for (const auto& t : talentTree) {
+            if (t.tier == tier) talentsInTier++;
+        }
+        std::cout << " (" << talentsInTier << " talents)\n\n";
         
+        bool hasTalent = false;
         for (const auto& talent : talentTree) {
             if (talent.tier == tier) {
                 hasTalent = true;
-                std::cout << "[" << talent.id << "] " << talent.name;
-                std::cout << " (" << talent.currentRank << "/" << talent.maxRank << ")";
                 
-                if (talent.type == TalentType::ACTIVE) {
-                    std::cout << " [ACTIVE]";
-                } else if (talent.type == TalentType::ULTIMATE) {
-                    std::cout << " [ULTIMATE]";
-                } else if (talent.type == TalentType::SYNERGY) {
-                    std::cout << " [SYNERGY]";
+                // Check if unlockable
+                bool canUnlock = canUnlockTalent(talent.id);
+                std::string status = talent.currentRank > 0 ? "[UNLOCKED]" : 
+                                    canUnlock ? "[AVAILABLE]" : "[LOCKED]";
+                
+                std::cout << "[" << talent.id << "] " << talent.name << " " << status;
+                if (talent.currentRank > 0) {
+                    std::cout << " (" << talent.currentRank << "/" << talent.maxRank << ")";
                 }
                 
+                if (talent.type == TalentType::ACTIVE) {
+                    std::cout << " {ACTIVE}";
+                } else if (talent.type == TalentType::ULTIMATE) {
+                    std::cout << " {ULTIMATE}";
+                } else if (talent.type == TalentType::SYNERGY) {
+                    std::cout << " {SYNERGY}";
+                }
                 std::cout << "\n  " << talent.description << "\n";
+                
+                if (!talent.prerequisites.empty()) {
+                    std::cout << "  Requirements: ";
+                    for (size_t i = 0; i < talent.prerequisites.size(); ++i) {
+                        if (i > 0) std::cout << ", ";
+                        std::cout << "[" << talent.prerequisites[i] << "]";
+                    }
+                    std::cout << "\n";
+                }
+                std::cout << "\n";
             }
         }
         
         if (!hasTalent) {
-            std::cout << "  (No talents available)\n";
+            std::cout << "  (No talents in this tier)\n";
         }
-        std::cout << "\n";
     }
+    std::cout << "\n" << std::string(60, '=') << "\n";
 }
 
 bool SkillTreeManager::unlockTalent(int talentId) {
@@ -239,17 +268,8 @@ std::string SkillTreeManager::getCurrentSpecialization() const {
 }
 
 void SkillTreeManager::applyAllTalentBonuses() {
-    // Calculate the total bonuses from talents and apply them once
-    // Note: This is designed to be called when talents are unlocked,
-    // not every frame. The bonus is applied incrementally when unlocking.
-    
-    // This function now calculates the total bonus a newly unlocked talent would provide
-    // We only apply new bonuses during unlockTalent() to avoid accumulation
-}
-
-void SkillTreeManager::recalculateStats() {
-    // Calculate and return total bonuses from all talents
-    // Used for display or save/load purposes
+    // Recalculate total bonuses from all talents and apply them
+    // Useful for save/load or talent respec scenarios
     
     int totalHpBonus = 0, totalManaBonus = 0, totalAttackBonus = 0;
     int totalDefenseBonus = 0, totalCritBonus = 0, totalDodgeBonus = 0;
@@ -269,9 +289,130 @@ void SkillTreeManager::recalculateStats() {
         }
     }
     
-    // Log for debugging/display
-    std::cout << "Talent Bonuses: HP+" << totalHpBonus << " Mana+" << totalManaBonus 
-              << " Atk+" << totalAttackBonus << " Def+" << totalDefenseBonus << "\n";
+    std::cout << "\nTalent Bonuses Applied:\n";
+    std::cout << "  HP+" << totalHpBonus << " Mana+" << totalManaBonus 
+              << " ATK+" << totalAttackBonus << " DEF+" << totalDefenseBonus
+              << " CRIT+" << totalCritBonus << " DODGE+" << totalDodgeBonus
+              << " SPD+" << totalSpeedBonus << " MAG+" << totalMagicBonus 
+              << " RES+" << totalResistBonus << "\n\n";
+}
+
+void SkillTreeManager::recalculateStats() {
+    // Recalculate bonuses - same as applyAllTalentBonuses
+    applyAllTalentBonuses();
+}
+
+bool SkillTreeManager::interactiveTalentMenu() {
+    bool inMenu = true;
+    while (inMenu) {
+        displayTalentTree();
+        std::cout << "\n1. Unlock Talent\n";
+        std::cout << "2. View Specializations\n";
+        std::cout << "3. View Unlocked Talents\n";
+        std::cout << "4. View Active Abilities\n";
+        std::cout << "0. Exit Talent Tree\n\n";
+        
+        int choice = 0;
+        std::cout << "Choice: ";
+        std::cin >> choice;
+        std::cin.ignore();
+        
+        switch (choice) {
+            case 1: {
+                system("clear");
+                std::cout << "\nEnter Talent ID to unlock: ";
+                int talentId = 0;
+                std::cin >> talentId;
+                std::cin.ignore();
+                
+                if (!canUnlockTalent(talentId)) {
+                    std::cout << "\nCannot unlock this talent! Check requirements and available points.\n";
+                } else {
+                    if (unlockTalent(talentId)) {
+                        std::cout << "\nTalent unlocked successfully!\n";
+                    } else {
+                        std::cout << "\nFailed to unlock talent.\n";
+                    }
+                }
+                std::cout << "\nPress Enter to continue...";
+                std::cin.get();
+                system("clear");
+                break;
+            }
+            case 2: {
+                system("clear");
+                std::cout << "\nSpecializations for " << playerRef.name << ":\n";
+                std::cout << "Current: " << getCurrentSpecialization() << "\n\n";
+                
+                std::cout << "1. First Specialization Path\n";
+                std::cout << "2. Second Specialization Path\n";
+                std::cout << "3. Third Specialization Path\n";
+                std::cout << "0. Cancel\n";
+                std::cout << "Choice: ";
+                int specChoice = 0;
+                std::cin >> specChoice;
+                std::cin.ignore();
+                
+                if (specChoice > 0 && specChoice <= 3) {
+                    chooseSpecialization(specChoice - 1);
+                    std::cout << "\nSpecialization updated!\n";
+                }
+                std::cout << "\nPress Enter to continue...";
+                std::cin.get();
+                system("clear");
+                break;
+            }
+            case 3: {
+                system("clear");
+                auto unlocked = getUnlockedTalents();
+                std::cout << "\n=== Unlocked Talents (" << unlocked.size() << ") ===\n";
+                for (const auto& talent : unlocked) {
+                    std::cout << "[" << talent.id << "] " << talent.name 
+                              << " (Rank " << talent.currentRank << "/" << talent.maxRank << ")";
+                    if (talent.type == TalentType::ACTIVE) std::cout << " [ACTIVE]";
+                    else if (talent.type == TalentType::ULTIMATE) std::cout << " [ULTIMATE]";
+                    std::cout << "\n  " << talent.description << "\n\n";
+                }
+                if (unlocked.empty()) {
+                    std::cout << "You haven't unlocked any talents yet!\n";
+                }
+                std::cout << "\nPress Enter to continue...";
+                std::cin.get();
+                system("clear");
+                break;
+            }
+            case 4: {
+                system("clear");
+                auto abilities = getActiveAbilities();
+                std::cout << "\n=== Active Abilities (" << abilities.size() << ") ===\n";
+                for (size_t i = 0; i < abilities.size(); ++i) {
+                    const auto& ability = abilities[i];
+                    std::cout << "[" << (i + 1) << "] " << ability.name 
+                              << " (Mana: " << ability.manaCost << ", CD: " << ability.cooldown << ")\n";
+                    std::cout << "  Damage: x" << ability.damageMultiplier;
+                    if (ability.isMagical) std::cout << " [MAGICAL]";
+                    if (ability.isHeal) std::cout << " [HEAL]";
+                    std::cout << "\n";
+                }
+                if (abilities.empty()) {
+                    std::cout << "You have no active abilities unlocked!\n";
+                }
+                std::cout << "\nPress Enter to continue...";
+                std::cin.get();
+                system("clear");
+                break;
+            }
+            case 0:
+                inMenu = false;
+                break;
+            default:
+                system("clear");
+                std::cout << "Invalid choice!\n";
+                std::cout << "\nPress Enter to continue...";
+                std::cin.get();
+        }
+    }
+    return true;
 }
 
 std::vector<Skill> SkillTreeManager::getActiveAbilities() const {
@@ -772,6 +913,40 @@ TalentNode* SkillTreeManager::findTalent(int talentId) {
         }
     }
     return nullptr;
+}
+
+void SkillTreeManager::displaySkillLevelUpMenu() {
+    std::cout << "\n" << std::string(60, '=') << "\n";
+    std::cout << "          SKILL POINT ALLOCATION\n";
+    std::cout << std::string(60, '=') << "\n\n";
+    
+    std::cout << "Available Talent Points: " << getAvailableTalentPoints() << "\n";
+    std::cout << "Player Level: " << playerRef.level << "\n\n";
+    
+    std::cout << "You have earned new talent points!\n";
+    std::cout << "\n1. Browse Talent Tree\n";
+    std::cout << "2. Quick Allocate\n";
+    std::cout << "0. Skip for now\n\n";
+    
+    int choice = 0;
+    std::cout << "Choice: ";
+    std::cin >> choice;
+    std::cin.ignore();
+    
+    if (choice == 1) {
+        interactiveTalentMenu();
+    } else if (choice == 2) {
+        std::cout << "\nQuick allocate: Enter Talent ID to add rank to: ";
+        int talentId = 0;
+        std::cin >> talentId;
+        std::cin.ignore();
+        
+        if (canUnlockTalent(talentId)) {
+            unlockTalent(talentId);
+        } else {
+            std::cout << "Cannot unlock that talent!\n";
+        }
+    }
 }
 
 }  // namespace AQE

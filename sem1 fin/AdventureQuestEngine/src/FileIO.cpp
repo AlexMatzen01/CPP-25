@@ -487,6 +487,16 @@ bool FileIO::saveGame(const GameState& gameState, const std::string& filename) {
     file << "mawUnlocked=" << (p.mawUnlocked ? 1 : 0) << "\n";
     file << "mawDepthReached=" << p.mawDepthReached << "\n";
     
+    // Save talent system
+    file << "\n[TALENTS]\n";
+    file << "selectedSpecialization=" << p.selectedSpecialization << "\n";
+    file << "talentPoints=" << p.talentPoints << "\n";
+    file << "spentTalentPoints=" << p.spentTalentPoints << "\n";
+    file << "unlockedCount=" << p.unlockedTalentIds.size() << "\n";
+    for (int talentId : p.unlockedTalentIds) {
+        file << "unlockedTalent=" << talentId << "\n";
+    }
+    
     // Save inventory
     file << "\n[INVENTORY]\n";
     file << "count=" << p.inventory.size() << "\n";
@@ -667,6 +677,12 @@ bool FileIO::loadGame(GameState& gameState, const std::string& filename) {
             else if (key == "isInMawRealm") gameState.isInMawRealm = (std::stoi(value) != 0);
             else if (key == "currentMawStratum") gameState.currentMawStratum = std::max(0, std::stoi(value));
             else if (key == "difficulty") gameState.difficulty = std::stoi(value);
+        }
+        else if (section == "[TALENTS]") {
+            if (key == "selectedSpecialization") p.selectedSpecialization = std::max(0, std::min(2, std::stoi(value)));
+            else if (key == "talentPoints") p.talentPoints = std::max(1, std::stoi(value));
+            else if (key == "spentTalentPoints") p.spentTalentPoints = std::max(0, std::stoi(value));
+            else if (key == "unlockedTalent") p.unlockedTalentIds.push_back(std::stoi(value));
         }
         else if (section == "[DUNGEON]") {
             if (key == "room") {

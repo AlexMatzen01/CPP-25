@@ -884,6 +884,9 @@ void GameEngine::applyClassStats(CharacterClass charClass) {
             // Warriors, Rogues, Barbarians, and Monks cannot cast spells
             break;
     }
+    
+    // Initialize the talent tree system for this player
+    m_skillTreeManager = std::make_unique<SkillTreeManager>(m_gameState.player);
 }
 
 void GameEngine::displayClassInfo(CharacterClass charClass) {
@@ -1018,9 +1021,9 @@ void GameEngine::displayCurrentRoom() {
 }
 
 std::string GameEngine::getExplorationAction() {
-    std::string actionPrompt = " [n/s/e/w, look, search, interact, inventory, status, quests, map, menu, help]";
+    std::string actionPrompt = " [n/s/e/w, look, search, interact, inventory, status, skills, talents, quests, map, menu, help]";
     if (m_isInMawRealm) {
-        actionPrompt = " [n/s/e/w, look, search, interact, inventory, status, quests, map, extract, menu, help]";
+        actionPrompt = " [n/s/e/w, look, search, interact, inventory, status, skills, talents, quests, map, extract, menu, help]";
     }
 
     std::cout << "\n"
@@ -1079,6 +1082,12 @@ bool GameEngine::processAction(const std::string& action) {
     // Menu commands
     else if (action == "inventory" || action == "inv") {
         openInventory();
+        return true;
+    } else if (action == "skills") {
+        displaySkillsMenu();
+        return true;
+    } else if (action == "talents") {
+        displayTalentTree();
         return true;
     } else if (action == "status" || action == "stats") {
         clearScreen();
@@ -1581,6 +1590,57 @@ void GameEngine::showHelp() {
     
     displayDivider(80, '-');
     waitForEnter();
+}
+
+void GameEngine::displaySkillsMenu() {
+    clearScreen();
+    std::cout << UIManager::createTitle("LEARNED SKILLS", 80, UIColor::BRIGHT_CYAN) << "\n";
+    
+    std::cout << "Level: " << m_gameState.player.level << " | ";
+    std::cout << "Mana: " << m_gameState.player.stats.currentMana << "/" << m_gameState.player.stats.maxMana << "\n\n";
+    
+    if (m_gameState.player.skills.empty()) {
+        std::cout << "You have not learned any skills yet!\n";
+        displayDivider(80, '-');
+        waitForEnter();
+        return;
+    }
+    
+    std::cout << "Available Skills:\n\n";
+    for (size_t i = 0; i < m_gameState.player.skills.size(); ++i) {
+        const Skill& skill = m_gameState.player.skills[i];
+        
+        std::string typeStr = skill.isHeal ? "[HEAL]" : "[DAMAGE]";
+        if (skill.isMagical) typeStr += " [MAGIC]";
+        
+        std::string status = (skill.currentCooldown > 0) ? 
+            (" [CD: " + std::to_string(skill.currentCooldown) + "]") : " [READY]";
+        
+        std::cout << "[" << (i + 1) << "] " << skill.name << " " 
+                  << typeStr << status << "\n"
+                  << "    " << skill.description << "\n"
+                  << "    Mana Cost: " << skill.manaCost << " | Cooldown: " << skill.cooldown << "\n";
+        
+        if (skill.damageMultiplier > 0) {
+            if (skill.isHeal) {
+                std::cout << "    Healing: x" << skill.damageMultiplier << " Magic Power\n";
+            } else {
+                std::cout << "    Damage: x" << skill.damageMultiplier << (skill.isMagical ? " Magic Power" : " Attack") << "\n";
+            }
+        }
+        std::cout << "\n";
+    }
+    
+    displayDivider(80, '-');
+    waitForEnter();
+}
+
+void GameEngine::displayTalentTree() {
+    clearScreen();
+    if (m_skillTreeManager) {
+        m_skillTreeManager->interactiveTalentMenu();
+    }
+    clearScreen();
 }
 
 void GameEngine::showSettings() {

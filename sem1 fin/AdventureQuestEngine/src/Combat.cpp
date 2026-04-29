@@ -216,13 +216,13 @@ CombatStats CombatSystem::getEffectiveEnemyStats(const Enemy& enemy) const {
     
     // Apply difficulty modifiers
     if (gameDifficulty == 1) {  // Easy
-        effective.attack = static_cast<int>(effective.attack * 0.7f);
-        effective.defense = static_cast<int>(effective.defense * 0.7f);
-        effective.maxHP = static_cast<int>(effective.maxHP * 0.85f);
+        effective.attack = static_cast<int>(effective.attack * EASY_DAMAGE_MULT);
+        effective.defense = static_cast<int>(effective.defense * EASY_DEFENSE_MULT);
+        effective.maxHP = static_cast<int>(effective.maxHP * EASY_HP_MULT);
     } else if (gameDifficulty == 3) {  // Hard
-        effective.attack = static_cast<int>(effective.attack * 1.15f);
-        effective.defense = static_cast<int>(effective.defense * 1.1f);
-        effective.maxHP = static_cast<int>(effective.maxHP * 1.1f);
+        effective.attack = static_cast<int>(effective.attack * HARD_DAMAGE_MULT);
+        effective.defense = static_cast<int>(effective.defense * HARD_DEFENSE_MULT);
+        effective.maxHP = static_cast<int>(effective.maxHP * HARD_HP_MULT);
     }
     
     return effective;

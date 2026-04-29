@@ -14,12 +14,14 @@
 #include "Events.h"
 #include "FileIO.h"
 #include "Crafting.h"
+#include "SkillTree.h"
 #include "Utils.h"
 #include "Constants.h"
 
 #include <string>
 #include <vector>
 #include <iostream>
+#include <memory>
 
 namespace AQE {
 
@@ -209,6 +211,16 @@ public:
     void showHelp();
     
     /**
+// Displays skills menu with learned skills
+     */
+    void displaySkillsMenu();
+    
+    /**
+// Displays talent tree interface
+     */
+    void displayTalentTree();
+    
+    /**
 // Shows game settings menu
      */
     void showSettings();
@@ -393,6 +405,7 @@ private:
     FileIO m_fileIO;                // File I/O handler
     MerchantSystem m_merchantSystem; // Merchant/shop handler
     CraftingSystem m_craftingSystem; // Crafting handler
+    std::unique_ptr<SkillTreeManager> m_skillTreeManager; // Skill tree handler
     
     bool m_isRunning;               // Game running flag
     bool m_debugMode;               // Debug mode flag

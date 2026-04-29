@@ -68,8 +68,9 @@ constexpr int GRAVEYARD_ROOM_CHANCE = 6;
 constexpr int ARMORY_ROOM_CHANCE = 6;
 constexpr int PRISON_ROOM_CHANCE = 5;
 
-// Combat settings
+// Combat settings - improved balance
 constexpr int BASE_CRIT_MULTIPLIER = 2;
+constexpr float BASE_CRIT_BONUS_MULTIPLIER = 1.25f;  // Crit bonus adds scaling
 constexpr int MAX_DODGE_CHANCE = 75;
 constexpr int MAX_CRIT_CHANCE = 50;
 constexpr int FLEE_BASE_CHANCE = 40;
@@ -94,10 +95,14 @@ constexpr int STARTING_GOLD = 50;
 constexpr int MORALITY_HERO_THRESHOLD = 50;
 constexpr int MORALITY_EVIL_THRESHOLD = -50;
 
-// Difficulty multipliers
+// Difficulty multipliers - improved balance
 constexpr float EASY_DAMAGE_MULT = 0.75f;
+constexpr float EASY_DEFENSE_MULT = 0.80f;
+constexpr float EASY_HP_MULT = 0.90f;
 constexpr float EASY_GOLD_MULT = 1.5f;
-constexpr float HARD_DAMAGE_MULT = 1.5f;
+constexpr float HARD_DAMAGE_MULT = 1.25f;
+constexpr float HARD_DEFENSE_MULT = 1.15f;
+constexpr float HARD_HP_MULT = 1.20f;
 constexpr float HARD_GOLD_MULT = 0.75f;
 
 // Special ending conditions
@@ -118,85 +123,85 @@ constexpr int LEGENDARY_DROP_RATE = 1;
 // CHARACTER CLASS BASE STATS
 // ---
 
-// Warrior: High HP, High Attack, Medium Defense
-constexpr int WARRIOR_HP = 200;
-constexpr int WARRIOR_ATK = 22;
-constexpr int WARRIOR_DEF = 14;
-constexpr int WARRIOR_CRIT = 12;
-constexpr int WARRIOR_DODGE = 8;
+// Warrior: Balanced melee with solid defense
+constexpr int WARRIOR_HP = 210;
+constexpr int WARRIOR_ATK = 20;
+constexpr int WARRIOR_DEF = 16;
+constexpr int WARRIOR_CRIT = 10;
+constexpr int WARRIOR_DODGE = 6;
 constexpr int WARRIOR_SPEED = 10;
-constexpr int WARRIOR_MAGIC = 8;
-constexpr int WARRIOR_MAGRES = 8;
+constexpr int WARRIOR_MAGIC = 10;
+constexpr int WARRIOR_MAGRES = 10;
 
-// Mage: Low HP, Low Attack, High Magic
-constexpr int MAGE_HP = 120;
-constexpr int MAGE_ATK = 10;
-constexpr int MAGE_DEF = 8;
-constexpr int MAGE_CRIT = 18;
-constexpr int MAGE_DODGE = 10;
-constexpr int MAGE_SPEED = 12;
-constexpr int MAGE_MAGIC = 35;
-constexpr int MAGE_MAGRES = 20;
+// Mage: Glass cannon with high magic power
+constexpr int MAGE_HP = 110;
+constexpr int MAGE_ATK = 9;
+constexpr int MAGE_DEF = 6;
+constexpr int MAGE_CRIT = 12;
+constexpr int MAGE_DODGE = 8;
+constexpr int MAGE_SPEED = 14;
+constexpr int MAGE_MAGIC = 38;
+constexpr int MAGE_MAGRES = 22;
 
-// Rogue: Medium HP, Medium Attack, High Crit/Dodge
-constexpr int ROGUE_HP = 150;
-constexpr int ROGUE_ATK = 18;
-constexpr int ROGUE_DEF = 9;
-constexpr int ROGUE_CRIT = 28;
-constexpr int ROGUE_DODGE = 25;
-constexpr int ROGUE_SPEED = 18;
-constexpr int ROGUE_MAGIC = 12;
-constexpr int ROGUE_MAGRES = 10;
+// Rogue: Speed and precision specialist
+constexpr int ROGUE_HP = 140;
+constexpr int ROGUE_ATK = 16;
+constexpr int ROGUE_DEF = 8;
+constexpr int ROGUE_CRIT = 32;
+constexpr int ROGUE_DODGE = 28;
+constexpr int ROGUE_SPEED = 20;
+constexpr int ROGUE_MAGIC = 10;
+constexpr int ROGUE_MAGRES = 8;
 
-// Paladin: Balanced stats with self-healing
-constexpr int PALADIN_HP = 180;
-constexpr int PALADIN_ATK = 18;
-constexpr int PALADIN_DEF = 16;
-constexpr int PALADIN_CRIT = 10;
-constexpr int PALADIN_DODGE = 8;
-constexpr int PALADIN_SPEED = 10;
-constexpr int PALADIN_MAGIC = 22;
-constexpr int PALADIN_MAGRES = 16;
+// Paladin: Defensive support tank with healing
+constexpr int PALADIN_HP = 200;
+constexpr int PALADIN_ATK = 16;
+constexpr int PALADIN_DEF = 20;
+constexpr int PALADIN_CRIT = 8;
+constexpr int PALADIN_DODGE = 6;
+constexpr int PALADIN_SPEED = 8;
+constexpr int PALADIN_MAGIC = 28;
+constexpr int PALADIN_MAGRES = 20;
 
-// Ranger: High speed, high crit, medium HP
-constexpr int RANGER_HP = 160;
-constexpr int RANGER_ATK = 20;
-constexpr int RANGER_DEF = 10;
-constexpr int RANGER_CRIT = 25;
-constexpr int RANGER_DODGE = 15;
-constexpr int RANGER_SPEED = 20;
-constexpr int RANGER_MAGIC = 10;
-constexpr int RANGER_MAGRES = 10;
+// Ranger: High speed ranged attacker with crit focus
+constexpr int RANGER_HP = 155;
+constexpr int RANGER_ATK = 19;
+constexpr int RANGER_DEF = 9;
+constexpr int RANGER_CRIT = 28;
+constexpr int RANGER_DODGE = 18;
+constexpr int RANGER_SPEED = 24;
+constexpr int RANGER_MAGIC = 9;
+constexpr int RANGER_MAGRES = 9;
 
-// Necromancer: Low HP, high magic, medium magic resist
-constexpr int NECROMANCER_HP = 130;
-constexpr int NECROMANCER_ATK = 12;
-constexpr int NECROMANCER_DEF = 8;
-constexpr int NECROMANCER_CRIT = 15;
-constexpr int NECROMANCER_DODGE = 12;
-constexpr int NECROMANCER_SPEED = 12;
-constexpr int NECROMANCER_MAGIC = 32;
-constexpr int NECROMANCER_MAGRES = 18;
+// Necromancer: Magic specialist with life drain
+constexpr int NECROMANCER_HP = 135;
+constexpr int NECROMANCER_ATK = 11;
+constexpr int NECROMANCER_DEF = 7;
+constexpr int NECROMANCER_CRIT = 14;
+constexpr int NECROMANCER_DODGE = 10;
+constexpr int NECROMANCER_SPEED = 13;
+constexpr int NECROMANCER_MAGIC = 36;
+constexpr int NECROMANCER_MAGRES = 20;
 
-// Barbarian: Very high HP and attack, very low defense
-constexpr int BARBARIAN_HP = 250;
-constexpr int BARBARIAN_ATK = 28;
-constexpr int BARBARIAN_DEF = 6;
-constexpr int BARBARIAN_CRIT = 15;
-constexpr int BARBARIAN_DODGE = 5;
-constexpr int BARBARIAN_SPEED = 12;
-constexpr int BARBARIAN_MAGIC = 5;
-constexpr int BARBARIAN_MAGRES = 5;
+// Barbarian: High risk/reward melee - great offense, lower defense
+constexpr int BARBARIAN_HP = 240;
+constexpr int BARBARIAN_ATK = 26;
+constexpr int BARBARIAN_DEF = 10;
+constexpr int BARBARIAN_CRIT = 14;
+constexpr int BARBARIAN_DODGE = 6;
+constexpr int BARBARIAN_SPEED = 11;
+constexpr int BARBARIAN_MAGIC = 6;
+constexpr int BARBARIAN_MAGRES = 7;
 
-// Monk: High dodge, high speed, balanced stats
-constexpr int MONK_HP = 170;
-constexpr int MONK_ATK = 16;
-constexpr int MONK_DEF = 12;
-constexpr int MONK_CRIT = 15;
-constexpr int MONK_DODGE = 25;
-constexpr int MONK_SPEED = 22;
-constexpr int MONK_MAGIC = 15;
-constexpr int MONK_MAGRES = 15;
+// Monk: Speed and evasion focused with balanced stats
+constexpr int MONK_HP = 165;
+constexpr int MONK_ATK = 15;
+constexpr int MONK_DEF = 11;
+constexpr int MONK_CRIT = 16;
+constexpr int MONK_DODGE = 28;
+constexpr int MONK_SPEED = 25;
+constexpr int MONK_MAGIC = 14;
+constexpr int MONK_MAGRES = 14;
 
 // ---
 // ASCII ART TEMPLATES

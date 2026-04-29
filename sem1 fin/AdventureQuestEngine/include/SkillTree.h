@@ -133,6 +133,8 @@ public:
     // Tree management
     void initializeTalentTree();
     void displayTalentTree() const;
+    bool interactiveTalentMenu();
+    void displaySkillLevelUpMenu();
     bool unlockTalent(int talentId);
     bool canUnlockTalent(int talentId) const;
     int getAvailableTalentPoints() const;
