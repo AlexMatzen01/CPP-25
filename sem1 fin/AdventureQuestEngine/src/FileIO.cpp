@@ -1948,7 +1948,7 @@ std::vector<Enemy> createDefaultEnemies() {
     skeleton.stats.critChance = 5;
     skeleton.stats.dodgeChance = 8;
     skeleton.stats.speed = 8;
-    skeleton.experienceReward = 25;
+    skeleton.experienceReward = 15;
     skeleton.goldReward = 10;
     skeleton.lootTable = {1, 10};  // Potion, Sword
     skeleton.lootChances = {30, 10};
@@ -1966,7 +1966,7 @@ std::vector<Enemy> createDefaultEnemies() {
     goblin.stats.critChance = 12;
     goblin.stats.dodgeChance = 18;
     goblin.stats.speed = 12;
-    goblin.experienceReward = 20;
+    goblin.experienceReward = 12;
     goblin.goldReward = 15;
     goblin.lootTable = {1};
     goblin.lootChances = {40};
@@ -1984,7 +1984,7 @@ std::vector<Enemy> createDefaultEnemies() {
     orc.stats.critChance = 8;
     orc.stats.dodgeChance = 4;
     orc.stats.speed = 6;
-    orc.experienceReward = 40;
+    orc.experienceReward = 24;
     orc.goldReward = 20;
     orc.lootTable = {2, 11};
     orc.lootChances = {25, 15};
@@ -2003,7 +2003,7 @@ std::vector<Enemy> createDefaultEnemies() {
     slime.stats.critChance = 2;
     slime.stats.dodgeChance = 30;
     slime.stats.speed = 5;
-    slime.experienceReward = 15;
+    slime.experienceReward = 9;
     slime.goldReward = 5;
     slime.lootTable = {1};
     slime.lootChances = {20};
@@ -2021,7 +2021,7 @@ std::vector<Enemy> createDefaultEnemies() {
     spider.stats.critChance = 10;
     spider.stats.dodgeChance = 15;
     spider.stats.speed = 16;
-    spider.experienceReward = 35;
+    spider.experienceReward = 21;
     spider.goldReward = 12;
     
     EnemyAbility venom;
@@ -2045,7 +2045,7 @@ std::vector<Enemy> createDefaultEnemies() {
     darkKnight.stats.critChance = 10;
     darkKnight.stats.dodgeChance = 2;
     darkKnight.stats.speed = 7;
-    darkKnight.experienceReward = 75;
+    darkKnight.experienceReward = 45;
     darkKnight.goldReward = 40;
     darkKnight.lootTable = {16, 21}; // Steel Sword, Chainmail
     darkKnight.lootChances = {20, 15};
@@ -2063,7 +2063,7 @@ std::vector<Enemy> createDefaultEnemies() {
     mimic.stats.critChance = 20;
     mimic.stats.dodgeChance = 5;
     mimic.stats.speed = 10;
-    mimic.experienceReward = 100;
+    mimic.experienceReward = 60;
     mimic.goldReward = 150;
     mimic.lootTable = {3, 130}; // Greater Potion, Ring of Might
     mimic.lootChances = {50, 30};
@@ -2081,7 +2081,7 @@ std::vector<Enemy> createDefaultEnemies() {
     vampire.stats.critChance = 15;
     vampire.stats.dodgeChance = 20;
     vampire.stats.speed = 15;
-    vampire.experienceReward = 90;
+    vampire.experienceReward = 54;
     vampire.goldReward = 60;
 
     EnemyAbility bloodSuck;
@@ -2107,7 +2107,7 @@ std::vector<Enemy> createDefaultEnemies() {
     wraith.stats.critChance = 15;
     wraith.stats.dodgeChance = 25;
     wraith.stats.speed = 14;
-    wraith.experienceReward = 50;
+    wraith.experienceReward = 30;
     wraith.goldReward = 25;
     
     EnemyAbility lifeDrain;
@@ -2135,7 +2135,7 @@ std::vector<Enemy> createDefaultEnemies() {
     troll.stats.critChance = 5;
     troll.stats.dodgeChance = 3;
     troll.stats.speed = 4;
-    troll.experienceReward = 60;
+    troll.experienceReward = 36;
     troll.goldReward = 30;
     
     EnemyAbility regen;
@@ -2162,7 +2162,7 @@ std::vector<Enemy> createDefaultEnemies() {
     dragon.stats.critChance = 12;
     dragon.stats.dodgeChance = 8;
     dragon.stats.speed = 12;
-    dragon.experienceReward = 500;
+    dragon.experienceReward = 300;
     dragon.goldReward = 200;
     dragon.isBoss = true;
     dragon.lootTable = {13, 50};  // Dragonslayer, Artifact
@@ -2190,7 +2190,7 @@ std::vector<Enemy> createDefaultEnemies() {
     lich.stats.critChance = 5;
     lich.stats.dodgeChance = 5;
     lich.stats.speed = 10;
-    lich.experienceReward = 400;
+    lich.experienceReward = 240;
     lich.goldReward = 150;
     lich.isBoss = true;
     
@@ -2225,7 +2225,7 @@ std::vector<Enemy> createDefaultEnemies() {
     beholder.stats.critChance = 20;
     beholder.stats.dodgeChance = 15;
     beholder.stats.speed = 11;
-    beholder.experienceReward = 450;
+    beholder.experienceReward = 270;
     beholder.goldReward = 300;
     beholder.isBoss = true;
 

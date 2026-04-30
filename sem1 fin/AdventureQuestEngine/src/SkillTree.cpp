@@ -9,8 +9,19 @@
 #include <sstream>
 #include <algorithm>
 #include <iomanip>
+#include <cstdlib>
 
 namespace AQE {
+
+// Portable console clear helper (works on Windows and POSIX)
+static void clearConsole() {
+#ifdef _WIN32
+    std::system("cls");
+#else
+    std::system("clear");
+#endif
+}
+
 
 // ---
 // SkillTreeManager Implementation
@@ -97,12 +108,14 @@ void SkillTreeManager::displayTalentTree() const {
                     std::cout << " (" << talent.currentRank << "/" << talent.maxRank << ")";
                 }
                 
-                if (talent.type == TalentType::ACTIVE) {
-                    std::cout << " {ACTIVE}";
-                } else if (talent.type == TalentType::ULTIMATE) {
-                    std::cout << " {ULTIMATE}";
-                } else if (talent.type == TalentType::SYNERGY) {
-                    std::cout << " {SYNERGY}";
+                if (talent.currentRank > 0) {
+                    if (talent.type == TalentType::ACTIVE) {
+                        std::cout << " {ACTIVE}";
+                    } else if (talent.type == TalentType::ULTIMATE) {
+                        std::cout << " {ULTIMATE}";
+                    } else if (talent.type == TalentType::SYNERGY) {
+                        std::cout << " {SYNERGY}";
+                    }
                 }
                 std::cout << "\n  " << talent.description << "\n";
                 
@@ -138,7 +151,7 @@ bool SkillTreeManager::unlockTalent(int talentId) {
     talent->currentRank++;
     spentTalentPoints += talent->pointCost;
     
-    // Apply bonuses for this single rank increase (not accumulated)
+    // Apply stat bonuses, etc.
     playerRef.stats.maxHP += talent->hpBonus;
     playerRef.stats.maxMana += talent->manaBonus;
     playerRef.stats.attack += talent->attackBonus;
@@ -149,7 +162,26 @@ bool SkillTreeManager::unlockTalent(int talentId) {
     playerRef.stats.magicPower += talent->magicPowerBonus;
     playerRef.stats.magicResist += talent->magicResistBonus;
     
-    std::cout << "Unlocked: " << talent->name << " (Rank " << talent->currentRank << ")\n";
+    // If this is the first rank of an active/ultimate talent, expose the ability to the player
+    if ((talent->type == TalentType::ACTIVE || talent->type == TalentType::ULTIMATE)
+        && talent->currentRank == 1) {
+
+        // Ensure ability cooldown initialized
+        talent->ability.currentCooldown = 0;
+
+        // Avoid duplicates by ability name
+        bool already = false;
+        for (const Skill& s : playerRef.skills) {
+            if (s.name == talent->ability.name) { already = true; break; }
+        }
+        if (!already) {
+            playerRef.skills.push_back(talent->ability);
+        }
+
+        // Optionally track unlocked ids for persistence (if Player has such vector)
+        // if (!contains(playerRef.unlockedTalentIds, talent->id)) playerRef.unlockedTalentIds.push_back(talent->id);
+    }
+
     return true;
 }
 
@@ -319,7 +351,7 @@ bool SkillTreeManager::interactiveTalentMenu() {
         
         switch (choice) {
             case 1: {
-                system("clear");
+                clearConsole();
                 std::cout << "\nEnter Talent ID to unlock: ";
                 int talentId = 0;
                 std::cin >> talentId;
@@ -336,11 +368,11 @@ bool SkillTreeManager::interactiveTalentMenu() {
                 }
                 std::cout << "\nPress Enter to continue...";
                 std::cin.get();
-                system("clear");
+                clearConsole();
                 break;
             }
             case 2: {
-                system("clear");
+                clearConsole();
                 std::cout << "\nSpecializations for " << playerRef.name << ":\n";
                 std::cout << "Current: " << getCurrentSpecialization() << "\n\n";
                 
@@ -359,7 +391,7 @@ bool SkillTreeManager::interactiveTalentMenu() {
                 }
                 std::cout << "\nPress Enter to continue...";
                 std::cin.get();
-                system("clear");
+                clearConsole();
                 break;
             }
             case 3: {
@@ -421,7 +453,27 @@ std::vector<Skill> SkillTreeManager::getActiveAbilities() const {
     for (const auto& talent : talentTree) {
         if (talent.currentRank > 0 && 
             (talent.type == TalentType::ACTIVE || talent.type == TalentType::ULTIMATE)) {
-            abilities.push_back(talent.ability);
+            
+            // Check if all prerequisites are met
+            bool prereqsMet = true;
+            for (int prereqId : talent.prerequisites) {
+                const TalentNode* prereq = nullptr;
+                for (const auto& t : talentTree) {
+                    if (t.id == prereqId) {
+                        prereq = &t;
+                        break;
+                    }
+                }
+                if (prereq == nullptr || prereq->currentRank == 0) {
+                    prereqsMet = false;
+                    break;
+                }
+            }
+            
+            // Only add to active abilities if all prerequisites are met
+            if (prereqsMet) {
+                abilities.push_back(talent.ability);
+            }
         }
     }
     

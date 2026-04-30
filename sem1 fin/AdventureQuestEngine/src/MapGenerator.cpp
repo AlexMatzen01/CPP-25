@@ -1485,7 +1485,7 @@ void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& tem
                 enemy.stats.critChance = std::min(MAX_CRIT_CHANCE, enemy.stats.critChance + effectiveLevel / 5);
                 enemy.stats.dodgeChance = std::min(MAX_DODGE_CHANCE, enemy.stats.dodgeChance + effectiveLevel / 6);
                 enemy.trueDamage = std::max(enemy.trueDamage, 1 + effectiveLevel / 7 + (needsBoss ? 4 : 1));
-                enemy.experienceReward += effectiveLevel * (needsBoss ? 35 : 16);
+                enemy.experienceReward += effectiveLevel * (needsBoss ? 20 : 10);
                 enemy.goldReward += effectiveLevel * (needsBoss ? 22 : 9);
             } else {
                 // Non-Maw: scale enemies primarily with player's level to keep combat balanced
@@ -1503,7 +1503,7 @@ void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& tem
                 enemy.stats.speed = std::max(4, enemy.stats.speed + playerLevel / 4);
                 enemy.stats.critChance = std::min(MAX_CRIT_CHANCE, enemy.stats.critChance + playerLevel / 5);
                 enemy.stats.dodgeChance = std::min(MAX_DODGE_CHANCE, enemy.stats.dodgeChance + playerLevel / 6);
-                enemy.experienceReward += playerLevel * (needsBoss ? 30 : 10);
+                enemy.experienceReward += playerLevel * (needsBoss ? 18 : 6);
                 enemy.goldReward += playerLevel * (needsBoss ? 18 : 6);
 
                 for (EnemyAbility& ability : enemy.abilities) {
@@ -1531,7 +1531,7 @@ void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& tem
             fallback.stats.magicPower = (needsBoss ? 36 : 20) + mawLevel * 2;
             fallback.stats.magicResist = (needsBoss ? 16 : 10) + mawLevel / 2;
             fallback.trueDamage = (needsBoss ? 8 : 3) + mawLevel / 6;
-            fallback.experienceReward = (needsBoss ? 700 : 180) + mawLevel * (needsBoss ? 40 : 18);
+            fallback.experienceReward = (needsBoss ? 420 : 110) + mawLevel * (needsBoss ? 24 : 10);
             fallback.goldReward = (needsBoss ? 350 : 90) + mawLevel * (needsBoss ? 24 : 10);
             room.enemies.push_back(fallback);
         }

@@ -588,8 +588,19 @@ int rollItemLevel(int contextLevel, ItemRarity rarity, bool isBoss) {
     int maxLevel = center + spread;
 
     // Keep loot in a safe power envelope around the player's progression.
+    // Tighter caps for low-level players to prevent overpowering
     const int powerFloor = std::max(1, baseline - 8);
-    const int powerCeil = std::min(MAX_ITEM_LEVEL, baseline + 10 + (isBoss ? 3 : 0));
+    int powerCeil = baseline + 10 + (isBoss ? 3 : 0);
+    
+    // Low-level protection: scale ceiling down significantly
+    if (normalizedContext <= 5) {
+        powerCeil = baseline + 2;  // Very tight for early game
+    } else if (normalizedContext <= 10) {
+        powerCeil = baseline + 4;  // Still tight but allows some progression
+    } else if (normalizedContext <= 20) {
+        powerCeil = baseline + 6;  // Moderate allowance
+    }
+    // else: use default baseline + 10 + (isBoss ? 3 : 0)
 
     minLevel = std::max(minLevel, powerFloor);
     maxLevel = std::min(maxLevel, powerCeil);

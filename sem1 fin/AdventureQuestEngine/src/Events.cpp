@@ -1287,7 +1287,7 @@ std::vector<Quest> createDefaultQuests() {
     main.completionText = "Freedom at last! You've escaped the dungeon!";
     main.isMainQuest = true;
     main.goldReward = 100;
-    main.experienceReward = 200;
+    main.experienceReward = 120;
     quests.push_back(main);
     
     // Side quest: Kill enemies
@@ -1298,7 +1298,7 @@ std::vector<Quest> createDefaultQuests() {
     killQuest.completionText = "You've proven yourself a capable warrior!";
     killQuest.targetEnemyCount = 5;
     killQuest.goldReward = 50;
-    killQuest.experienceReward = 100;
+    killQuest.experienceReward = 60;
     quests.push_back(killQuest);
     
     // Side quest: Find treasure rooms
@@ -1309,7 +1309,7 @@ std::vector<Quest> createDefaultQuests() {
     treasureQuest.completionText = "Your greed... I mean, exploration has paid off!";
     treasureQuest.targetEnemyCount = 3;  // Reusing for room count
     treasureQuest.goldReward = 75;
-    treasureQuest.experienceReward = 75;
+    treasureQuest.experienceReward = 45;
     quests.push_back(treasureQuest);
     
     // Side quest: Solve puzzles
@@ -1320,7 +1320,7 @@ std::vector<Quest> createDefaultQuests() {
     puzzleQuest.completionText = "Your wisdom is unmatched!";
     puzzleQuest.targetEnemyCount = 2;  // Reusing for puzzle count
     puzzleQuest.goldReward = 60;
-    puzzleQuest.experienceReward = 120;
+    puzzleQuest.experienceReward = 72;
     quests.push_back(puzzleQuest);
     
     // Morality quest: Good path
@@ -1332,7 +1332,7 @@ std::vector<Quest> createDefaultQuests() {
     heroQuest.affectsMorality = true;
     heroQuest.moralityChange = 0;  // Check morality score instead
     heroQuest.goldReward = 0;
-    heroQuest.experienceReward = 150;
+    heroQuest.experienceReward = 90;
     quests.push_back(heroQuest);
     
     return quests;

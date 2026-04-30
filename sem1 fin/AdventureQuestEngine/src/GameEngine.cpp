@@ -276,7 +276,7 @@ void GameEngine::giveStarterQuests() {
     mainQuest.isMainQuest = true;
     mainQuest.requiresBoss = true;
     mainQuest.goldReward = 500;
-    mainQuest.experienceReward = 1000;
+    mainQuest.experienceReward = 600;
     mainQuest.status = QuestStatus::IN_PROGRESS;
     m_gameState.player.activeQuests.push_back(mainQuest);
     
@@ -287,7 +287,7 @@ void GameEngine::giveStarterQuests() {
     killQuest.completionText = "You've proven yourself a capable warrior!";
     killQuest.targetEnemyCount = 5;
     killQuest.goldReward = 75;
-    killQuest.experienceReward = 150;
+    killQuest.experienceReward = 90;
     killQuest.status = QuestStatus::IN_PROGRESS;
     m_gameState.player.activeQuests.push_back(killQuest);
     
@@ -298,7 +298,7 @@ void GameEngine::giveStarterQuests() {
     exploreQuest.completionText = "Your exploration has revealed many secrets!";
     exploreQuest.targetEnemyCount = 10;  // Using for room count
     exploreQuest.goldReward = 50;
-    exploreQuest.experienceReward = 100;
+    exploreQuest.experienceReward = 60;
     exploreQuest.status = QuestStatus::IN_PROGRESS;
     m_gameState.player.activeQuests.push_back(exploreQuest);
     
@@ -2821,7 +2821,7 @@ bool GameEngine::triggerFinalBoss() {
     shadowLord.stats.magicPower = 20 + (baseMult * 2);
     shadowLord.stats.magicResist = 15 + baseMult;
     
-    shadowLord.experienceReward = 500 + (playerLevel * 100);
+    shadowLord.experienceReward = 300 + (playerLevel * 60);
     shadowLord.goldReward = 300 + (playerLevel * 50);
     
     // Add boss abilities
@@ -3024,7 +3024,7 @@ Enemy GameEngine::createMawEnemy(int depth, bool bossVariant) const {
         mawEnemy.stats.speed = 16;
         mawEnemy.stats.magicPower = 25;
         mawEnemy.stats.magicResist = 12;
-        mawEnemy.experienceReward = 220;
+        mawEnemy.experienceReward = 130;
         mawEnemy.goldReward = 120;
     }
 
@@ -3045,7 +3045,7 @@ Enemy GameEngine::createMawEnemy(int depth, bool bossVariant) const {
 
     mawEnemy.trueDamage = std::max(2, (depth / 2) + (bossVariant ? 5 : 2));
     mawEnemy.isBoss = bossVariant;
-    mawEnemy.experienceReward = std::max(80, mawEnemy.experienceReward + depth * (bossVariant ? 120 : 45));
+    mawEnemy.experienceReward = std::max(50, mawEnemy.experienceReward + depth * (bossVariant ? 70 : 27));
     mawEnemy.goldReward = std::max(40, mawEnemy.goldReward + depth * (bossVariant ? 70 : 25));
 
     for (EnemyAbility& ability : mawEnemy.abilities) {
