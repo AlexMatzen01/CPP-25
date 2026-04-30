@@ -6,122 +6,13 @@
 
 #include "../include/Crafting.h"
 #include "../include/Utils.h"
+#include "../include/UIEnhanced.h"
 #include <iostream>
 #include <sstream>
 #include <algorithm>
 #include <iomanip>
 #include <cstdlib>
 #include <cmath>
-
-namespace AQE {
-
-namespace {
-
-void applyAccessoryStats(Item& item) {
-    if (item.type != ItemType::ACCESSORY) {
-        return;
-    }
-
-    item.isUsable = false;
-    item.isStackable = false;
-
-    const std::string lowerName = toLower(item.name);
-
-    if (lowerName.find("swiftness") != std::string::npos) {
-        item.speedBonus = 6;
-        item.dodgeBonus = 6;
-        return;
-    }
-
-    if (lowerName.find("fortune") != std::string::npos) {
-        item.critBonus = 18;
-        item.attackBonus = 2;
-        return;
-    }
-
-    if (lowerName.find("might") != std::string::npos) {
-        item.attackBonus = 8;
-        item.critBonus = 3;
-        return;
-    }
-
-    if (lowerName.find("protection") != std::string::npos) {
-        item.defenseBonus = 6;
-        item.dodgeBonus = 2;
-        return;
-    }
-
-    if (lowerName.find("vitality") != std::string::npos) {
-        item.defenseBonus = 5;
-        item.dodgeBonus = 3;
-        return;
-    }
-
-    if (lowerName.find("shadows") != std::string::npos) {
-        item.dodgeBonus = 14;
-        item.speedBonus = 4;
-        item.defenseBonus = 2;
-        return;
-    }
-
-    if (lowerName.find("dragon") != std::string::npos) {
-        item.attackBonus = 12;
-        item.defenseBonus = 8;
-        item.critBonus = 12;
-        item.speedBonus = -1;
-        return;
-    }
-
-    if (lowerName.find("iron skin") != std::string::npos) {
-        item.defenseBonus = 7;
-        item.speedBonus = -2;
-        return;
-    }
-
-    if (lowerName.find("assassin") != std::string::npos) {
-        item.attackBonus = 4;
-        item.critBonus = 12;
-        item.speedBonus = 5;
-        return;
-    }
-
-    if (lowerName.find("wisdom") != std::string::npos) {
-        item.attackBonus = 5;
-        item.defenseBonus = 5;
-        item.critBonus = 5;
-        return;
-    }
-
-    if (lowerName.find("pendant") != std::string::npos ||
-        lowerName.find("necklace") != std::string::npos) {
-        item.defenseBonus = 4;
-        item.dodgeBonus = 4;
-        item.critBonus = 2;
-        return;
-    }
-
-    if (lowerName.find("amulet") != std::string::npos ||
-        lowerName.find("charm") != std::string::npos ||
-        lowerName.find("talisman") != std::string::npos) {
-        item.defenseBonus = 5;
-        item.dodgeBonus = 3;
-        item.critBonus = 2;
-        return;
-    }
-
-    if (lowerName.find("cloak") != std::string::npos) {
-        item.dodgeBonus = 10;
-        item.speedBonus = 5;
-        item.defenseBonus = 2;
-        return;
-    }
-
-    item.defenseBonus = 3;
-    item.critBonus = 2;
-    item.dodgeBonus = 2;
-}
-
-void configureVendorTemplateItem(Item& item, int dungeonLevel) {
     const int baseLevel = std::max(1, dungeonLevel);
     const int rolledLevel = rollItemLevel(baseLevel, item.rarity, false);
     const int minLevel = std::max(1, rolledLevel - 4);

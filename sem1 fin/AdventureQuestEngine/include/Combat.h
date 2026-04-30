@@ -420,7 +420,7 @@ private:
      * @param target Target enemy (if applicable)
      * @return Spell result
      */
-    SpellResult castSpellInCombat(int spellIndex, Enemy* target);
+    SpellResult castSpellInCombat(int spellIndex, Enemy* target, std::vector<Enemy>* enemies);
     
     //==========================================================================
     // PRIVATE METHODS - Loot

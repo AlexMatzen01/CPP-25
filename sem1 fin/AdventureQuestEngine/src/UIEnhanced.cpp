@@ -799,7 +799,8 @@ void UIManager::clearScreen() {
 #ifdef _WIN32
     system("cls");
 #else
-    std::cout << "\033[2J\033[H";
+    // Use the system `clear` command on Unix-like systems for consistent behavior
+    system("clear");
 #endif
 }
 

@@ -363,7 +363,7 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies, std::vector<Enemy>& d
                                     if (!playerRef.learnedSpells[spellChoice-1].isHeal && !playerRef.learnedSpells[spellChoice-1].isAOE) {
                                         targetIdx = (enemies.size() == 1) ? 0 : selectTarget(enemies);
                                     }
-                                    SpellResult result = castSpellInCombat(spellChoice - 1, &enemies[targetIdx]);
+                                    SpellResult result = castSpellInCombat(spellChoice - 1, &enemies[targetIdx], &enemies);
                                     displayMessage(result.message);
                                 }
                             }
@@ -902,7 +902,7 @@ AbilityResult CombatSystem::usePlayerAbility(int abilityIndex, Enemy* target) {
     return result;
 }
 
-SpellResult CombatSystem::castSpellInCombat(int spellIndex, Enemy* target) {
+SpellResult CombatSystem::castSpellInCombat(int spellIndex, Enemy* target, std::vector<Enemy>* enemies) {
     SpellResult result;
     
     if (spellIndex < 0 || spellIndex >= static_cast<int>(playerRef.learnedSpells.size())) {
@@ -1000,13 +1000,19 @@ SpellResult CombatSystem::castSpellInCombat(int spellIndex, Enemy* target) {
         }
     } else {
         // AOE spell - hit all enemies
+        if (enemies == nullptr) {
+            result.cast = false;
+            result.message = "No enemies available for AOE spell!";
+            return result;
+        }
+
         CombatStats pStats = getEffectivePlayerStats();
         int baseDamage = static_cast<int>(pStats.magicPower * spell.damageMultiplier);
         
         result.message = "You cast " + colorize(spell.name, Color::BRIGHT_CYAN) + " on all enemies!\n";
         
-        for (size_t i = 0; i < playerRef.currentCombatEnemies.size(); ++i) {
-            Enemy& enemy = playerRef.currentCombatEnemies[i];
+        for (size_t i = 0; i < enemies->size(); ++i) {
+            Enemy& enemy = (*enemies)[i];
             if (enemy.stats.currentHP <= 0) continue;
             
             CombatStats eStats = getEffectiveEnemyStats(enemy);
@@ -1334,107 +1340,31 @@ std::vector<Item> CombatSystem::rollLootTable(const Enemy& enemy) {
                     else if (rarityRoll > 60) rarity = ItemRarity::EPIC;
                     else rarity = ItemRarity::COMMON;
                 }
-                drops.push_back(Item{materialType, rarity});
+
+                // Create a proper material Item and push it
+                Item material;
+                material.id = 5000 + randomInt(0, 999);
+                material.name = (rarity == ItemRarity::LEGENDARY) ? "Refined " + materialType + " Material" :
+                                (rarity == ItemRarity::EPIC) ? "Pure " + materialType + " Material" :
+                                (rarity == ItemRarity::RARE) ? "Quality " + materialType + " Material" :
+                                (rarity == ItemRarity::UNCOMMON) ? "Good " + materialType + " Material" :
+                                materialType + " Material";
+                material.description = "A crafting material. Can be used to craft items.";
+                material.type = ItemType::QUEST;
+                material.rarity = rarity;
+                material.isStackable = true;
+                material.isUsable = false;
+                material.quantity = (rarity == ItemRarity::LEGENDARY) ? 1 :
+                                   (rarity == ItemRarity::EPIC) ? randomInt(1, 2) :
+                                   (rarity == ItemRarity::RARE) ? randomInt(2, 3) :
+                                   randomInt(2, 4);
+                material.value = (static_cast<int>(rarity) + 1) * 5;
+                drops.push_back(material);
             }
         }
     
         return drops;
     }
-    
-    // Generate crafting materials based on enemy type
-    // Boss enemies drop more materials
-    int materialDropChance = enemy.isBoss ? 80 : 50;
-    int materialCount = enemy.isBoss ? randomInt(2, 4) : randomInt(1, 2);
-    
-    for (int i = 0; i < materialCount; ++i) {
-        if (randomChance(materialDropChance)) {
-            // Determine material type based on enemy name/type
-            std::string materialType;
-            if (enemy.name.find("Skeleton") != std::string::npos || 
-                enemy.name.find("Undead") != std::string::npos ||
-                enemy.name.find("Bone") != std::string::npos) {
-                materialType = randomChance(60) ? "Bone" : "Essence";
-            } else if (enemy.name.find("Dragon") != std::string::npos ||
-                       enemy.name.find("Dragon") != std::string::npos) {
-                materialType = "Dragon Scale";
-            } else if (enemy.name.find("Spider") != std::string::npos ||
-                       enemy.name.find("Arachnid") != std::string::npos) {
-                materialType = randomChance(70) ? "Leather" : "Cloth";
-            } else if (enemy.name.find("Slime") != std::string::npos ||
-                       enemy.name.find("Ooze") != std::string::npos) {
-                materialType = randomChance(50) ? "Essence" : "Herb";
-            } else if (enemy.name.find("Vampire") != std::string::npos ||
-                       enemy.name.find("Wraith") != std::string::npos) {
-                materialType = randomChance(60) ? "Essence" : "Crystal";
-            } else if (enemy.name.find("Troll") != std::string::npos ||
-                       enemy.name.find("Orc") != std::string::npos) {
-                materialType = randomChance(60) ? "Leather" : "Metal";
-            } else if (enemy.name.find("Goblin") != std::string::npos ||
-                       enemy.name.find("Mimic") != std::string::npos) {
-                materialType = randomChance(50) ? "Metal" : "Gem";
-            } else if (enemy.name.find("Lich") != std::string::npos ||
-                       enemy.name.find("Eye Tyrant") != std::string::npos ||
-                       enemy.name.find("Beholder") != std::string::npos) {
-                materialType = randomChance(70) ? "Crystal" : "Essence";
-            } else {
-                // Default: common materials
-                materialType = (randomInt(1, 6) == 1) ? "Metal" : 
-                               (randomInt(1, 5) == 1) ? "Leather" :
-                               (randomInt(1, 4) == 1) ? "Wood" : "Cloth";
-            }
-            
-            // Determine rarity based on player level and enemy type
-            ItemRarity rarity = ItemRarity::COMMON;
-            int rarityRoll = randomInt(1, 100);
-            if (enemy.isBoss) {
-                if (rarityRoll > 80) rarity = ItemRarity::LEGENDARY;
-                else if (rarityRoll > 60) rarity = ItemRarity::EPIC;
-                else if (rarityRoll > 40) rarity = ItemRarity::RARE;
-                else if (rarityRoll > 20) rarity = ItemRarity::UNCOMMON;
-            } else {
-                if (rarityRoll > 85) rarity = ItemRarity::RARE;
-                else if (rarityRoll > 65) rarity = ItemRarity::UNCOMMON;
-            }
-            
-            // Create material item
-            Item material;
-            material.id = 5000 + randomInt(0, 999);  // Material ID range
-            material.name = (rarity == ItemRarity::LEGENDARY) ? "Refined " + materialType + " Material" :
-                           (rarity == ItemRarity::EPIC) ? "Pure " + materialType + " Material" :
-                           (rarity == ItemRarity::RARE) ? "Quality " + materialType + " Material" :
-                           (rarity == ItemRarity::UNCOMMON) ? "Good " + materialType + " Material" :
-                           materialType + " Material";
-            material.description = "A crafting material. Can be used to craft items.";
-            material.type = ItemType::QUEST;  // Use QUEST type for materials
-            material.rarity = rarity;
-            material.isStackable = true;
-            material.isUsable = false;
-            material.quantity = (rarity == ItemRarity::LEGENDARY) ? 1 :
-                               (rarity == ItemRarity::EPIC) ? randomInt(1, 2) :
-                               (rarity == ItemRarity::RARE) ? randomInt(2, 3) :
-                               randomInt(2, 4);
-            material.value = (static_cast<int>(rarity) + 1) * 5;  // Higher rarity = more value
-            
-            drops.push_back(material);
-        }
-    }
-    
-    // Ensure at least one material drops
-    if (drops.empty()) {
-        Item material;
-        material.id = 5000 + randomInt(0, 999);
-        material.name = "Common Material";
-        material.description = "A crafting material.";
-        material.type = ItemType::QUEST;
-        material.rarity = ItemRarity::COMMON;
-        material.isStackable = true;
-        material.quantity = randomInt(1, 3);
-        material.value = 5;
-        drops.push_back(material);
-    }
-    
-    return drops;
-}
 
 int CombatSystem::calculateExperience(const std::vector<Enemy>& enemies) const {
     int total = 0;
