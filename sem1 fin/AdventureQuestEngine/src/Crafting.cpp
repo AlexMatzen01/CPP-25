@@ -13,6 +13,12 @@
 #include <iomanip>
 #include <cstdlib>
 #include <cmath>
+
+namespace AQE {
+
+namespace {
+
+void configureVendorTemplateItem(Item& item, int dungeonLevel) {
     const int baseLevel = std::max(1, dungeonLevel);
     const int rolledLevel = rollItemLevel(baseLevel, item.rarity, false);
     const int minLevel = std::max(1, rolledLevel - 4);
@@ -25,6 +31,61 @@
     }
 
     rebuildItemStatsFromLevel(item);
+}
+
+void applyAccessoryStats(Item& item) {
+    if (item.type != ItemType::ACCESSORY) {
+        return;
+    }
+
+    item.isUsable = false;
+    item.isStackable = false;
+
+    if (!item.hasUniquePerk || item.uniquePerkName.empty()) {
+        const std::string lowerName = toLower(item.name);
+        if (lowerName.find("fortune") != std::string::npos ||
+            lowerName.find("luck") != std::string::npos) {
+            item.uniquePerkName = "Fortunebound";
+        } else if (lowerName.find("swift") != std::string::npos ||
+                   lowerName.find("speed") != std::string::npos) {
+            item.uniquePerkName = "Arcane Pulse";
+        } else if (lowerName.find("guard") != std::string::npos ||
+                   lowerName.find("protect") != std::string::npos ||
+                   lowerName.find("shield") != std::string::npos) {
+            item.uniquePerkName = "Guardian Sigil";
+        }
+
+        if (!item.uniquePerkName.empty()) {
+            item.hasUniquePerk = true;
+        }
+    }
+
+    if (item.itemLevel <= 0) {
+        return;
+    }
+
+    if (item.uniquePerkName == "Fortunebound") {
+        item.critBonus += 6;
+        item.dodgeBonus += 6;
+    } else if (item.uniquePerkName == "Arcane Pulse") {
+        item.attackBonus += 4;
+        item.speedBonus += 4;
+    } else if (item.uniquePerkName == "Guardian Sigil") {
+        item.defenseBonus += 5;
+        item.dodgeBonus += 4;
+    } else if (item.hasUniquePerk) {
+        switch (randomInt(1, 3)) {
+            case 1:
+                item.attackBonus += 3;
+                break;
+            case 2:
+                item.defenseBonus += 3;
+                break;
+            default:
+                item.critBonus += 3;
+                break;
+        }
+    }
 }
 
 ItemRarity rarityFromRequiredLevel(int requiredLevel) {
