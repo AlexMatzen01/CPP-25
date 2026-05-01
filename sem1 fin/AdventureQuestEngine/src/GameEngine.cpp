@@ -16,6 +16,7 @@
 #include <ctime>
 #include <cmath>
 #include <cctype>
+#include <fstream>
 
 namespace AQE {
 
@@ -46,6 +47,43 @@ std::string getSaveDisplayName(const std::string& path) {
     return name;
 }
 
+}
+
+std::string extractSkillTreeData(const std::string& filename) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        return "";
+    }
+
+    std::string line;
+    std::string section;
+    while (std::getline(file, line)) {
+        line = trim(line);
+        if (line.empty() || line[0] == '#') {
+            continue;
+        }
+        if (line == "[SKILLTREE]") {
+            section = line;
+            continue;
+        }
+        if (line.size() > 0 && line[0] == '[') {
+            section.clear();
+            continue;
+        }
+
+        if (section == "[SKILLTREE]") {
+            const size_t equalsPos = line.find('=');
+            if (equalsPos != std::string::npos) {
+                const std::string key = trim(line.substr(0, equalsPos));
+                const std::string value = trim(line.substr(equalsPos + 1));
+                if (key == "data") {
+                    return value;
+                }
+            }
+        }
+    }
+
+    return "";
 }
 
 // ---
@@ -2148,7 +2186,21 @@ void GameEngine::displayLeaderboard() {
 bool GameEngine::saveGame(const std::string& filename) {
     m_gameState.isInMawRealm = m_isInMawRealm;
     m_gameState.currentMawStratum = m_currentMawStratum;
-    return m_fileIO.saveGame(m_gameState, filename);
+    if (!m_fileIO.saveGame(m_gameState, filename)) {
+        return false;
+    }
+
+    if (m_skillTreeManager) {
+        std::ofstream file(filename, std::ios::app);
+        if (!file.is_open()) {
+            return false;
+        }
+
+        file << "\n[SKILLTREE]\n";
+        file << "data=" << m_skillTreeManager->serializeTalents() << "\n";
+    }
+
+    return true;
 }
 
 bool GameEngine::loadGame(const std::string& filename) {
@@ -2158,6 +2210,12 @@ bool GameEngine::loadGame(const std::string& filename) {
 
     if (!m_fileIO.loadGame(m_gameState, filename)) {
         return false;
+    }
+
+    m_skillTreeManager = std::make_unique<SkillTreeManager>(m_gameState.player);
+    const std::string skillTreeData = extractSkillTreeData(filename);
+    if (!skillTreeData.empty()) {
+        m_skillTreeManager->deserializeTalents(skillTreeData);
     }
 
     m_isInMawRealm = m_gameState.isInMawRealm;
@@ -2659,6 +2717,10 @@ void GameEngine::checkLevelUp() {
 
         m_gameState.player.experience -= m_gameState.player.experienceToLevel;
         m_gameState.player.level++;
+        m_gameState.player.talentPoints++;
+        if (m_skillTreeManager) {
+            m_skillTreeManager->addTalentPoints(1);
+        }
         
         // Increase experience needed for next level
         m_gameState.player.experienceToLevel = static_cast<int>(
@@ -2740,6 +2802,7 @@ void GameEngine::checkLevelUp() {
         std::cout << "    Max Mana: +" << manaGain << " (Now: " << m_gameState.player.stats.maxMana << ")\n";
         std::cout << "    Attack: +" << atkGain << " (Now: " << m_gameState.player.stats.attack << ")\n";
         std::cout << "    Defense: +" << defGain << " (Now: " << m_gameState.player.stats.defense << ")\n";
+        std::cout << "    Skill Point: +1 (Available: " << m_gameState.player.talentPoints << ")\n";
         std::cout << "\n  Your health and mana have been restored!\n\n";
         
         // Restore some health on level up

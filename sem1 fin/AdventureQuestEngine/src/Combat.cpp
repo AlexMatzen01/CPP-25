@@ -1288,7 +1288,6 @@ std::vector<Item> CombatSystem::generateLoot(const std::vector<Enemy>& enemies) 
 
 std::vector<Item> CombatSystem::rollLootTable(const Enemy& enemy) {
     std::vector<Item> drops;
-        const int contextLevel = std::max(1, playerRef.level);
     
         // Generate crafting materials based on enemy type
         // Boss enemies drop more materials

@@ -17,6 +17,79 @@ namespace AQE {
 
 namespace {
 
+int defaultAccessoryItemLevel(ItemRarity rarity) {
+    switch (rarity) {
+        case ItemRarity::COMMON: return 8;
+        case ItemRarity::UNCOMMON: return 16;
+        case ItemRarity::RARE: return 28;
+        case ItemRarity::EPIC: return 42;
+        case ItemRarity::LEGENDARY: return 58;
+        default: return 8;
+    }
+}
+
+json statusEffectToJson(const StatusEffect& effect) {
+    return json{
+        {"name", effect.name},
+        {"description", effect.description},
+        {"attackMod", effect.attackMod},
+        {"defenseMod", effect.defenseMod},
+        {"critMod", effect.critMod},
+        {"dodgeMod", effect.dodgeMod},
+        {"speedMod", effect.speedMod},
+        {"turnsRemaining", effect.turnsRemaining},
+        {"isDebuff", effect.isDebuff},
+        {"appliesStun", effect.appliesStun},
+        {"appliesVulnerable", effect.appliesVulnerable},
+        {"vulnerablePercent", effect.vulnerablePercent}
+    };
+}
+
+StatusEffect statusEffectFromJson(const json& j) {
+    StatusEffect effect;
+    if (j.contains("name")) j.at("name").get_to(effect.name);
+    if (j.contains("description")) j.at("description").get_to(effect.description);
+    if (j.contains("attackMod")) j.at("attackMod").get_to(effect.attackMod);
+    if (j.contains("defenseMod")) j.at("defenseMod").get_to(effect.defenseMod);
+    if (j.contains("critMod")) j.at("critMod").get_to(effect.critMod);
+    if (j.contains("dodgeMod")) j.at("dodgeMod").get_to(effect.dodgeMod);
+    if (j.contains("speedMod")) j.at("speedMod").get_to(effect.speedMod);
+    if (j.contains("turnsRemaining")) j.at("turnsRemaining").get_to(effect.turnsRemaining);
+    if (j.contains("isDebuff")) j.at("isDebuff").get_to(effect.isDebuff);
+    if (j.contains("appliesStun")) j.at("appliesStun").get_to(effect.appliesStun);
+    if (j.contains("appliesVulnerable")) j.at("appliesVulnerable").get_to(effect.appliesVulnerable);
+    if (j.contains("vulnerablePercent")) j.at("vulnerablePercent").get_to(effect.vulnerablePercent);
+    return effect;
+}
+
+json skillToJson(const Skill& skill) {
+    return json{
+        {"name", skill.name},
+        {"description", skill.description},
+        {"manaCost", skill.manaCost},
+        {"cooldown", skill.cooldown},
+        {"currentCooldown", skill.currentCooldown},
+        {"damageMultiplier", skill.damageMultiplier},
+        {"isMagical", skill.isMagical},
+        {"isHeal", skill.isHeal},
+        {"effect", statusEffectToJson(skill.effect)}
+    };
+}
+
+Skill skillFromJson(const json& j) {
+    Skill skill;
+    if (j.contains("name")) j.at("name").get_to(skill.name);
+    if (j.contains("description")) j.at("description").get_to(skill.description);
+    if (j.contains("manaCost")) j.at("manaCost").get_to(skill.manaCost);
+    if (j.contains("cooldown")) j.at("cooldown").get_to(skill.cooldown);
+    if (j.contains("currentCooldown")) j.at("currentCooldown").get_to(skill.currentCooldown);
+    if (j.contains("damageMultiplier")) j.at("damageMultiplier").get_to(skill.damageMultiplier);
+    if (j.contains("isMagical")) j.at("isMagical").get_to(skill.isMagical);
+    if (j.contains("isHeal")) j.at("isHeal").get_to(skill.isHeal);
+    if (j.contains("effect")) skill.effect = statusEffectFromJson(j.at("effect"));
+    return skill;
+}
+
 bool createSpellFromId(int spellId, Spell& spell) {
     switch (spellId) {
         case 101: spell = SpellLibrary::createFirebolt(); return true;
@@ -332,7 +405,11 @@ std::vector<Item> FileIO::loadItems(const std::string& filename) {
             Item item = entry.get<Item>();
 
             if (!entry.contains("itemLevel") || item.itemLevel <= 0) {
-                item.itemLevel = estimateItemLevelFromLegacyStats(item);
+                if (item.type == ItemType::ACCESSORY) {
+                    item.itemLevel = defaultAccessoryItemLevel(item.rarity);
+                } else {
+                    item.itemLevel = estimateItemLevelFromLegacyStats(item);
+                }
             }
 
             rebuildItemStatsFromLevel(item);
@@ -496,6 +573,13 @@ bool FileIO::saveGame(const GameState& gameState, const std::string& filename) {
     for (int talentId : p.unlockedTalentIds) {
         file << "unlockedTalent=" << talentId << "\n";
     }
+
+    // Save learned skills
+    file << "\n[SKILLS]\n";
+    file << "count=" << p.skills.size() << "\n";
+    for (const Skill& skill : p.skills) {
+        file << "skill=" << skillToJson(skill).dump() << "\n";
+    }
     
     // Save inventory
     file << "\n[INVENTORY]\n";
@@ -564,6 +648,8 @@ bool FileIO::loadGame(GameState& gameState, const std::string& filename) {
     }
     
     Player& p = gameState.player;
+    p.skills.clear();
+    p.unlockedTalentIds.clear();
     p.shadowLordDefeated = false;
     p.mawUnlocked = false;
     p.mawDepthReached = 0;
@@ -652,6 +738,14 @@ bool FileIO::loadGame(GameState& gameState, const std::string& filename) {
                     if (parts.size() >= 20) item.durability = std::stoi(parts[19]);
                     if (parts.size() >= 21) item.maxDurability = std::stoi(parts[20]);
 
+                    // Keep accessory stats tied to iLvl scaling even for legacy saves.
+                    if (item.type == ItemType::ACCESSORY) {
+                        if (item.itemLevel <= 0) {
+                            item.itemLevel = defaultAccessoryItemLevel(item.rarity);
+                        }
+                        rebuildItemStatsFromLevel(item);
+                    }
+
                     p.inventory.push_back(item);
                 }
             }
@@ -666,6 +760,16 @@ bool FileIO::loadGame(GameState& gameState, const std::string& filename) {
                 std::vector<std::string> parts = split(value, ',');
                 if (parts.size() >= 2) {
                     loadedSpells.push_back({std::stoi(parts[0]), std::stoi(parts[1])});
+                }
+            }
+        }
+        else if (section == "[SKILLS]") {
+            if (key == "skill") {
+                try {
+                    json skillJson = json::parse(value);
+                    p.skills.push_back(skillFromJson(skillJson));
+                } catch (const std::exception& e) {
+                    std::cerr << "Warning: Skipping invalid skill entry in save: " << e.what() << "\n";
                 }
             }
         }
@@ -1924,7 +2028,11 @@ std::vector<Item> createDefaultItems() {
 
     for (Item& item : items) {
         if (item.itemLevel <= 0) {
-            item.itemLevel = estimateItemLevelFromLegacyStats(item);
+            if (item.type == ItemType::ACCESSORY) {
+                item.itemLevel = defaultAccessoryItemLevel(item.rarity);
+            } else {
+                item.itemLevel = estimateItemLevelFromLegacyStats(item);
+            }
         }
         rebuildItemStatsFromLevel(item);
     }

@@ -67,6 +67,17 @@ void SkillTreeManager::initializeTalentTree() {
     currentCombo = ComboChain();
     totalTalentPoints = playerRef.level;
     spentTalentPoints = 0;
+    playerRef.talentPoints = totalTalentPoints;
+    playerRef.spentTalentPoints = spentTalentPoints;
+}
+
+void SkillTreeManager::addTalentPoints(int amount) {
+    if (amount <= 0) {
+        return;
+    }
+
+    totalTalentPoints += amount;
+    playerRef.talentPoints = totalTalentPoints;
 }
 
 void SkillTreeManager::displayTalentTree() const {
@@ -395,7 +406,7 @@ bool SkillTreeManager::interactiveTalentMenu() {
                 break;
             }
             case 3: {
-                system("clear");
+                clearConsole();
                 auto unlocked = getUnlockedTalents();
                 std::cout << "\n=== Unlocked Talents (" << unlocked.size() << ") ===\n";
                 for (const auto& talent : unlocked) {
@@ -410,11 +421,11 @@ bool SkillTreeManager::interactiveTalentMenu() {
                 }
                 std::cout << "\nPress Enter to continue...";
                 std::cin.get();
-                system("clear");
+                clearConsole();
                 break;
             }
             case 4: {
-                system("clear");
+                clearConsole();
                 auto abilities = getActiveAbilities();
                 std::cout << "\n=== Active Abilities (" << abilities.size() << ") ===\n";
                 for (size_t i = 0; i < abilities.size(); ++i) {
@@ -431,14 +442,14 @@ bool SkillTreeManager::interactiveTalentMenu() {
                 }
                 std::cout << "\nPress Enter to continue...";
                 std::cin.get();
-                system("clear");
+                clearConsole();
                 break;
             }
             case 0:
                 inMenu = false;
                 break;
             default:
-                system("clear");
+                clearConsole();
                 std::cout << "Invalid choice!\n";
                 std::cout << "\nPress Enter to continue...";
                 std::cin.get();
@@ -582,7 +593,7 @@ float SkillTreeManager::getPassiveValue(const std::string& passiveName) const {
 
 std::string SkillTreeManager::serializeTalents() const {
     std::stringstream ss;
-    ss << selectedSpecialization << ";";
+    ss << selectedSpecialization << ";" << totalTalentPoints << ";" << spentTalentPoints << ";";
     for (const auto& talent : talentTree) {
         ss << talent.id << ":" << talent.currentRank << ",";
     }
@@ -599,6 +610,18 @@ void SkillTreeManager::deserializeTalents(const std::string& data) {
     if (std::getline(ss, token, ';')) {
         selectedSpecialization = std::stoi(token);
     }
+
+    // Optional saved total/spent point counts
+    if (std::getline(ss, token, ';')) {
+        if (!token.empty()) {
+            totalTalentPoints = std::max(0, std::stoi(token));
+        }
+    }
+    if (std::getline(ss, token, ';')) {
+        if (!token.empty()) {
+            spentTalentPoints = std::max(0, std::stoi(token));
+        }
+    }
     
     // Rest are talent ranks
     while (std::getline(ss, token, ',')) {
@@ -613,6 +636,9 @@ void SkillTreeManager::deserializeTalents(const std::string& data) {
             }
         }
     }
+
+    playerRef.talentPoints = totalTalentPoints;
+    playerRef.spentTalentPoints = spentTalentPoints;
 }
 
 void SkillTreeManager::buildWarriorTree() {

@@ -142,6 +142,9 @@ public:
     // Specialization
     void chooseSpecialization(int specIndex);
     std::string getCurrentSpecialization() const;
+
+    // Point management
+    void addTalentPoints(int amount = 1);
     
     // Stat calculation
     void applyAllTalentBonuses();

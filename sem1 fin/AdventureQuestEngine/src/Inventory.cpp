@@ -36,6 +36,23 @@ std::string getSlotLabel(ItemType type) {
     }
 }
 
+int defaultAccessoryItemLevel(ItemRarity rarity) {
+    switch (rarity) {
+        case ItemRarity::COMMON:
+            return 8;
+        case ItemRarity::UNCOMMON:
+            return 16;
+        case ItemRarity::RARE:
+            return 28;
+        case ItemRarity::EPIC:
+            return 42;
+        case ItemRarity::LEGENDARY:
+            return 58;
+        default:
+            return 8;
+    }
+}
+
 const Item* findEquippedItemForType(const Player& player, ItemType type) {
     for (const Item& item : player.inventory) {
         if (item.type == type && item.isEquipped) {
@@ -839,6 +856,14 @@ bool InventorySystem::equipItem(int itemIndex) {
     if (item.isEquipped) {
         std::cout << item.name << " is already equipped.\n";
         return false;
+    }
+
+    if (item.type == ItemType::ACCESSORY) {
+        // Accessories should always derive bonuses from dynamic iLvl scaling.
+        if (item.itemLevel <= 0) {
+            item.itemLevel = defaultAccessoryItemLevel(item.rarity);
+        }
+        rebuildItemStatsFromLevel(item);
     }
     
     // Unequip existing item in same slot
