@@ -1,8 +1,8 @@
-//! Copyright (c) Alexander Matzen. All rights reserved.
-//! Author: Alexander Matzen
-//! Licensed under the MIT license
 
-// Core data structures for the game engine
+
+
+
+
 
 #ifndef TYPES_H
 #define TYPES_H
@@ -12,79 +12,69 @@
 #include <map>
 #include <functional>
 
-namespace AQE {  // Adventure Quest Engine namespace
+namespace AQE {  
 
-// ---
-// ENUMERATIONS
-// ---
 
-/**
-// Item rarity tiers affecting drop rates and power
- */
+
+
+
+
 enum class ItemRarity {
-    COMMON,      // 50% drop rate
-    UNCOMMON,    // 30% drop rate
-    RARE,        // 15% drop rate
-    EPIC,        // 4% drop rate
-    LEGENDARY    // 1% drop rate
+    COMMON,      
+    UNCOMMON,    
+    RARE,        
+    EPIC,        
+    LEGENDARY    
 };
 
-/**
-// Types of items available in the game
- */
+
 enum class ItemType {
-    CONSUMABLE,   // Healing potions, food, etc.
-    WEAPON,       // Swords, axes, staffs
-    ARMOR,        // Defensive gear
-    ACCESSORY,    // Rings, amulets with buffs
-    KEY,          // Keys for locked doors/chests
-    QUEST,        // Quest-specific items
-    SPECIAL       // Unique items for special endings
+    CONSUMABLE,   
+    WEAPON,       
+    ARMOR,        
+    ACCESSORY,    
+    KEY,          
+    QUEST,        
+    SPECIAL       
 };
 
-/**
-// Types of rooms in the dungeon
- */
+
 enum class RoomType {
-    NORMAL,       // Standard room with possible encounters
-    TREASURE,     // Contains valuable loot
-    BOSS,         // Boss enemy encounter
-    TRAP,         // Dangerous trap room
-    PUZZLE,       // Puzzle to solve for rewards
-    SECRET,       // Hidden room with rare items
-    SAFE,         // Rest area, no enemies
-    SHOP,         // Merchant/vendor room
-    ENTRANCE,     // Starting room
-    EXIT,         // Final destination
-    LIBRARY,      // Library with rare knowledge items
-    FORGE,        // Forge for crafting weapons/armor
-    SHRINE,       // Shrine with blessing/buff effects
-    LABORATORY,   // Laboratory with alchemical items
-    GRAVEYARD,    // Graveyard with undead enemies
-    ARMORY,       // Armory with weapon/armor loot
-    PRISON,       // Prison with hostile NPCs
-    SHADOWLORD    // Unique final boss chamber
+    NORMAL,       
+    TREASURE,     
+    BOSS,         
+    TRAP,         
+    PUZZLE,       
+    SECRET,       
+    SAFE,         
+    SHOP,         
+    ENTRANCE,     
+    EXIT,         
+    LIBRARY,      
+    FORGE,        
+    SHRINE,       
+    LABORATORY,   
+    GRAVEYARD,    
+    ARMORY,       
+    PRISON,       
+    SHADOWLORD    
 };
 
-/**
-// Types of events that can occur
- */
+
 enum class EventType {
-    COMBAT,       // Enemy encounter
-    TREASURE,     // Find loot
-    TRAP,         // Take damage or debuff
-    RIDDLE,       // Solve a riddle
-    MERCHANT,     // Buy/sell items
-    HEAL,         // Restore HP
-    BUFF,         // Temporary stat boost
-    AMBUSH,       // Surprise attack
-    STORY,        // Narrative event
-    CHOICE        // Branching decision
+    COMBAT,       
+    TREASURE,     
+    TRAP,         
+    RIDDLE,       
+    MERCHANT,     
+    HEAL,         
+    BUFF,         
+    AMBUSH,       
+    STORY,        
+    CHOICE        
 };
 
-/**
-// Telegraphable intent for enemies (for fairness/readability)
- */
+
 enum class EnemyIntent {
     UNKNOWN,
     ATTACK_LIGHT,
@@ -98,9 +88,7 @@ enum class EnemyIntent {
     CHARGE
 };
 
-/**
-// Quest status tracking
- */
+
 enum class QuestStatus {
     NOT_STARTED,
     IN_PROGRESS,
@@ -108,100 +96,90 @@ enum class QuestStatus {
     FAILED
 };
 
-/**
-// Character classes with different starting stats
- */
+
 enum class CharacterClass {
-    WARRIOR,      // High HP, high attack
-    MAGE,         // Low HP, high magic damage
-    ROGUE,        // Medium HP, high crit/dodge
-    PALADIN,      // Balanced with healing
-    RANGER,       // High speed, high crit, ranged focus
-    NECROMANCER,  // Low HP, high magic, life drain
-    BARBARIAN,    // Very high HP and attack, low defense
-    MONK          // High dodge, high speed, balanced stats
+    WARRIOR,      
+    MAGE,         
+    ROGUE,        
+    PALADIN,      
+    RANGER,       
+    NECROMANCER,  
+    BARBARIAN,    
+    MONK          
 };
 
-/**
-// Elemental damage types
- */
+
 enum class DamageElement {
-    PHYSICAL,     // Physical damage
-    FIRE,         // Fire magic
-    FROST,        // Ice/Frost magic
-    LIGHTNING,    // Lightning magic
-    ARCANE,       // Pure magical energy
-    HOLY,         // Holy/divine magic
-    SHADOW,       // Dark/shadow magic
-    NATURE        // Nature/primal magic
+    PHYSICAL,     
+    FIRE,         
+    FROST,        
+    LIGHTNING,    
+    ARCANE,       
+    HOLY,         
+    SHADOW,       
+    NATURE        
 };
 
-/**
-// Possible game endings
- */
+
 enum class EndingType {
-    VICTORY_NORMAL,      // Defeated final boss
-    VICTORY_SECRET,      // Found secret ending
-    VICTORY_SPEEDRUN,    // Won in under X turns
-    DEFEAT_DEATH,        // Died in combat
-    DEFEAT_TRAP,         // Killed by trap
-    ENDING_EVIL,         // Made evil choices
-    ENDING_HERO,         // Made heroic choices
-    ENDING_NEUTRAL,      // Mixed choices
-    ENDING_PACIFIST,     // Avoided combat
-    ENDING_COMPLETIONIST // Completed all quests
+    VICTORY_NORMAL,      
+    VICTORY_SECRET,      
+    VICTORY_SPEEDRUN,    
+    DEFEAT_DEATH,        
+    DEFEAT_TRAP,         
+    ENDING_EVIL,         
+    ENDING_HERO,         
+    ENDING_NEUTRAL,      
+    ENDING_PACIFIST,     
+    ENDING_COMPLETIONIST 
 };
 
-// ---
-// STAT STRUCTURES
-// ---
 
-/**
-// Combat statistics for players and enemies
- */
+
+
+
+
 struct CombatStats {
-    int maxHP;           // Maximum hit points
-    int currentHP;       // Current hit points
-    int maxMana;         // Maximum mana points
-    int currentMana;     // Current mana points
-    int attack;          // Base attack damage
-    int defense;         // Damage reduction
-    int critChance;      // Percentage chance for critical hit (0-100)
-    int dodgeChance;     // Percentage chance to dodge (0-100)
-    int speed;           // Determines turn order
-    int magicPower;      // Magic damage multiplier
-    int magicResist;     // Magic damage reduction
+    int maxHP;           
+    int currentHP;       
+    int maxMana;         
+    int currentMana;     
+    int attack;          
+    int defense;         
+    int critChance;      
+    int dodgeChance;     
+    int speed;           
+    int magicPower;      
+    int magicResist;     
     
     CombatStats() : maxHP(100), currentHP(100), maxMana(50), currentMana(50),
                     attack(10), defense(5), critChance(10), dodgeChance(5), 
                     speed(10), magicPower(10), magicResist(5) {}
 };
 
-/**
-// Temporary buff/debuff effect
- */
+
 struct StatusEffect {
     std::string name;
     std::string description;
-    int attackMod;       // Modifier to attack
-    int defenseMod;      // Modifier to defense
-    int critMod;         // Modifier to crit chance
-    int dodgeMod;        // Modifier to dodge chance
-    int speedMod;        // Modifier to speed
-    int turnsRemaining;  // How many turns until effect expires
-    bool isDebuff;       // True if negative effect
+    int attackMod;       
+    int defenseMod;      
+    int critMod;         
+    int dodgeMod;        
+    int speedMod;        
+    int turnsRemaining;  
+    bool isDebuff;       
 
-    // Extended fields for richer combat interactions
-    int dotDamage;       // Damage over time per tick
-    bool dotIsMagic;     // If true, use magic scaling/resist
-    bool appliesVulnerable; // If true, target takes extra damage
-    int vulnerablePercent;  // Percent extra damage taken
-    bool appliesStun;    // Stuns target for 1 turn
-    bool appliesSilence; // Prevents abilities
-    int shieldAmount;    // Temporary shield HP
-    int stackCount;      // Current stacks of this effect
-    int maxStacks;       // Cap for stacking
-    bool ticksStartOfTurn; // If true, tick at start; else end
+    
+    int dotDamage;       
+    bool dotIsMagic;     
+    bool appliesVulnerable; 
+    int vulnerablePercent;  
+    bool appliesStun;    
+    bool appliesSilence; 
+    int shieldAmount;    
+    int stackCount;      
+    int maxStacks;       
+    bool ticksStartOfTurn; 
     
     StatusEffect() : attackMod(0), defenseMod(0), critMod(0), dodgeMod(0),
                      speedMod(0), turnsRemaining(0), isDebuff(false), dotDamage(0),
@@ -210,50 +188,48 @@ struct StatusEffect {
                      stackCount(0), maxStacks(1), ticksStartOfTurn(true) {}
 };
 
-// ---
-// ITEM STRUCTURE
-// ---
 
-/**
-// Represents an item in the game world
- */
+
+
+
+
 struct Item {
-    int id;                      // Unique identifier
-    std::string name;            // Display name
-    std::string description;     // Detailed description
-    ItemType type;               // Category of item
-    ItemRarity rarity;           // Rarity tier
-    int value;                   // Gold value for buying/selling
-    int quantity;                // Stack count
+    int id;                      
+    std::string name;            
+    std::string description;     
+    ItemType type;               
+    ItemRarity rarity;           
+    int value;                   
+    int quantity;                
     
-    // Effect values (interpretation depends on type)
-    int healAmount;              // HP restored (consumables)
-    int attackBonus;             // Attack modifier (weapons)
-    int defenseBonus;            // Defense modifier (armor)
-    int critBonus;               // Crit chance modifier
-    int dodgeBonus;              // Dodge chance modifier
-    int speedBonus;              // Speed modifier
-    int duration;                // Effect duration in turns
     
-    std::string questId;         // Associated quest ID (for quest items)
-    bool isEquipped;             // Currently equipped?
-    bool isUsable;               // Can be used from inventory?
-    bool isStackable;            // Can stack with same items?
+    int healAmount;              
+    int attackBonus;             
+    int defenseBonus;            
+    int critBonus;               
+    int dodgeBonus;              
+    int speedBonus;              
+    int duration;                
     
-    // Durability and upgrade system
-    int durability;              // Current durability points
-    int maxDurability;           // Maximum durability points
-    int upgradeLevel;            // Current upgrade level (0-10)
+    std::string questId;         
+    bool isEquipped;             
+    bool isUsable;               
+    bool isStackable;            
+    
+    
+    int durability;              
+    int maxDurability;           
+    int upgradeLevel;            
 
-    // Replayability progression
-    int itemLevel;               // Dynamic item level (iLvl)
-    bool hasUniquePerk;          // High-tier roll with special bonus
-    std::string uniquePerkName;  // Display name for rolled perk
-    bool mawOnly;                // Only drops/spawns in The Maw
     
-    // Enchantment system
-    bool isEnchanted;            // Has enchantment applied?
-    std::string enchantmentName; // Name of the enchantment
+    int itemLevel;               
+    bool hasUniquePerk;          
+    std::string uniquePerkName;  
+    bool mawOnly;                
+    
+    
+    bool isEnchanted;            
+    std::string enchantmentName; 
     
     Item() : id(0), type(ItemType::CONSUMABLE), rarity(ItemRarity::COMMON),
              value(0), quantity(1), healAmount(0), attackBonus(0),
@@ -264,90 +240,84 @@ struct Item {
              isEnchanted(false) {}
 };
 
-// ---
-// ENEMY STRUCTURE
-// ---
 
-/**
-// Special ability for enemies
- */
+
+
+
+
 struct EnemyAbility {
     std::string name;
     std::string description;
-    int damage;              // Extra damage dealt
-    int cooldown;            // Turns between uses
-    int currentCooldown;     // Current cooldown counter
-    float triggerChance;     // Chance to use (0.0 - 1.0)
-    bool heals;              // Does this ability heal the enemy?
-    int healAmount;          // HP restored if heals
+    int damage;              
+    int cooldown;            
+    int currentCooldown;     
+    float triggerChance;     
+    bool heals;              
+    int healAmount;          
     
     EnemyAbility() : damage(0), cooldown(3), currentCooldown(0),
                      triggerChance(0.25f), heals(false), healAmount(0) {}
 };
 
-/**
-// Represents an enemy in the game
- */
-struct Enemy {
-    int id;                           // Unique identifier
-    std::string name;                 // Display name
-    std::string description;          // Flavor text
-    std::string asciiArt;             // ASCII art representation
-    CombatStats stats;                // Combat statistics
-    std::vector<EnemyAbility> abilities; // Special abilities
-    int experienceReward;             // XP given on defeat
-    int goldReward;                   // Gold given on defeat
-    std::vector<int> lootTable;       // IDs of possible item drops
-    std::vector<int> lootChances;     // Drop chances (percentages)
-    bool isBoss;                      // Is this a boss enemy?
-    bool mawOnly;                     // Only appears in The Maw
-    int trueDamage;                   // Unmitigable damage dealt per attack
-    std::string dialogue;             // What the enemy says
-    std::vector<StatusEffect> activeEffects; // Active status effects
 
-    // Intent/AI fields
-    EnemyIntent nextIntent;           // Next planned action type
-    int intentStrength;               // Relative strength/weight
+struct Enemy {
+    int id;                           
+    std::string name;                 
+    std::string description;          
+    std::string asciiArt;             
+    CombatStats stats;                
+    std::vector<EnemyAbility> abilities; 
+    int experienceReward;             
+    int goldReward;                   
+    std::vector<int> lootTable;       
+    std::vector<int> lootChances;     
+    bool isBoss;                      
+    bool mawOnly;                     
+    int trueDamage;                   
+    std::string dialogue;             
+    std::vector<StatusEffect> activeEffects; 
+
+    
+    EnemyIntent nextIntent;           
+    int intentStrength;               
     
     Enemy() : id(0), experienceReward(10), goldReward(5), isBoss(false),
               mawOnly(false), trueDamage(0),
               nextIntent(EnemyIntent::UNKNOWN), intentStrength(0) {}
 };
 
-// ---
-// ROOM STRUCTURE
-// ---
 
-/**
-// Represents a room/location in the dungeon
- */
+
+
+
+
 struct Room {
-    int id;                          // Unique identifier
-    int x, y;                        // Grid position
-    std::string name;                // Room name
-    std::string description;         // Detailed description
-    std::string shortDesc;           // Brief description for revisits
-    RoomType type;                   // Room category
+    int id;                          
+    int x, y;                        
+    std::string name;                
+    std::string description;         
+    std::string shortDesc;           
+    RoomType type;                   
     
-    // Navigation
-    bool hasNorth, hasSouth, hasEast, hasWest;  // Available exits
-    int northRoomId, southRoomId, eastRoomId, westRoomId;  // Connected rooms
-    bool isLocked;                   // Requires key to enter?
-    int requiredKeyId;               // ID of key item needed
     
-    // Contents
-    std::vector<Item> items;         // Items in the room
-    std::vector<Enemy> enemies;      // Enemies in the room
-    std::vector<int> eventIds;       // Events that can trigger here
+    bool hasNorth, hasSouth, hasEast, hasWest;  
+    int northRoomId, southRoomId, eastRoomId, westRoomId;  
+    bool isLocked;                   
+    int requiredKeyId;               
     
-    // State
-    bool isExplored;                 // Has player visited?
-    bool isCleared;                  // Enemies defeated?
-    bool isSecret;                   // Is this a secret room?
-    bool isTrapActive;               // Is trap still active?
-    int trapDamage;                  // Damage dealt by trap
     
-    // Puzzle (if applicable)
+    std::vector<Item> items;         
+    std::vector<Enemy> enemies;      
+    std::vector<int> eventIds;       
+    
+    
+    bool isExplored;                 
+    bool isCleared;                  
+    bool isSecret;                   
+    bool isTrapActive;               
+    int trapDamage;                  
+    
+    
     std::string puzzleQuestion;
     std::string puzzleAnswer;
     bool puzzleSolved;
@@ -361,37 +331,35 @@ struct Room {
              trapDamage(0), puzzleSolved(false), puzzleRewardItemId(-1) {}
 };
 
-// ---
-// QUEST STRUCTURE
-// ---
 
-/**
-// Represents a quest/mission
- */
+
+
+
+
 struct Quest {
-    int id;                          // Unique identifier
-    std::string name;                // Quest name
-    std::string description;         // Quest description
-    std::string completionText;      // Text shown on completion
-    QuestStatus status;              // Current status
+    int id;                          
+    std::string name;                
+    std::string description;         
+    std::string completionText;      
+    QuestStatus status;              
     
-    // Requirements
-    int targetEnemyId;               // Enemy to defeat (if combat quest)
-    int targetEnemyCount;            // Number to defeat
-    int currentEnemyCount;           // Progress counter
-    int targetItemId;                // Item to collect (if fetch quest)
-    int targetRoomId;                // Room to reach (if exploration quest)
-    bool requiresBoss;               // Must defeat a boss?
     
-    // Rewards
+    int targetEnemyId;               
+    int targetEnemyCount;            
+    int currentEnemyCount;           
+    int targetItemId;                
+    int targetRoomId;                
+    bool requiresBoss;               
+    
+    
     int goldReward;
     int experienceReward;
-    std::vector<int> itemRewards;    // IDs of reward items
+    std::vector<int> itemRewards;    
     
-    // Flags
-    bool isMainQuest;                // Part of main storyline?
-    bool affectsMorality;            // Affects good/evil score?
-    int moralityChange;              // +/- to morality score
+    
+    bool isMainQuest;                
+    bool affectsMorality;            
+    int moralityChange;              
     
     Quest() : id(0), status(QuestStatus::NOT_STARTED),
               targetEnemyId(-1), targetEnemyCount(0), currentEnemyCount(0),
@@ -400,61 +368,57 @@ struct Quest {
               affectsMorality(false), moralityChange(0) {}
 };
 
-// ---
-// EVENT STRUCTURE
-// ---
 
-/**
-// Choice option for decision events
- */
+
+
+
+
 struct EventChoice {
-    std::string text;                // Choice display text
-    std::string resultText;          // Text shown after choosing
-    int hpChange;                    // HP modification
-    int goldChange;                  // Gold modification
-    int moralityChange;              // Morality modification
-    int itemRewardId;                // Item given (-1 for none)
-    int itemLostId;                  // Item taken (-1 for none)
-    bool triggersEvent;              // Does this trigger another event?
-    int triggeredEventId;            // ID of triggered event
+    std::string text;                
+    std::string resultText;          
+    int hpChange;                    
+    int goldChange;                  
+    int moralityChange;              
+    int itemRewardId;                
+    int itemLostId;                  
+    bool triggersEvent;              
+    int triggeredEventId;            
     
     EventChoice() : hpChange(0), goldChange(0), moralityChange(0),
                     itemRewardId(-1), itemLostId(-1), triggersEvent(false),
                     triggeredEventId(-1) {}
 };
 
-/**
-// Represents a game event (encounter, trap, choice, etc.)
- */
+
 struct Event {
-    int id;                          // Unique identifier
-    std::string name;                // Event name
-    std::string description;         // What happens
-    EventType type;                  // Event category
+    int id;                          
+    std::string name;                
+    std::string description;         
+    EventType type;                  
     
-    // Trigger conditions
-    int triggerChance;               // Percentage chance to occur (0-100)
-    bool requiresItem;               // Needs specific item to trigger?
-    int requiredItemId;              // ID of required item
-    bool oneTimeOnly;                // Can only occur once?
-    bool hasOccurred;                // Has this already happened?
     
-    // Effects
-    int damageDealt;                 // Damage to player (traps)
-    int healingGiven;                // HP restored
-    int goldGiven;                   // Gold rewarded
-    int goldTaken;                   // Gold removed
-    int experienceGiven;             // XP rewarded
-    std::vector<int> itemsGiven;     // Items rewarded
-    std::vector<StatusEffect> buffs; // Buffs applied
+    int triggerChance;               
+    bool requiresItem;               
+    int requiredItemId;              
+    bool oneTimeOnly;                
+    bool hasOccurred;                
     
-    // Combat events
-    int enemyId;                     // Enemy spawned (-1 for none)
     
-    // Choice events
-    std::vector<EventChoice> choices; // Available choices
+    int damageDealt;                 
+    int healingGiven;                
+    int goldGiven;                   
+    int goldTaken;                   
+    int experienceGiven;             
+    std::vector<int> itemsGiven;     
+    std::vector<StatusEffect> buffs; 
     
-    // Riddle events
+    
+    int enemyId;                     
+    
+    
+    std::vector<EventChoice> choices; 
+    
+    
     std::string riddleQuestion;
     std::string riddleAnswer;
     int riddleRewardId;
@@ -467,13 +431,11 @@ struct Event {
               riddleRewardId(-1), riddleFailDamage(0) {}
 };
 
-// ---
-// SKILL STRUCTURE
-// ---
 
-/**
-// Represents a player skill/ability
- */
+
+
+
+
 struct Skill {
     std::string name;
     std::string description;
@@ -489,116 +451,110 @@ struct Skill {
               damageMultiplier(1.0f), isMagical(false), isHeal(false) {}
 };
 
-/**
-// Magic school categories for spells
- */
+
 enum class MagicSchool {
-    EVOCATION,      // Damage spells (fire, ice, lightning)
-    ABJURATION,     // Defense/protection spells
-    TRANSMUTATION,  // Buff/debuff spells
-    NECROMANCY,     // Life drain, curses, undead summon
-    CONJURATION,    // Summons, temporary effects
-    DIVINATION,     // Utility, reveal hidden
-    RESTORATION,    // Healing, purge status effects
-    ENCHANTMENT     // Mind control, manipulation
+    EVOCATION,      
+    ABJURATION,     
+    TRANSMUTATION,  
+    NECROMANCY,     
+    CONJURATION,    
+    DIVINATION,     
+    RESTORATION,    
+    ENCHANTMENT     
 };
 
-/**
-// Spell definition (magic ability for certain classes)
- */
+
 struct Spell {
-    int id;                          // Unique spell ID
-    std::string name;                // Spell name
-    std::string description;         // What does it do
-    MagicSchool school;              // School of magic
-    int manaCost;                    // Mana required
-    int cooldown;                    // Turn cooldown
-    int currentCooldown;             // Current cooldown
-    int level;                       // Minimum level to learn
-    float damageMultiplier;          // For offensive spells: damage * (magic_power * multiplier)
-    float healMultiplier;            // For healing spells: heal * (magic_power * multiplier)
-    int dotDamage;                   // Damage over time per turn
-    int dotTurns;                    // How many turns DoT lasts
-    bool isAOE;                      // Affects all enemies?
-    bool isHeal;                     // Is healing spell?
-    bool isDebuff;                   // Is debuff spell?
-    StatusEffect appliedEffect;      // Effect to apply (if any)
-    std::vector<CharacterClass> restrictedClasses;  // Classes that can learn this spell
+    int id;                          
+    std::string name;                
+    std::string description;         
+    MagicSchool school;              
+    int manaCost;                    
+    int cooldown;                    
+    int currentCooldown;             
+    int level;                       
+    float damageMultiplier;          
+    float healMultiplier;            
+    int dotDamage;                   
+    int dotTurns;                    
+    bool isAOE;                      
+    bool isHeal;                     
+    bool isDebuff;                   
+    StatusEffect appliedEffect;      
+    std::vector<CharacterClass> restrictedClasses;  
     
     Spell() : id(0), school(MagicSchool::EVOCATION), manaCost(0), cooldown(0), 
               currentCooldown(0), level(1), damageMultiplier(1.0f), healMultiplier(1.0f), 
               dotDamage(0), dotTurns(0), isAOE(false), isHeal(false), isDebuff(false) {}
 };
 
-// ---
-// PLAYER STRUCTURE
-// ---
 
-/**
-// Represents the player character
- */
+
+
+
+
 struct Player {
-    std::string name;                // Character name
-    CharacterClass charClass;        // Character class
-    CombatStats stats;               // Combat statistics
-    int level;                       // Current level
-    int experience;                  // Current XP
-    int experienceToLevel;           // XP needed for next level
-    int gold;                        // Currency
+    std::string name;                
+    CharacterClass charClass;        
+    CombatStats stats;               
+    int level;                       
+    int experience;                  
+    int experienceToLevel;           
+    int gold;                        
     
-    // Skills
-    std::vector<Skill> skills;       // Available skills
     
-    // Magic System (restricted to certain classes)
-    // Note: Spells are stored dynamically; use caution with empty vector
-    std::vector<Spell> learnedSpells;  // Known spells
-    int spellsLearned;               // Total spells learned
-    std::vector<struct Enemy> currentCombatEnemies;  // Enemies in current combat (for AOE spells)
+    std::vector<Skill> skills;       
     
-    // Inventory
-    std::vector<Item> inventory;     // All carried items
-    int maxInventorySize;            // Maximum items (0 = unlimited)
     
-    // Equipment slots
-    int equippedWeaponId;            // ID of equipped weapon (-1 = none)
-    int equippedArmorId;             // ID of equipped armor
-    int equippedAccessoryId;         // ID of equipped accessory
-    int averageItemLevel;            // Average iLvl of equipped gear
     
-    // Status
-    std::vector<StatusEffect> activeEffects;  // Active buffs/debuffs
-    std::vector<Quest> activeQuests;          // Current quests
-    std::vector<Quest> completedQuests;       // Finished quests
-    std::vector<int> visitedRooms;            // IDs of visited rooms
-    std::vector<std::string> gameLog;         // Log of events
+    std::vector<Spell> learnedSpells;  
+    int spellsLearned;               
+    std::vector<struct Enemy> currentCombatEnemies;  
     
-    // Position
-    int currentRoomId;               // Current room ID
     
-    // Stats for endings
-    int moralityScore;               // Good (+) / Evil (-)
-    int totalKills;                  // Enemies defeated
-    int explorationTurns;            // Turns spent exploring
-    int combatTurns;                 // Turns spent in combat
-    int totalTurns;                  // Derived: exploration + combat
-    int secretsFound;                // Secret rooms discovered
-    int puzzlesSolved;               // Puzzles completed
-    int bossesDefeated;              // Boss enemies killed
-    int deathCount;                  // Times died (for saves)
+    std::vector<Item> inventory;     
+    int maxInventorySize;            
     
-    // Flags
-    bool hasWon;                     // Reached victory condition?
-    bool isAlive;                    // Still alive?
-    bool hasSecretEnding;            // Found secret ending?
-    bool shadowLordDefeated;         // True after defeating final boss
-    bool mawUnlocked;                // Portal Room / The Maw access unlocked
-    int mawDepthReached;             // Deepest cleared Maw floor
     
-    // Talent System
-    std::vector<int> unlockedTalentIds;     // IDs of unlocked talents
-    int selectedSpecialization;             // Currently selected specialization (0-2)
-    int talentPoints;                       // Total talent points available
-    int spentTalentPoints;                  // Talent points already spent
+    int equippedWeaponId;            
+    int equippedArmorId;             
+    int equippedAccessoryId;         
+    int averageItemLevel;            
+    
+    
+    std::vector<StatusEffect> activeEffects;  
+    std::vector<Quest> activeQuests;          
+    std::vector<Quest> completedQuests;       
+    std::vector<int> visitedRooms;            
+    std::vector<std::string> gameLog;         
+    
+    
+    int currentRoomId;               
+    
+    
+    int moralityScore;               
+    int totalKills;                  
+    int explorationTurns;            
+    int combatTurns;                 
+    int totalTurns;                  
+    int secretsFound;                
+    int puzzlesSolved;               
+    int bossesDefeated;              
+    int deathCount;                  
+    
+    
+    bool hasWon;                     
+    bool isAlive;                    
+    bool hasSecretEnding;            
+    bool shadowLordDefeated;         
+    bool mawUnlocked;                
+    int mawDepthReached;             
+    
+    
+    std::vector<int> unlockedTalentIds;     
+    int selectedSpecialization;             
+    int talentPoints;                       
+    int spentTalentPoints;                  
     
     Player() : charClass(CharacterClass::WARRIOR), level(1), experience(0),
                experienceToLevel(100), gold(50), maxInventorySize(30),
@@ -611,23 +567,21 @@ struct Player {
                mawDepthReached(0), selectedSpecialization(0), talentPoints(1), spentTalentPoints(0) {}
 };
 
-// ---
-// GAME STATE STRUCTURE
-// ---
 
-/**
-// Main game state container
- */
+
+
+
+
 struct GameState {
-    Player player;                           // Player data
-    std::vector<Room> dungeon;               // All rooms
-    std::vector<Item> itemTemplates;         // Item database
-    std::vector<Enemy> enemyTemplates;       // Enemy database
-    std::vector<Event> eventTemplates;       // Event database
-    std::vector<Quest> questTemplates;       // Quest database
-    std::map<int, Room*> roomMap;            // Quick room lookup by ID
+    Player player;                           
+    std::vector<Room> dungeon;               
+    std::vector<Item> itemTemplates;         
+    std::vector<Enemy> enemyTemplates;       
+    std::vector<Event> eventTemplates;       
+    std::vector<Quest> questTemplates;       
+    std::map<int, Room*> roomMap;            
     
-    // World generation params
+    
     int mapWidth;
     int mapHeight;
     int currentDungeonLevel;
@@ -635,26 +589,24 @@ struct GameState {
     bool isInMawRealm;
     int currentMawStratum;
     
-    // Game settings
+    
     bool debugMode;
     bool showAsciiArt;
-    int difficulty;                          // 1=Easy, 2=Normal, 3=Hard
+    int difficulty;                          
     
-    // Leaderboard
-    std::vector<std::pair<std::string, int>> leaderboard;  // Name, Score
+    
+    std::vector<std::pair<std::string, int>> leaderboard;  
     
     GameState() : mapWidth(8), mapHeight(8), currentDungeonLevel(1),
                   randomSeed(0), isInMawRealm(false), currentMawStratum(0),
                   debugMode(false), showAsciiArt(true), difficulty(2) {}
 };
 
-// ---
-// RIDDLE STRUCTURE
-// ---
 
-/**
-// Represents a riddle/puzzle
- */
+
+
+
+
 struct Riddle {
     std::string question;
     std::string answer;
@@ -665,6 +617,6 @@ struct Riddle {
         : question(q), answer(a), hint(h) {}
 };
 
-}  // namespace AQE
+}  
 
-#endif // TYPES_H
+#endif 

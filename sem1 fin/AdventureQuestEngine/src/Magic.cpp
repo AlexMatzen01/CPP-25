@@ -1,28 +1,28 @@
-//! Copyright (c) Alexander Matzen. All rights reserved.
-//! Author: Alexander Matzen
-//! Licensed under the MIT license
+
+
+
 
 #include "Magic.h"
 #include <algorithm>
 
 namespace AQE {
 
-// ---
-// MAGIC SYSTEM IMPLEMENTATION
-// ---
+
+
+
 
 MagicSystem::MagicSystem(Player& player) : playerRef(player) {}
 
 bool MagicSystem::learnSpell(const Spell& spell) {
-    // Check if player's class can learn this spell
+    
     if (!canLearnSpell(playerRef.charClass, spell)) {
         return false;
     }
     
-    // Check if already learned
+    
     for (const auto& known : knownSpells) {
         if (known.id == spell.id) {
-            return false; // Already learned
+            return false; 
         }
     }
     
@@ -43,7 +43,7 @@ bool MagicSystem::canCastMagic(CharacterClass charClass) {
 }
 
 bool MagicSystem::canLearnSpell(CharacterClass charClass, const Spell& spell) {
-    // Check if class can learn this spell
+    
     for (const auto& restrictedClass : spell.restrictedClasses) {
         if (restrictedClass == charClass) {
             return true;
@@ -79,9 +79,9 @@ std::vector<MagicSchool> MagicSystem::getAvailableSchools(CharacterClass charCla
     return schools;
 }
 
-// ---
-// SPELL LIBRARY IMPLEMENTATIONS
-// ---
+
+
+
 
 namespace SpellLibrary {
 
@@ -91,10 +91,10 @@ Spell createFirebolt() {
     spell.name = "Firebolt";
     spell.description = "Launch a bolt of fire at a single target";
     spell.school = MagicSchool::EVOCATION;
-    spell.manaCost = 25;  // Increased from 20
+    spell.manaCost = 25;  
     spell.cooldown = 1;
     spell.level = 1;
-    spell.damageMultiplier = 1.0f;  // Reduced from 1.2f
+    spell.damageMultiplier = 1.0f;  
     spell.isAOE = false;
     spell.isHeal = false;
     spell.isDebuff = false;
@@ -108,10 +108,10 @@ Spell createFrostbolt() {
     spell.name = "Frostbolt";
     spell.description = "Launch a bolt of ice, slowing the target";
     spell.school = MagicSchool::EVOCATION;
-    spell.manaCost = 28;  // Increased from 20
-    spell.cooldown = 2;  // Increased from 1
+    spell.manaCost = 28;  
+    spell.cooldown = 2;  
     spell.level = 2;
-    spell.damageMultiplier = 0.9f;  // Reduced from 1.1f
+    spell.damageMultiplier = 0.9f;  
     spell.isAOE = false;
     spell.isHeal = false;
     spell.isDebuff = true;
@@ -132,10 +132,10 @@ Spell createChainLightning() {
     spell.name = "Chain Lightning";
     spell.description = "Lightning jumps between all enemies";
     spell.school = MagicSchool::EVOCATION;
-    spell.manaCost = 45;  // Increased from 35
-    spell.cooldown = 3;  // Increased from 2
+    spell.manaCost = 45;  
+    spell.cooldown = 3;  
     spell.level = 4;
-    spell.damageMultiplier = 1.1f;  // Reduced from 1.5f
+    spell.damageMultiplier = 1.1f;  
     spell.isAOE = true;
     spell.isHeal = false;
     spell.isDebuff = false;
@@ -149,10 +149,10 @@ Spell createInferno() {
     spell.name = "Inferno";
     spell.description = "Massive fire explosion, deals damage and applies burn";
     spell.school = MagicSchool::EVOCATION;
-    spell.manaCost = 60;  // Increased from 50
-    spell.cooldown = 4;  // Increased from 3
+    spell.manaCost = 60;  
+    spell.cooldown = 4;  
     spell.level = 8;
-    spell.damageMultiplier = 1.5f;  // Reduced from 2.0f
+    spell.damageMultiplier = 1.5f;  
     spell.isAOE = true;
     spell.isHeal = false;
     spell.isDebuff = true;
@@ -175,10 +175,10 @@ Spell createBlizzard() {
     spell.name = "Blizzard";
     spell.description = "Winter storm hits all enemies, chilling them";
     spell.school = MagicSchool::EVOCATION;
-    spell.manaCost = 60;  // Increased from 50
-    spell.cooldown = 4;  // Increased from 3
+    spell.manaCost = 60;  
+    spell.cooldown = 4;  
     spell.level = 8;
-    spell.damageMultiplier = 1.4f;  // Reduced from 1.8f
+    spell.damageMultiplier = 1.4f;  
     spell.isAOE = true;
     spell.isHeal = false;
     spell.isDebuff = true;
@@ -200,8 +200,8 @@ Spell createMagicShield() {
     spell.name = "Magic Shield";
     spell.description = "Create a magical barrier to reduce damage";
     spell.school = MagicSchool::ABJURATION;
-    spell.manaCost = 30;  // Increased from 25
-    spell.cooldown = 2;  // Increased from 1
+    spell.manaCost = 30;  
+    spell.cooldown = 2;  
     spell.level = 1;
     spell.isAOE = false;
     spell.isHeal = false;
@@ -343,11 +343,11 @@ Spell createDrainLife() {
     spell.name = "Drain Life";
     spell.description = "Siphon life from target, healing yourself";
     spell.school = MagicSchool::NECROMANCY;
-    spell.manaCost = 40;  // Increased from 35
+    spell.manaCost = 40;  
     spell.cooldown = 2;
     spell.level = 3;
-    spell.damageMultiplier = 1.1f;  // Reduced from 1.3f
-    spell.healMultiplier = 0.4f;  // Reduced from 0.6f
+    spell.damageMultiplier = 1.1f;  
+    spell.healMultiplier = 0.4f;  
     spell.isAOE = false;
     spell.isHeal = true;
     spell.isDebuff = false;
@@ -403,10 +403,10 @@ Spell createDeathWish() {
     spell.name = "Death Wish";
     spell.description = "Extreme damage at great personal risk";
     spell.school = MagicSchool::NECROMANCY;
-    spell.manaCost = 75;  // Increased from 60
-    spell.cooldown = 5;  // Increased from 4
+    spell.manaCost = 75;  
+    spell.cooldown = 5;  
     spell.level = 10;
-    spell.damageMultiplier = 2.2f;  // Reduced from 3.0f
+    spell.damageMultiplier = 2.2f;  
     spell.isAOE = true;
     spell.isHeal = false;
     spell.isDebuff = false;
@@ -428,10 +428,10 @@ Spell createHeal() {
     spell.name = "Heal";
     spell.description = "Restore health to self or ally";
     spell.school = MagicSchool::RESTORATION;
-    spell.manaCost = 35;  // Increased from 25
-    spell.cooldown = 2;  // Increased from 1
+    spell.manaCost = 35;  
+    spell.cooldown = 2;  
     spell.level = 1;
-    spell.healMultiplier = 1.2f;  // Reduced from 1.5f
+    spell.healMultiplier = 1.2f;  
     spell.isAOE = false;
     spell.isHeal = true;
     spell.isDebuff = false;
@@ -446,10 +446,10 @@ Spell createGreaterHeal() {
     spell.name = "Greater Heal";
     spell.description = "Restore substantial health";
     spell.school = MagicSchool::RESTORATION;
-    spell.manaCost = 55;  // Increased from 45
-    spell.cooldown = 3;  // Increased from 2
+    spell.manaCost = 55;  
+    spell.cooldown = 3;  
     spell.level = 5;
-    spell.healMultiplier = 1.8f;  // Reduced from 2.5f
+    spell.healMultiplier = 1.8f;  
     spell.isAOE = false;
     spell.isHeal = true;
     spell.isDebuff = false;
@@ -558,6 +558,6 @@ Spell createFascinate() {
     return spell;
 }
 
-} // namespace SpellLibrary
+} 
 
-} // namespace AQE
+} 

@@ -1,8 +1,8 @@
-//! Copyright (c) Alexander Matzen. All rights reserved.
-//! Author: Alexander Matzen
-//! Licensed under the MIT license
 
-// Procedural map generation implementation
+
+
+
+
 
 #include "../include/MapGenerator.h"
 #include "../include/Utils.h"
@@ -17,74 +17,74 @@
 
 namespace AQE {
 
-// ---
-// CONSTRUCTOR
-// ---
+
+
+
 
 MapGenerator::MapGenerator(int width, int height)
     : mapWidth(width), mapHeight(height), entranceId(-1), exitId(-1), nextRoomId(0), forgeCount(0), mawModeActive(false), mawIntensityLevel(0) {
-    // Clamp dimensions to valid range
+    
     if (mapWidth < MIN_MAP_WIDTH) mapWidth = MIN_MAP_WIDTH;
     if (mapWidth > MAX_MAP_WIDTH) mapWidth = MAX_MAP_WIDTH;
     if (mapHeight < MIN_MAP_HEIGHT) mapHeight = MIN_MAP_HEIGHT;
     if (mapHeight > MAX_MAP_HEIGHT) mapHeight = MAX_MAP_HEIGHT;
 }
 
-// ---
-// PUBLIC METHODS
-// ---
+
+
+
 
 bool MapGenerator::generateMap(GameState& gameState, bool mawMode) {
     mawModeActive = mawMode;
     mawIntensityLevel = mawModeActive ? std::max(1, gameState.currentDungeonLevel) : 0;
 
-    // Store map dimensions in game state
+    
     gameState.mapWidth = mapWidth;
     gameState.mapHeight = mapHeight;
     
-    // Clear previous data
+    
     rooms.clear();
     initializeGrid();
-    forgeCount = 0;  // Reset forge counter for this generation
+    forgeCount = 0;  
     
-    // Step 1: Place entrance at bottom-left area
+    
     entranceId = placeEntranceRoom();
     if (entranceId < 0) return false;
 
-    // Step 1.5: Place a basic shop next to the entrance
+    
     if (!placeBasicShopNextToEntrance()) return false;
     
-    // Step 1.6: Place a forge next to the entrance
+    
     if (!placeForgeNextToEntrance()) return false;
     
-    // Step 2: Place exit at top-right area
+    
     exitId = placeExitRoom();
     if (exitId < 0) return false;
     
-    // Step 3: Generate main path between entrance and exit
+    
     if (!generateMainPath()) return false;
     
-    // Step 4: Fill remaining spaces with optional rooms
+    
     fillRemainingRooms();
     
-    // Step 5: Place secret rooms (1-3 based on map size)
+    
     int secretCount = 1 + randomInt(0, mapWidth * mapHeight / 20);
     placeSecretRooms(secretCount);
     
-    // Step 6: Place the unique Shadow Lord chamber as far from the entrance as possible
+    
     if (!mawModeActive && !placeShadowLordRoom()) return false;
     if (mawModeActive) ensureMawExitRoom();
     
-    // Step 7: Connect all adjacent rooms
+    
     connectRooms();
     
-    // Step 8: Verify connectivity
+    
     if (!verifyConnectivity()) {
-        // If not connected, regenerate (shouldn't happen with proper algorithm)
+        
         return generateMap(gameState, mawMode);
     }
     
-    // Step 9: Populate rooms with content
+    
     const int dungeonLevel = std::max(1, gameState.currentDungeonLevel);
     for (Room& room : rooms) {
         populateWithEnemies(room, gameState.enemyTemplates, dungeonLevel, mawModeActive, gameState.player.level);
@@ -99,10 +99,10 @@ bool MapGenerator::generateMap(GameState& gameState, bool mawMode) {
         }
     }
     
-    // Copy rooms to game state
+    
     gameState.dungeon = rooms;
     
-    // Build room lookup map
+    
     gameState.roomMap.clear();
     for (Room& room : gameState.dungeon) {
         gameState.roomMap[room.id] = &room;
@@ -177,7 +177,7 @@ void MapGenerator::printMap(int currentRoomId) const {
     displaySeparator(80, '=');
     std::cout << "\n";
     
-    // Print coordinate numbers on top
+    
     std::cout << "    ";
     for (int x = 0; x < mapWidth; ++x) {
         std::cout << "  " << colorize(std::to_string(x), Color::DARK_GRAY) << " ";
@@ -185,11 +185,11 @@ void MapGenerator::printMap(int currentRoomId) const {
     std::cout << "\n";
     
     for (int y = mapHeight - 1; y >= 0; --y) {
-        // Print top border of row with fancy corners
+        
         std::cout << "    ";
         for (int x = 0; x < mapWidth; ++x) {
             if (grid[y][x] >= 0) {
-                // Highlight current player room with special border
+                
                 if (grid[y][x] == currentRoomId) {
                     std::cout << colorize("┏━━━", Color::BRIGHT_GREEN);
                 } else {
@@ -201,7 +201,7 @@ void MapGenerator::printMap(int currentRoomId) const {
         }
         std::cout << "\n";
         
-        // Print room content with color-coded symbols
+        
         std::cout << " " << colorize(std::to_string(y), Color::DARK_GRAY) << "  ";
         for (int x = 0; x < mapWidth; ++x) {
             if (grid[y][x] >= 0) {
@@ -295,9 +295,9 @@ void MapGenerator::printMap(int currentRoomId) const {
                             break;
                     }
                     
-                    // Highlight current player room
+                    
                     if (room->id == currentRoomId) {
-                        // Use bright green border and bold symbol for player location
+                        
                         std::cout << colorize("┃", Color::BRIGHT_GREEN) << "\033[7m" << colorize(symbol, color) << "\033[27m";
                     } else {
                         std::cout << colorize("│", Color::BRIGHT_BLACK) << colorize(symbol, color);
@@ -311,11 +311,11 @@ void MapGenerator::printMap(int currentRoomId) const {
         }
         std::cout << "\n";
         
-        // Print bottom border
+        
         std::cout << "    ";
         for (int x = 0; x < mapWidth; ++x) {
             if (grid[y][x] >= 0) {
-                // Highlight current player room with special border
+                
                 if (grid[y][x] == currentRoomId) {
                     std::cout << colorize("┗━━━", Color::BRIGHT_GREEN);
                 } else {
@@ -331,7 +331,7 @@ void MapGenerator::printMap(int currentRoomId) const {
     std::cout << "\n";
     displaySeparator(80, '-');
     
-    // Enhanced legend with colors and symbols
+    
     std::cout << "\n" << colorize("◆ LEGEND", Color::BRIGHT_CYAN) << "\n\n";
     
     std::cout << "  " << colorize("⌂", Color::BRIGHT_GREEN) << " Entrance (Start)      ";
@@ -549,21 +549,21 @@ void MapGenerator::printMawMap(int currentRoomId, int stratum, bool fogOfWar) co
     std::cout << "\n";
 }
 
-// ---
-// PRIVATE METHODS - Core Generation
-// ---
+
+
+
 
 void MapGenerator::initializeGrid() {
     grid.clear();
     grid.resize(mapHeight);
     for (int y = 0; y < mapHeight; ++y) {
-        grid[y].resize(mapWidth, -1);  // -1 means empty
+        grid[y].resize(mapWidth, -1);  
     }
     nextRoomId = 0;
 }
 
 int MapGenerator::placeEntranceRoom() {
-    // Place entrance in bottom-left quadrant
+    
     int x = randomInt(0, mapWidth / 3);
     int y = randomInt(0, mapHeight / 3);
     
@@ -578,7 +578,7 @@ int MapGenerator::placeEntranceRoom() {
                               "Cold air flows from within, carrying the scent of ancient stone and forgotten secrets. "
                               "There's no turning back now.";
     }
-    entrance.isExplored = true;  // Player starts here
+    entrance.isExplored = true;  
     
     rooms.push_back(entrance);
     grid[y][x] = entrance.id;
@@ -587,11 +587,11 @@ int MapGenerator::placeEntranceRoom() {
 }
 
 int MapGenerator::placeExitRoom() {
-    // Place exit in top-right quadrant (away from entrance)
+    
     int x = randomInt(mapWidth * 2 / 3, mapWidth - 1);
     int y = randomInt(mapHeight * 2 / 3, mapHeight - 1);
     
-    // Make sure it's not the same as entrance
+    
     while (grid[y][x] >= 0) {
         x = randomInt(mapWidth / 2, mapWidth - 1);
         y = randomInt(mapHeight / 2, mapHeight - 1);
@@ -718,7 +718,7 @@ bool MapGenerator::placeShadowLordRoom() {
 }
 
 bool MapGenerator::placeBasicShopNextToEntrance() {
-    // Find entrance position
+    
     int startX = -1, startY = -1;
     for (const Room& room : rooms) {
         if (room.id == entranceId) {
@@ -730,10 +730,10 @@ bool MapGenerator::placeBasicShopNextToEntrance() {
     
     if (startX < 0) return false;
     
-    // Try to find an empty adjacent spot
+    
     std::vector<std::pair<int, int>> directions = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
     
-    // Simple shuffle using randomInt
+    
     for (int i = 0; i < 4; ++i) {
         int j = randomInt(0, 3);
         std::swap(directions[i], directions[j]);
@@ -754,11 +754,11 @@ bool MapGenerator::placeBasicShopNextToEntrance() {
         }
     }
     
-    return false; // Should rarely happen
+    return false; 
 }
 
 bool MapGenerator::placeForgeNextToEntrance() {
-    // Find entrance position
+    
     int startX = -1, startY = -1;
     for (const Room& room : rooms) {
         if (room.id == entranceId) {
@@ -770,7 +770,7 @@ bool MapGenerator::placeForgeNextToEntrance() {
     
     if (startX < 0) return false;
     
-    // Try to find an empty adjacent spot (prefer diagonal or farther from shop)
+    
     std::vector<std::pair<int, int>> directions = {{1, 1}, {-1, 1}, {1, -1}, {-1, -1}, {0, 1}, {0, -1}, {1, 0}, {-1, 0}};
     
     for (auto [dx, dy] : directions) {
@@ -789,11 +789,11 @@ bool MapGenerator::placeForgeNextToEntrance() {
         }
     }
     
-    return false; // Should rarely happen
+    return false; 
 }
 
 bool MapGenerator::generateMainPath() {
-    // Find entrance and exit positions
+    
     int startX = -1, startY = -1, endX = -1, endY = -1;
     
     for (const Room& room : rooms) {
@@ -809,23 +809,23 @@ bool MapGenerator::generateMainPath() {
     
     if (startX < 0 || endX < 0) return false;
     
-    // Generate path using random walk with bias toward exit
+    
     int currentX = startX;
     int currentY = startY;
-    int maxIterations = mapWidth * mapHeight * 2;  // Prevent infinite loops
+    int maxIterations = mapWidth * mapHeight * 2;  
     
     while ((currentX != endX || currentY != endY) && maxIterations > 0) {
         maxIterations--;
         
-        // Calculate direction bias toward exit
+        
         int dx = (endX > currentX) ? 1 : (endX < currentX) ? -1 : 0;
         int dy = (endY > currentY) ? 1 : (endY < currentY) ? -1 : 0;
         
-        // Choose direction (70% chance to move toward exit, 30% random)
+        
         int moveX = 0, moveY = 0;
         
         if (randomChance(70)) {
-            // Move toward exit
+            
             if (randomChance(50) && dx != 0) {
                 moveX = dx;
             } else if (dy != 0) {
@@ -834,7 +834,7 @@ bool MapGenerator::generateMainPath() {
                 moveX = dx;
             }
         } else {
-            // Random direction
+            
             int dir = randomInt(0, 3);
             switch (dir) {
                 case 0: moveX = 1; break;
@@ -847,31 +847,31 @@ bool MapGenerator::generateMainPath() {
         int newX = currentX + moveX;
         int newY = currentY + moveY;
         
-        // Check if valid position
+        
         if (isValidPosition(newX, newY) && !hasRoom(newX, newY)) {
-            // Create room at this position
+            
             RoomType type = determineRoomType(newX, newY, true);
             Room room = createRoom(newX, newY, type);
             rooms.push_back(room);
             grid[newY][newX] = room.id;
         }
         
-        // Move to new position if valid
+        
         if (isValidPosition(newX, newY)) {
             currentX = newX;
             currentY = newY;
         }
     }
     
-    // Ensure we have a connected path (verify later)
+    
     return true;
 }
 
 void MapGenerator::fillRemainingRooms() {
-    // Random fill with higher probability to create denser maps
-    int fillChance = 65;  // Base chance to fill empty cell (increased from 40 for more density)
     
-    // Collect all candidates first
+    int fillChance = 65;  
+    
+    
     std::vector<std::pair<int, int>> allCandidates;
     
     for (int y = 0; y < mapHeight; ++y) {
@@ -885,18 +885,18 @@ void MapGenerator::fillRemainingRooms() {
         }
     }
     
-    // Shuffle candidates for better distribution
+    
     for (size_t i = 0; i < allCandidates.size(); ++i) {
         size_t j = randomInt(0, static_cast<int>(allCandidates.size()) - 1);
         std::swap(allCandidates[i], allCandidates[j]);
     }
     
-    // Fill rooms with balanced distribution
+    
     for (auto [x, y] : allCandidates) {
         if (!hasRoom(x, y) && randomChance(fillChance)) {
             RoomType type = determineRoomType(x, y);
             
-            // Don't place extra forges if we already have enough
+            
             if (type == RoomType::FORGE && forgeCount >= 4) {
                 type = RoomType::NORMAL;
             }
@@ -914,7 +914,7 @@ void MapGenerator::fillRemainingRooms() {
 void MapGenerator::placeSecretRooms(int count) {
     std::vector<std::pair<int,int>> candidates;
     
-    // Find all empty cells adjacent to exactly one room
+    
     for (int y = 0; y < mapHeight; ++y) {
         for (int x = 0; x < mapWidth; ++x) {
             if (!hasRoom(x, y)) {
@@ -926,7 +926,7 @@ void MapGenerator::placeSecretRooms(int count) {
         }
     }
     
-    // Place secret rooms in random candidate positions
+    
     for (int i = 0; i < count && !candidates.empty(); ++i) {
         int idx = randomInt(0, static_cast<int>(candidates.size()) - 1);
         auto [x, y] = candidates[idx];
@@ -945,30 +945,30 @@ void MapGenerator::placeSecretRooms(int count) {
 }
 
 void MapGenerator::connectRooms() {
-    // Connect each room to its adjacent rooms
+    
     for (Room& room : rooms) {
         int x = room.x;
         int y = room.y;
         
-        // Check North (y+1)
+        
         if (isValidPosition(x, y + 1) && hasRoom(x, y + 1)) {
             room.hasNorth = true;
             room.northRoomId = grid[y + 1][x];
         }
         
-        // Check South (y-1)
+        
         if (isValidPosition(x, y - 1) && hasRoom(x, y - 1)) {
             room.hasSouth = true;
             room.southRoomId = grid[y - 1][x];
         }
         
-        // Check East (x+1)
+        
         if (isValidPosition(x + 1, y) && hasRoom(x + 1, y)) {
             room.hasEast = true;
             room.eastRoomId = grid[y][x + 1];
         }
         
-        // Check West (x-1)
+        
         if (isValidPosition(x - 1, y) && hasRoom(x - 1, y)) {
             room.hasWest = true;
             room.westRoomId = grid[y][x - 1];
@@ -976,9 +976,9 @@ void MapGenerator::connectRooms() {
     }
 }
 
-// ---
-// PRIVATE METHODS - Room Creation
-// ---
+
+
+
 
 Room MapGenerator::createRoom(int x, int y, RoomType type) {
     Room room;
@@ -1222,20 +1222,20 @@ RoomType MapGenerator::determineRoomType(int x, int y, bool isMainPath) {
         return RoomType::NORMAL;
     }
 
-    // Count existing rooms to balance distribution
+    
     std::map<RoomType, int> roomCounts;
     for (const Room& room : rooms) {
         roomCounts[room.type]++;
     }
     
     int totalRooms = static_cast<int>(rooms.size());
-    int maxRoomTypeCount = std::max(3, totalRooms / 8);  // Limit any one type to ~12.5% of rooms
+    int maxRoomTypeCount = std::max(3, totalRooms / 8);  
     
-    // Reduce chance for room types that are already well-represented
+    
     int roll = randomInt(1, 100);
     int cumulative = 0;
     
-    // Boss rooms should not be on the main path to keep them "on the side"
+    
     if (!isMainPath && roomCounts[RoomType::BOSS] < 2) {
         cumulative += BOSS_ROOM_CHANCE;
         if (roll <= cumulative) return RoomType::BOSS;
@@ -1291,14 +1291,14 @@ RoomType MapGenerator::determineRoomType(int x, int y, bool isMainPath) {
     return RoomType::NORMAL;
 }
 
-// ---
-// PRIVATE METHODS - Population
-// ---
+
+
+
 
 void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& templates, int contextLevel, bool mawMode, int playerLevel) {
     (void)contextLevel;
 
-    // Skip certain room types
+    
     if (room.type == RoomType::SAFE || room.type == RoomType::ENTRANCE || 
         room.type == RoomType::EXIT || room.type == RoomType::TREASURE ||
         room.type == RoomType::SHOP || room.type == RoomType::LIBRARY ||
@@ -1335,7 +1335,7 @@ void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& tem
             break;
         case RoomType::SECRET:
             if (randomChance(30)) {
-                enemyCount = 1;  // Rare guardian
+                enemyCount = 1;  
             }
             break;
         case RoomType::GRAVEYARD:
@@ -1413,7 +1413,7 @@ void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& tem
     };
     
     for (int i = 0; i < enemyCount; ++i) {
-        // Find appropriate enemy
+        
         std::vector<const Enemy*> validEnemies;
         std::vector<const Enemy*> weakEnemies;
         std::vector<const Enemy*> mediumEnemies;
@@ -1464,9 +1464,9 @@ void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& tem
         
         if (!validEnemies.empty()) {
             int idx = randomInt(0, static_cast<int>(validEnemies.size()) - 1);
-            Enemy enemy = *validEnemies[idx];  // Copy the template
+            Enemy enemy = *validEnemies[idx];  
 
-            // Determine effective level for scaling: Maw now follows the player's level directly.
+            
             int effectiveLevel = std::max(1, playerLevel);
 
             if (mawMode) {
@@ -1488,11 +1488,11 @@ void MapGenerator::populateWithEnemies(Room& room, const std::vector<Enemy>& tem
                 enemy.experienceReward += effectiveLevel * (needsBoss ? 20 : 10);
                 enemy.goldReward += effectiveLevel * (needsBoss ? 22 : 9);
             } else {
-                // Non-Maw: scale enemies primarily with player's level to keep combat balanced
+                
                 int levelDelta = std::max(0, playerLevel - 1);
-                const float hpScale = 1.0f + levelDelta * 0.06f;   // ~6% HP per level
-                const float atkScale = 1.0f + levelDelta * 0.045f; // ~4.5% ATK per level
-                const float defScale = 1.0f + levelDelta * 0.035f; // ~3.5% DEF per level
+                const float hpScale = 1.0f + levelDelta * 0.06f;   
+                const float atkScale = 1.0f + levelDelta * 0.045f; 
+                const float defScale = 1.0f + levelDelta * 0.035f; 
 
                 enemy.stats.maxHP = std::max(20, static_cast<int>(enemy.stats.maxHP * hpScale));
                 enemy.stats.currentHP = enemy.stats.maxHP;
@@ -1558,7 +1558,7 @@ void MapGenerator::populateWithItems(Room& room, const std::vector<Item>& templa
             }
             break;
         case RoomType::BOSS:
-            // Boss loot handled in combat
+            
             break;
         case RoomType::ARMORY:
             itemCount = randomInt(1, 3);
@@ -1588,16 +1588,16 @@ void MapGenerator::populateWithItems(Room& room, const std::vector<Item>& templa
             if (randomChance(20)) itemCount = 1;
             break;
         case RoomType::SAFE:
-            // Safe room - minimal items, focus on rest
+            
             if (randomChance(10)) itemCount = 1;
             break;
         case RoomType::SHOP:
-            // Shop handled by merchant system
+            
             break;
         case RoomType::ENTRANCE:
         case RoomType::EXIT:
         case RoomType::SHADOWLORD:
-            // No items at entrance/exit
+            
             break;
         default:
             if (randomChance(15)) {
@@ -1606,7 +1606,7 @@ void MapGenerator::populateWithItems(Room& room, const std::vector<Item>& templa
             break;
     }
     
-    // Higher rarity in special rooms
+    
     int rarityBoost = 0;
     if (room.type == RoomType::SECRET) rarityBoost = 2;
     if (room.type == RoomType::TREASURE) rarityBoost = 1;
@@ -1615,11 +1615,11 @@ void MapGenerator::populateWithItems(Room& room, const std::vector<Item>& templa
     if (room.type == RoomType::SHRINE) rarityBoost = 1;
     if (room.type == RoomType::GRAVEYARD) rarityBoost = 1;
     
-    // Track used templates to prevent duplicates
+    
     std::set<const Item*> usedTemplates;
     
     for (int i = 0; i < itemCount; ++i) {
-        // Weight by rarity, excluding non-stackable duplicates
+        
         std::vector<const Item*> validItems;
         for (const Item& item : templates) {
             if (mawMode && !item.mawOnly) {
@@ -1629,7 +1629,7 @@ void MapGenerator::populateWithItems(Room& room, const std::vector<Item>& templa
                 continue;
             }
             
-            // Skip non-stackable items that have already been used
+            
             if (!item.isStackable && usedTemplates.count(&item) > 0) {
                 continue;
             }
@@ -1639,7 +1639,7 @@ void MapGenerator::populateWithItems(Room& room, const std::vector<Item>& templa
                 effectiveRarity = static_cast<int>(ItemRarity::COMMON);
             }
             
-            // Add item multiple times based on inverse rarity (common items appear more)
+            
             int weight = 5 - effectiveRarity;
             for (int w = 0; w < weight; ++w) {
                 validItems.push_back(&item);
@@ -1649,13 +1649,13 @@ void MapGenerator::populateWithItems(Room& room, const std::vector<Item>& templa
         if (!validItems.empty()) {
             int idx = randomInt(0, static_cast<int>(validItems.size()) - 1);
             const Item* selectedTemplate = validItems[idx];
-            Item item = *selectedTemplate;  // Copy
+            Item item = *selectedTemplate;  
             item.quantity = 1;
             const int rolledItemLevel = rollItemLevel(floorLevel, item.rarity, false);
             applyItemLevelScaling(item, rolledItemLevel, true);
             room.items.push_back(item);
             
-            // Track non-stackable templates to prevent duplicates
+            
             if (!item.isStackable) {
                 usedTemplates.insert(selectedTemplate);
             }
@@ -1664,10 +1664,10 @@ void MapGenerator::populateWithItems(Room& room, const std::vector<Item>& templa
 }
 
 void MapGenerator::assignEvents(Room& room, const std::vector<Event>& templates) {
-    // Events are referenced by ID, actual handling done during gameplay
+    
     if (templates.empty()) return;
     
-    // Add random events based on room type
+    
     for (const Event& evt : templates) {
         bool shouldAdd = false;
         
@@ -1700,21 +1700,21 @@ void MapGenerator::assignEvents(Room& room, const std::vector<Event>& templates)
 void MapGenerator::setupPuzzle(Room& room) {
     if (RIDDLE_DATABASE.empty()) return;
     
-    // Pick a random riddle
+    
     int idx = randomInt(0, static_cast<int>(RIDDLE_DATABASE.size()) - 1);
     const Riddle& riddle = RIDDLE_DATABASE[idx];
     
     room.puzzleQuestion = riddle.question;
     room.puzzleAnswer = toLower(riddle.answer);
     room.puzzleSolved = false;
-    room.puzzleRewardItemId = randomInt(1, 10);  // Random reward item ID
+    room.puzzleRewardItemId = randomInt(1, 10);  
 }
 
 void MapGenerator::setupTrap(Room& room) {
     room.isTrapActive = true;
     room.trapDamage = randomInt(10, 30);
     
-    // Add trap description
+    
     std::vector<std::string> trapDescs = {
         "Poison darts shoot from the walls!",
         "The floor gives way to spikes!",
@@ -1781,9 +1781,9 @@ void MapGenerator::ensureMawExitRoom() {
     }
 }
 
-// ---
-// PRIVATE METHODS - Validation
-// ---
+
+
+
 
 bool MapGenerator::isValidPosition(int x, int y) const {
     return x >= 0 && x < mapWidth && y >= 0 && y < mapHeight;
@@ -1797,7 +1797,7 @@ bool MapGenerator::hasRoom(int x, int y) const {
 bool MapGenerator::verifyConnectivity() {
     if (rooms.empty()) return false;
     
-    // BFS from entrance to verify all rooms reachable
+    
     std::set<int> visited;
     std::queue<int> toVisit;
     toVisit.push(entranceId);
@@ -1809,7 +1809,7 @@ bool MapGenerator::verifyConnectivity() {
         if (visited.count(currentId)) continue;
         visited.insert(currentId);
         
-        // Find current room
+        
         for (const Room& room : rooms) {
             if (room.id == currentId) {
                 if (room.hasNorth && !visited.count(room.northRoomId)) {
@@ -1829,7 +1829,7 @@ bool MapGenerator::verifyConnectivity() {
         }
     }
     
-    // Check if exit is reachable
+    
     return visited.count(exitId) > 0;
 }
 
@@ -1855,9 +1855,9 @@ std::vector<int> MapGenerator::getAdjacentRooms(int x, int y) {
     return result;
 }
 
-// ---
-// STANDALONE HELPER FUNCTIONS
-// ---
+
+
+
 
 bool generateDungeon(GameState& gameState, int width, int height) {
     MapGenerator generator(width, height);
@@ -1869,7 +1869,7 @@ std::vector<Room> loadRoomTemplates(const std::string& filename) {
     std::ifstream file(filename);
     
     if (!file.is_open()) {
-        // Return empty vector if file doesn't exist
+        
         return templates;
     }
     
@@ -1926,7 +1926,7 @@ Room* getRoomById(GameState& gameState, int roomId) {
         return it->second;
     }
     
-    // Fallback to linear search
+    
     for (Room& room : gameState.dungeon) {
         if (room.id == roomId) {
             return &room;
@@ -1944,4 +1944,4 @@ Room* getRoomAtPosition(GameState& gameState, int x, int y) {
     return nullptr;
 }
 
-}  // namespace AQE
+}  

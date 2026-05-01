@@ -1,8 +1,8 @@
-//! Copyright (c) Alexander Matzen. All rights reserved.
-//! Author: Alexander Matzen
-//! Licensed under the MIT license
 
-// Main entry point for Adventure Quest Engine
+
+
+
+
 
 #include "include/GameEngine.h"
 #include <iostream>
@@ -35,13 +35,13 @@ void initializeConsoleEncoding() {
 #endif
 }
 
-}  // namespace
+}  
 
 int main() {
     initializeConsoleEncoding();
 
     try {
-        // Create game engine and run
+        
         AQE::GameEngine game;
         return game.run();
         

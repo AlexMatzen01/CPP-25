@@ -1,8 +1,8 @@
-//! Copyright (c) Alexander Matzen. All rights reserved.
-//! Author: Alexander Matzen
-//! Licensed under the MIT license
 
-// Game constants and configuration
+
+
+
+
 
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
@@ -13,11 +13,11 @@
 
 namespace AQE {
 
-// ---
-// GAME CONFIGURATION
-// ---
 
-// ANSI Color Codes
+
+
+
+
 namespace Color {
     const std::string RESET = "\033[0m";
     const std::string BLACK = "\033[30m";
@@ -32,7 +32,7 @@ namespace Color {
     const std::string BOLD = "\033[1m";
     const std::string UNDERLINE = "\033[4m";
     
-    // Bright/Bold Colors
+    
     const std::string BRIGHT_BLACK = "\033[90m";
     const std::string BRIGHT_RED = "\033[91m";
     const std::string BRIGHT_GREEN = "\033[92m";
@@ -43,7 +43,7 @@ namespace Color {
     const std::string BRIGHT_WHITE = "\033[97m";
 }
 
-// Map generation settings
+
 constexpr int MIN_MAP_WIDTH = 5;
 constexpr int MAX_MAP_WIDTH = 20;
 constexpr int MIN_MAP_HEIGHT = 5;
@@ -51,8 +51,8 @@ constexpr int MAX_MAP_HEIGHT = 20;
 constexpr int DEFAULT_MAP_WIDTH = 15;
 constexpr int DEFAULT_MAP_HEIGHT = 15;
 
-// Room generation probabilities (percentages)
-// Adjusted for balanced distribution across the dungeon
+
+
 constexpr int TREASURE_ROOM_CHANCE = 12;
 constexpr int BOSS_ROOM_CHANCE = 8;
 constexpr int TRAP_ROOM_CHANCE = 10;
@@ -68,34 +68,34 @@ constexpr int GRAVEYARD_ROOM_CHANCE = 6;
 constexpr int ARMORY_ROOM_CHANCE = 6;
 constexpr int PRISON_ROOM_CHANCE = 5;
 
-// Combat settings - improved balance
+
 constexpr int BASE_CRIT_MULTIPLIER = 2;
-constexpr float BASE_CRIT_BONUS_MULTIPLIER = 1.25f;  // Crit bonus adds scaling
+constexpr float BASE_CRIT_BONUS_MULTIPLIER = 1.25f;  
 constexpr int MAX_DODGE_CHANCE = 75;
 constexpr int MAX_CRIT_CHANCE = 50;
 constexpr int FLEE_BASE_CHANCE = 40;
-constexpr int SPEED_FLEE_BONUS = 2;  // Per point of speed difference
+constexpr int SPEED_FLEE_BONUS = 2;  
 
-// Experience and leveling
+
 constexpr int BASE_XP_TO_LEVEL = 350;
 constexpr float XP_MULTIPLIER_PER_LEVEL = 1.55f;
 constexpr int MAX_LEVEL = 60;
 constexpr int MAX_ITEM_LEVEL = 120;
 constexpr int STAT_POINTS_PER_LEVEL = 5;
 
-// Inventory limits
+
 constexpr int DEFAULT_INVENTORY_SIZE = 30;
 constexpr int STACK_LIMIT = 99;
 
-// Economy
+
 constexpr float SELL_PRICE_MULTIPLIER = 0.5f;
 constexpr int STARTING_GOLD = 50;
 
-// Morality thresholds
+
 constexpr int MORALITY_HERO_THRESHOLD = 50;
 constexpr int MORALITY_EVIL_THRESHOLD = -50;
 
-// Difficulty multipliers - improved balance
+
 constexpr float EASY_DAMAGE_MULT = 0.75f;
 constexpr float EASY_DEFENSE_MULT = 0.80f;
 constexpr float EASY_HP_MULT = 0.90f;
@@ -105,13 +105,13 @@ constexpr float HARD_DEFENSE_MULT = 1.15f;
 constexpr float HARD_HP_MULT = 1.20f;
 constexpr float HARD_GOLD_MULT = 0.75f;
 
-// Special ending conditions
+
 constexpr int SPEEDRUN_TURN_LIMIT = 50;
 constexpr int COMPLETIONIST_QUEST_COUNT = 5;
 
-// ---
-// DROP RATE TABLES (Percentages)
-// ---
+
+
+
 
 constexpr int COMMON_DROP_RATE = 50;
 constexpr int UNCOMMON_DROP_RATE = 30;
@@ -119,11 +119,11 @@ constexpr int RARE_DROP_RATE = 15;
 constexpr int EPIC_DROP_RATE = 4;
 constexpr int LEGENDARY_DROP_RATE = 1;
 
-// ---
-// CHARACTER CLASS BASE STATS
-// ---
 
-// Warrior: Balanced melee with solid defense
+
+
+
+
 constexpr int WARRIOR_HP = 210;
 constexpr int WARRIOR_ATK = 20;
 constexpr int WARRIOR_DEF = 16;
@@ -133,7 +133,7 @@ constexpr int WARRIOR_SPEED = 10;
 constexpr int WARRIOR_MAGIC = 10;
 constexpr int WARRIOR_MAGRES = 10;
 
-// Mage: Glass cannon with high magic power
+
 constexpr int MAGE_HP = 110;
 constexpr int MAGE_ATK = 9;
 constexpr int MAGE_DEF = 6;
@@ -143,7 +143,7 @@ constexpr int MAGE_SPEED = 14;
 constexpr int MAGE_MAGIC = 38;
 constexpr int MAGE_MAGRES = 22;
 
-// Rogue: Speed and precision specialist
+
 constexpr int ROGUE_HP = 140;
 constexpr int ROGUE_ATK = 16;
 constexpr int ROGUE_DEF = 8;
@@ -153,7 +153,7 @@ constexpr int ROGUE_SPEED = 20;
 constexpr int ROGUE_MAGIC = 10;
 constexpr int ROGUE_MAGRES = 8;
 
-// Paladin: Defensive support tank with healing
+
 constexpr int PALADIN_HP = 200;
 constexpr int PALADIN_ATK = 16;
 constexpr int PALADIN_DEF = 20;
@@ -163,7 +163,7 @@ constexpr int PALADIN_SPEED = 8;
 constexpr int PALADIN_MAGIC = 28;
 constexpr int PALADIN_MAGRES = 20;
 
-// Ranger: High speed ranged attacker with crit focus
+
 constexpr int RANGER_HP = 155;
 constexpr int RANGER_ATK = 19;
 constexpr int RANGER_DEF = 9;
@@ -173,7 +173,7 @@ constexpr int RANGER_SPEED = 24;
 constexpr int RANGER_MAGIC = 9;
 constexpr int RANGER_MAGRES = 9;
 
-// Necromancer: Magic specialist with life drain
+
 constexpr int NECROMANCER_HP = 135;
 constexpr int NECROMANCER_ATK = 11;
 constexpr int NECROMANCER_DEF = 7;
@@ -183,7 +183,7 @@ constexpr int NECROMANCER_SPEED = 13;
 constexpr int NECROMANCER_MAGIC = 36;
 constexpr int NECROMANCER_MAGRES = 20;
 
-// Barbarian: High risk/reward melee - great offense, lower defense
+
 constexpr int BARBARIAN_HP = 240;
 constexpr int BARBARIAN_ATK = 26;
 constexpr int BARBARIAN_DEF = 10;
@@ -193,7 +193,7 @@ constexpr int BARBARIAN_SPEED = 11;
 constexpr int BARBARIAN_MAGIC = 6;
 constexpr int BARBARIAN_MAGRES = 7;
 
-// Monk: Speed and evasion focused with balanced stats
+
 constexpr int MONK_HP = 165;
 constexpr int MONK_ATK = 15;
 constexpr int MONK_DEF = 11;
@@ -203,9 +203,9 @@ constexpr int MONK_SPEED = 25;
 constexpr int MONK_MAGIC = 14;
 constexpr int MONK_MAGRES = 14;
 
-// ---
-// ASCII ART TEMPLATES
-// ---
+
+
+
 
 const std::string TITLE_ART = R"(
 ===============================================================================
@@ -353,9 +353,9 @@ const std::string TRAP_ART = R"(
     ^^^^
 )";
 
-// ---
-// TEXT TEMPLATES
-// ---
+
+
+
 
 const std::vector<std::string> ROOM_PREFIXES = {
     "Dark", "Dusty", "Ancient", "Forgotten", "Cursed", "Mystic",
@@ -406,11 +406,11 @@ const std::vector<std::string> DEATH_TEXT = {
     "is vanquished!"
 };
 
-// ---
-// RIDDLES AND PUZZLES
-// ---
 
-// Riddle struct is defined in Types.h
+
+
+
+
 
 const std::vector<Riddle> RIDDLE_DATABASE = {
     {"I have cities, but no houses. I have mountains, but no trees. "
@@ -439,9 +439,9 @@ const std::vector<Riddle> RIDDLE_DATABASE = {
     {"What has one eye but cannot see?", "needle", "Used in sewing."}
 };
 
-// ---
-// FILE PATHS
-// ---
+
+
+
 
 const std::string DATA_FOLDER = "data/";
 const std::string ROOMS_FILE = "data/rooms.txt";
@@ -453,6 +453,6 @@ const std::string SAVE_FILE = "data/savegame.txt";
 const std::string LOG_FILE = "data/gamelog.txt";
 const std::string LEADERBOARD_FILE = "data/leaderboard.txt";
 
-}  // namespace AQE
+}  
 
-#endif // CONSTANTS_H
+#endif 

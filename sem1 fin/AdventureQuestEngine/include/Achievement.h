@@ -1,8 +1,8 @@
-//! Copyright (c) Alexander Matzen. All rights reserved.
-//! Author: Alexander Matzen
-//! Licensed under the MIT license
 
-// Achievement system (partially implemented - some features scrapped)
+
+
+
+
 
 #ifndef ACHIEVEMENT_H
 #define ACHIEVEMENT_H
@@ -14,18 +14,18 @@
 
 namespace AQE {
 
-// ---
-// ACHIEVEMENT SYSTEM
-// ---
+
+
+
 
 enum class AchievementCategory {
-    COMBAT,          // Kill X enemies, etc.
-    EXPLORATION,     // Visit X rooms, find secrets
-    COLLECTION,      // Collect items, complete quests
-    MASTERY,         // Reach level X, max out skills
-    CHALLENGE,       // Complete difficult tasks
-    STORY,           // Story milestones
-    HIDDEN           // Secret achievements
+    COMBAT,          
+    EXPLORATION,     
+    COLLECTION,      
+    MASTERY,         
+    CHALLENGE,       
+    STORY,           
+    HIDDEN           
 };
 
 enum class AchievementTier {
@@ -40,23 +40,23 @@ struct Achievement {
     int id;
     std::string name;
     std::string description;
-    std::string secretDescription;       // Hidden until unlocked
+    std::string secretDescription;       
     AchievementCategory category;
     AchievementTier tier;
-    int rewardPoints;                    // Achievement points
+    int rewardPoints;                    
     bool isUnlocked;
-    bool isHidden;                       // Don't show until close to completion
+    bool isHidden;                       
     
-    // Progress tracking
+    
     int currentProgress;
     int requiredProgress;
-    bool isPercentBased;                 // Show as X%?
+    bool isPercentBased;                 
     
-    // Unlock rewards
+    
     int goldReward;
     int experienceReward;
     std::vector<int> itemRewards;
-    std::string unlockedPerkId;          // Permanent perk
+    std::string unlockedPerkId;          
     
     Achievement() : id(0), category(AchievementCategory::COMBAT),
                    tier(AchievementTier::BRONZE), rewardPoints(10),
@@ -65,9 +65,9 @@ struct Achievement {
                    goldReward(0), experienceReward(0) {}
 };
 
-// ---
-// PERMANENT PERKS (META-PROGRESSION)
-// ---
+
+
+
 
 struct PermanentPerk {
     std::string id;
@@ -76,19 +76,19 @@ struct PermanentPerk {
     bool isUnlocked;
     int achievementPointCost;
     
-    // Bonuses (apply to ALL future runs)
-    float startingGoldMultiplier;        // Start with more gold
-    float startingXPMultiplier;          // Start with bonus XP
-    int startingLevel;                   // Start at higher level
-    bool startsWithRecipes;              // Know crafting recipes
-    bool increasedDropRate;              // +10% drop rate
+    
+    float startingGoldMultiplier;        
+    float startingXPMultiplier;          
+    int startingLevel;                   
+    bool startsWithRecipes;              
+    bool increasedDropRate;              
     float dropRateBonus;
-    bool increasedCritChance;            // +5% crit
+    bool increasedCritChance;            
     int critChanceBonus;
-    bool unlocksFastTravel;              // Can teleport to visited rooms
-    bool unlocksStorage;                 // Bank storage between runs
+    bool unlocksFastTravel;              
+    bool unlocksStorage;                 
     int storageSize;
-    bool grantsVision;                   // See hidden rooms on map
+    bool grantsVision;                   
     
     PermanentPerk() : isUnlocked(false), achievementPointCost(0),
                      startingGoldMultiplier(1.0f), startingXPMultiplier(1.0f),
@@ -99,28 +99,28 @@ struct PermanentPerk {
                      storageSize(0), grantsVision(false) {}
 };
 
-// ---
-// NEW GAME+ SYSTEM
-// ---
+
+
+
 
 struct NewGamePlusModifiers {
-    int difficultyMultiplier;            // 1.5x, 2x, 3x enemy stats
-    bool retainLevel;                    // Keep your level
-    bool retainGold;                     // Keep your gold
-    bool retainItems;                    // Keep your items
-    bool retainSkills;                   // Keep talent tree
+    int difficultyMultiplier;            
+    bool retainLevel;                    
+    bool retainGold;                     
+    bool retainItems;                    
+    bool retainSkills;                   
     
-    // New challenges
-    bool hasPermadeath;                  // One life only
-    bool hasTimeLimit;                   // Must complete in X turns
+    
+    bool hasPermadeath;                  
+    bool hasTimeLimit;                   
     int turnLimit;
-    bool hasNoHealing;                   // Can't heal consumables
-    bool hasRandomizedClasses;           // Class changes each run
-    bool hasCursedItems;                 // All items have drawbacks
+    bool hasNoHealing;                   
+    bool hasRandomizedClasses;           
+    bool hasCursedItems;                 
     
-    // Rewards
-    float goldRewardMultiplier;          // 2x gold
-    float xpRewardMultiplier;            // 2x XP
+    
+    float goldRewardMultiplier;          
+    float xpRewardMultiplier;            
     bool unlocksBonusEnding;
     
     NewGamePlusModifiers() : difficultyMultiplier(1), retainLevel(false),
@@ -132,20 +132,20 @@ struct NewGamePlusModifiers {
                             xpRewardMultiplier(1.0f), unlocksBonusEnding(false) {}
 };
 
-// ---
-// CHALLENGE MODES
-// ---
+
+
+
 
 enum class ChallengeMode {
     NONE,
-    IRONMAN,             // Permadeath, no saves
-    SPEEDRUN,            // Complete ASAP
-    PACIFIST,            // Minimal combat
-    POVERTY,             // Start with no gold, worse drops
-    GLASS_CANNON,        // Double damage dealt and received
-    SOLO,                // No companions
-    COLLECTOR,           // Must collect all items
-    MINIMALIST           // Limited inventory space
+    IRONMAN,             
+    SPEEDRUN,            
+    PACIFIST,            
+    POVERTY,             
+    GLASS_CANNON,        
+    SOLO,                
+    COLLECTOR,           
+    MINIMALIST           
 };
 
 struct ChallengeRun {
@@ -155,10 +155,10 @@ struct ChallengeRun {
     bool isActive;
     bool isCompleted;
     
-    // Special rules
+    
     std::map<std::string, bool> rules;
     
-    // Completion rewards
+    
     int achievementPoints;
     std::string unlockedTitle;
     int cosmeticRewardId;
@@ -168,23 +168,23 @@ struct ChallengeRun {
                     cosmeticRewardId(-1) {}
 };
 
-// ---
-// STATISTICS TRACKING
-// ---
+
+
+
 
 struct PlayerStatistics {
-    // Combat stats
+    
     int totalKills;
     int totalDamageDealt;
     int totalDamageTaken;
     int totalHealing;
     int criticalHits;
     int dodgedAttacks;
-    int perfectDodges;                   // Dodged without taking damage
+    int perfectDodges;                   
     int abilitiesUsed;
     int combosCompleted;
     
-    // Exploration stats
+    
     int roomsVisited;
     int secretsFound;
     int treasuresOpened;
@@ -192,7 +192,7 @@ struct PlayerStatistics {
     int puzzlesSolved;
     int merchantsVisited;
     
-    // Progression stats
+    
     int questsCompleted;
     int achievementsUnlocked;
     int maxLevelReached;
@@ -201,16 +201,16 @@ struct PlayerStatistics {
     int itemsCrafted;
     int itemsEnchanted;
     
-    // Run stats
+    
     int totalRuns;
     int completedRuns;
     int fastestRunTurns;
     int longestSurvivalTurns;
-    int currentStreak;                   // Consecutive wins
+    int currentStreak;                   
     int bestStreak;
     
-    // Unique accomplishments
-    std::vector<std::string> uniqueDeaths;  // How you died
+    
+    std::vector<std::string> uniqueDeaths;  
     std::vector<std::string> endingsUnlocked;
     std::vector<std::string> titlesEarned;
     
@@ -226,37 +226,37 @@ struct PlayerStatistics {
                         currentStreak(0), bestStreak(0) {}
 };
 
-// ---
-// ACHIEVEMENT MANAGER
-// ---
+
+
+
 
 class AchievementManager {
 public:
     AchievementManager();
     
-    // Achievement tracking
+    
     void checkAchievements(const Player& player, const GameState& state);
     void updateProgress(int achievementId, int progress);
     void unlockAchievement(int achievementId);
     bool isUnlocked(int achievementId) const;
     
-    // Display
+    
     void displayAchievements() const;
     void displayAchievementsByCategory(AchievementCategory category) const;
     void displayRecentUnlocks() const;
     float getCompletionPercentage() const;
     
-    // Rewards
+    
     void claimAchievementReward(int achievementId, Player& player);
     int getTotalAchievementPoints() const;
     
-    // Perks
+    
     void displayPerks() const;
     bool unlockPerk(const std::string& perkId);
     bool hasPerk(const std::string& perkId) const;
     void applyPerksToNewRun(Player& player);
     
-    // Save/Load
+    
     std::string serializeAchievements() const;
     void deserializeAchievements(const std::string& data);
     
@@ -273,15 +273,15 @@ private:
     PermanentPerk* findPerk(const std::string& perkId);
 };
 
-// ---
-// STATISTICS MANAGER
-// ---
+
+
+
 
 class StatisticsManager {
 public:
     StatisticsManager();
     
-    // Tracking
+    
     void recordKill();
     void recordDamage(int amount, bool dealt);
     void recordHealing(int amount);
@@ -305,17 +305,17 @@ public:
     void recordEnding(const std::string& ending);
     void recordTitle(const std::string& title);
     
-    // Display
+    
     void displayStatistics() const;
     void displayCombatStats() const;
     void displayExplorationStats() const;
     void displayProgressStats() const;
     
-    // Leaderboard
+    
     void updateLeaderboard(const std::string& playerName, int score);
     void displayLeaderboard() const;
     
-    // Save/Load
+    
     std::string serializeStats() const;
     void deserializeStats(const std::string& data);
     
@@ -323,11 +323,11 @@ public:
     
 private:
     PlayerStatistics stats;
-    std::vector<std::pair<std::string, int>> leaderboard;  // Name, Score
+    std::vector<std::pair<std::string, int>> leaderboard;  
     
     int calculateScore(const Player& player, int turns, bool won) const;
 };
 
-}  // namespace AQE
+}  
 
-#endif // ACHIEVEMENT_H
+#endif 

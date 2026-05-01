@@ -1,8 +1,8 @@
-//! Copyright (c) Alexander Matzen. All rights reserved.
-//! Author: Alexander Matzen
-//! Licensed under the MIT license
 
-// Crafting system implementation (partially implemented - many features scrapped)
+
+
+
+
 
 #include "../include/Crafting.h"
 #include "../include/Utils.h"
@@ -149,11 +149,11 @@ const char* rarityName(ItemRarity rarity) {
     return "Unknown";
 }
 
-}  // namespace
+}  
 
-// ---
-// CraftingSystem Implementation
-// ---
+
+
+
 
 CraftingSystem::CraftingSystem(Player& player)
     : playerRef(player),
@@ -371,7 +371,7 @@ Item CraftingSystem::buildCraftedItem(const Recipe& recipe, bool masterwork) con
     craftedItem.quantity = std::max(1, recipe.resultQuantity);
     craftedItem.rarity = rarityFromRequiredLevel(recipe.requiredLevel);
 
-    // Dynamic iLvl baseline tracks both player progression and the strength of currently equipped gear.
+    
     const int equippedLevel = calculateAverageItemLevel(playerRef);
     int playerContextLevel = std::max(playerRef.level, recipe.requiredLevel);
     if (equippedLevel > 0) {
@@ -551,17 +551,17 @@ bool CraftingSystem::canCraft(int recipeId) const {
         return false;
     }
     
-    // Check level requirement
+    
     if (playerRef.level < recipe->requiredLevel) {
         return false;
     }
     
-    // Check gold
+    
     if (playerRef.gold < recipe->requiredGold) {
         return false;
     }
     
-    // Check materials
+    
     if (!hasMaterials(recipe->requiredMaterials)) {
         return false;
     }
@@ -578,13 +578,13 @@ void CraftingSystem::discoverRecipe(int recipeId) {
 }
 
 void CraftingSystem::learnRecipeFromBook(int recipeBookId) {
-    // Recipe books have IDs starting from 2000
+    
     int recipeId = recipeBookId - 2000;
     discoverRecipe(recipeId);
 }
 
 bool CraftingSystem::enchantItem(int itemId, EnchantmentType enchantType) {
-    // Find item in inventory
+    
     Item* item = nullptr;
     for (auto& invItem : playerRef.inventory) {
         if (invItem.id == itemId) {
@@ -609,7 +609,7 @@ bool CraftingSystem::enchantItem(int itemId, EnchantmentType enchantType) {
         return false;
     }
 
-    // Check for required essence (Material ID 6)
+    
     if (getMaterialCount(6) < 2) {
         std::cout << "Need 2 Magical Essence to enchant!\n";
         return false;
@@ -628,7 +628,7 @@ bool CraftingSystem::enchantItem(int itemId, EnchantmentType enchantType) {
         case EnchantmentType::ICE_DAMAGE:
             item->enchantmentName = "Frozen";
             item->attackBonus += 5;
-            item->speedBonus -= 2; // Slow effect
+            item->speedBonus -= 2; 
             break;
         case EnchantmentType::LIFESTEAL:
             item->enchantmentName = "Vampiric";
@@ -672,7 +672,7 @@ bool CraftingSystem::upgradeItem(int itemId) {
                 return false;
             }
 
-            // Require Metal (ID 1) for weapons/armor
+            
             if (getMaterialCount(1) < (item.upgradeLevel + 1) * 2) {
                 std::cout << "Not enough Iron Ore!\n";
                 return false;
@@ -687,7 +687,7 @@ bool CraftingSystem::upgradeItem(int itemId) {
             if (item.type == ItemType::WEAPON) item.attackBonus += 5;
             if (item.type == ItemType::ARMOR) item.defenseBonus += 3;
             
-            // Update name
+            
             size_t plusPos = item.name.find(" +");
             if (plusPos != std::string::npos) {
                 item.name = item.name.substr(0, plusPos);
@@ -838,11 +838,11 @@ std::vector<CraftingMaterial> CraftingSystem::disenchantItem(int itemId) {
             std::cout << "Disenchanting " << it->name << "...\n";
             
             int matCount = 1 + static_cast<int>(it->rarity);
-            addMaterial(1, matCount * 2); // Iron
-            addMaterial(2, matCount);     // Wood
+            addMaterial(1, matCount * 2); 
+            addMaterial(2, matCount);     
             
             if (it->isEnchanted) {
-                addMaterial(6, 1); // Essence
+                addMaterial(6, 1); 
             }
 
             playerRef.inventory.erase(it);
@@ -1063,7 +1063,7 @@ void CraftingSystem::deserializeCrafting(const std::string& data) {
     size_t pipePos = data.find('|');
     if (pipePos == std::string::npos) return;
     
-    // Parse materials
+    
     std::string matData = data.substr(0, pipePos);
     std::stringstream matSs(matData);
     std::string token;
@@ -1080,7 +1080,7 @@ void CraftingSystem::deserializeCrafting(const std::string& data) {
         }
     }
     
-    // Parse discovered recipes
+    
     std::string tailData = data.substr(pipePos + 1);
     std::string recipeData = tailData;
     std::string progressionData;
@@ -1162,16 +1162,16 @@ void CraftingSystem::deserializeCrafting(const std::string& data) {
 }
 
 void CraftingSystem::initializeRecipes() {
-    // ==================== WEAPON RECIPES ====================
     
-    // Swords
+    
+    
     Recipe ironSword;
     ironSword.id = 1001;
     ironSword.name = "Iron Sword";
     ironSword.description = "A basic iron sword";
     ironSword.resultItemId = 10;
     ironSword.resultQuantity = 1;
-    ironSword.requiredMaterials = {{1, 5}, {2, 3}};  // 5 iron, 3 wood
+    ironSword.requiredMaterials = {{1, 5}, {2, 3}};  
     ironSword.requiredGold = 50;
     ironSword.requiredLevel = 1;
     ironSword.isDiscovered = true;
@@ -1186,7 +1186,7 @@ void CraftingSystem::initializeRecipes() {
     bronzeSword.description = "A basic bronze blade";
     bronzeSword.resultItemId = 15;
     bronzeSword.resultQuantity = 1;
-    bronzeSword.requiredMaterials = {{1, 3}, {2, 2}};  // 3 iron, 2 wood
+    bronzeSword.requiredMaterials = {{1, 3}, {2, 2}};  
     bronzeSword.requiredGold = 25;
     bronzeSword.requiredLevel = 1;
     bronzeSword.isDiscovered = true;
@@ -1201,7 +1201,7 @@ void CraftingSystem::initializeRecipes() {
     steelSword.description = "A sturdy steel sword";
     steelSword.resultItemId = 16;
     steelSword.resultQuantity = 1;
-    steelSword.requiredMaterials = {{1, 10}, {2, 5}};  // 10 iron, 5 wood
+    steelSword.requiredMaterials = {{1, 10}, {2, 5}};  
     steelSword.requiredGold = 150;
     steelSword.requiredLevel = 5;
     steelSword.isDiscovered = false;
@@ -1216,7 +1216,7 @@ void CraftingSystem::initializeRecipes() {
     mithrilSword.description = "A lightweight superior blade";
     mithrilSword.resultItemId = 17;
     mithrilSword.resultQuantity = 1;
-    mithrilSword.requiredMaterials = {{1, 15}, {5, 3}, {10, 1}};  // 15 iron, 3 gems, 1 crystal
+    mithrilSword.requiredMaterials = {{1, 15}, {5, 3}, {10, 1}};  
     mithrilSword.requiredGold = 400;
     mithrilSword.requiredLevel = 10;
     mithrilSword.isDiscovered = false;
@@ -1231,7 +1231,7 @@ void CraftingSystem::initializeRecipes() {
     flamingSword.description = "A blade wreathed in eternal flames";
     flamingSword.resultItemId = 18;
     flamingSword.resultQuantity = 1;
-    flamingSword.requiredMaterials = {{1, 20}, {6, 5}, {10, 2}};  // 20 iron, 5 essence, 2 crystal
+    flamingSword.requiredMaterials = {{1, 20}, {6, 5}, {10, 2}};  
     flamingSword.requiredGold = 600;
     flamingSword.requiredLevel = 15;
     flamingSword.isDiscovered = false;
@@ -1240,7 +1240,7 @@ void CraftingSystem::initializeRecipes() {
     flamingSword.experienceGained = 150;
     recipes.push_back(flamingSword);
     
-    // Daggers
+    
     Recipe rustyDagger;
     rustyDagger.id = 1010;
     rustyDagger.name = "Rusty Dagger";
@@ -1262,7 +1262,7 @@ void CraftingSystem::initializeRecipes() {
     poisonDagger.description = "Coated with deadly venom";
     poisonDagger.resultItemId = 71;
     poisonDagger.resultQuantity = 1;
-    poisonDagger.requiredMaterials = {{1, 5}, {7, 5}, {8, 2}};  // 5 iron, 5 herbs, 2 bones
+    poisonDagger.requiredMaterials = {{1, 5}, {7, 5}, {8, 2}};  
     poisonDagger.requiredGold = 120;
     poisonDagger.requiredLevel = 6;
     poisonDagger.isDiscovered = false;
@@ -1277,7 +1277,7 @@ void CraftingSystem::initializeRecipes() {
     shadowDagger.description = "Forged in darkness";
     shadowDagger.resultItemId = 72;
     shadowDagger.resultQuantity = 1;
-    shadowDagger.requiredMaterials = {{1, 8}, {6, 3}, {8, 3}};  // 8 iron, 3 essence, 3 bones
+    shadowDagger.requiredMaterials = {{1, 8}, {6, 3}, {8, 3}};  
     shadowDagger.requiredGold = 280;
     shadowDagger.requiredLevel = 12;
     shadowDagger.isDiscovered = false;
@@ -1286,7 +1286,7 @@ void CraftingSystem::initializeRecipes() {
     shadowDagger.experienceGained = 90;
     recipes.push_back(shadowDagger);
     
-    // Axes
+    
     Recipe woodcutterAxe;
     woodcutterAxe.id = 1020;
     woodcutterAxe.name = "Woodcutter's Axe";
@@ -1323,7 +1323,7 @@ void CraftingSystem::initializeRecipes() {
     greatAxe.description = "A massive axe that cleaves through armor";
     greatAxe.resultItemId = 82;
     greatAxe.resultQuantity = 1;
-    greatAxe.requiredMaterials = {{1, 18}, {2, 8}, {8, 4}};  // 18 iron, 8 wood, 4 bones
+    greatAxe.requiredMaterials = {{1, 18}, {2, 8}, {8, 4}};  
     greatAxe.requiredGold = 420;
     greatAxe.requiredLevel = 14;
     greatAxe.isDiscovered = false;
@@ -1332,7 +1332,7 @@ void CraftingSystem::initializeRecipes() {
     greatAxe.experienceGained = 120;
     recipes.push_back(greatAxe);
     
-    // Spears
+    
     Recipe woodenSpear;
     woodenSpear.id = 1030;
     woodenSpear.name = "Wooden Spear";
@@ -1378,14 +1378,14 @@ void CraftingSystem::initializeRecipes() {
     halberd.experienceGained = 85;
     recipes.push_back(halberd);
     
-    // Staves
+    
     Recipe apprenticeStaff;
     apprenticeStaff.id = 1040;
     apprenticeStaff.name = "Apprentice's Staff";
     apprenticeStaff.description = "A basic staff for novice mages";
     apprenticeStaff.resultItemId = 90;
     apprenticeStaff.resultQuantity = 1;
-    apprenticeStaff.requiredMaterials = {{2, 8}, {5, 1}};  // 8 wood, 1 gem
+    apprenticeStaff.requiredMaterials = {{2, 8}, {5, 1}};  
     apprenticeStaff.requiredGold = 45;
     apprenticeStaff.requiredLevel = 1;
     apprenticeStaff.isDiscovered = true;
@@ -1400,7 +1400,7 @@ void CraftingSystem::initializeRecipes() {
     fireStaff.description = "Channels the power of fire";
     fireStaff.resultItemId = 91;
     fireStaff.resultQuantity = 1;
-    fireStaff.requiredMaterials = {{2, 12}, {5, 3}, {6, 2}};  // 12 wood, 3 gems, 2 essence
+    fireStaff.requiredMaterials = {{2, 12}, {5, 3}, {6, 2}};  
     fireStaff.requiredGold = 180;
     fireStaff.requiredLevel = 8;
     fireStaff.isDiscovered = false;
@@ -1439,16 +1439,16 @@ void CraftingSystem::initializeRecipes() {
     archmagusStaff.experienceGained = 180;
     recipes.push_back(archmagusStaff);
     
-    // ==================== ARMOR RECIPES ====================
     
-    // Light Armor
+    
+    
     Recipe clothRobe;
     clothRobe.id = 1100;
     clothRobe.name = "Cloth Robe";
     clothRobe.description = "Simple cloth offering minimal protection";
     clothRobe.resultItemId = 100;
     clothRobe.resultQuantity = 1;
-    clothRobe.requiredMaterials = {{4, 5}};  // 5 cloth
+    clothRobe.requiredMaterials = {{4, 5}};  
     clothRobe.requiredGold = 15;
     clothRobe.requiredLevel = 1;
     clothRobe.isDiscovered = true;
@@ -1463,7 +1463,7 @@ void CraftingSystem::initializeRecipes() {
     paddedArmor.description = "Quilted layers provide basic protection";
     paddedArmor.resultItemId = 101;
     paddedArmor.resultQuantity = 1;
-    paddedArmor.requiredMaterials = {{4, 8}, {3, 2}};  // 8 cloth, 2 leather
+    paddedArmor.requiredMaterials = {{4, 8}, {3, 2}};  
     paddedArmor.requiredGold = 28;
     paddedArmor.requiredLevel = 1;
     paddedArmor.isDiscovered = true;
@@ -1478,7 +1478,7 @@ void CraftingSystem::initializeRecipes() {
     hideArmor.description = "Tough animal hide";
     hideArmor.resultItemId = 102;
     hideArmor.resultQuantity = 1;
-    hideArmor.requiredMaterials = {{3, 10}};  // 10 leather
+    hideArmor.requiredMaterials = {{3, 10}};  
     hideArmor.requiredGold = 50;
     hideArmor.requiredLevel = 3;
     hideArmor.isDiscovered = true;
@@ -1493,7 +1493,7 @@ void CraftingSystem::initializeRecipes() {
     studdedLeather.description = "Leather reinforced with metal studs";
     studdedLeather.resultItemId = 103;
     studdedLeather.resultQuantity = 1;
-    studdedLeather.requiredMaterials = {{3, 12}, {1, 6}};  // 12 leather, 6 iron
+    studdedLeather.requiredMaterials = {{3, 12}, {1, 6}};  
     studdedLeather.requiredGold = 85;
     studdedLeather.requiredLevel = 6;
     studdedLeather.isDiscovered = false;
@@ -1502,14 +1502,14 @@ void CraftingSystem::initializeRecipes() {
     studdedLeather.experienceGained = 45;
     recipes.push_back(studdedLeather);
     
-    // Medium Armor
+    
     Recipe scalemail;
     scalemail.id = 1110;
     scalemail.name = "Scale Mail";
     scalemail.description = "Overlapping metal scales";
     scalemail.resultItemId = 104;
     scalemail.resultQuantity = 1;
-    scalemail.requiredMaterials = {{1, 14}, {3, 8}};  // 14 iron, 8 leather
+    scalemail.requiredMaterials = {{1, 14}, {3, 8}};  
     scalemail.requiredGold = 130;
     scalemail.requiredLevel = 7;
     scalemail.isDiscovered = false;
@@ -1548,7 +1548,7 @@ void CraftingSystem::initializeRecipes() {
     halfPlate.experienceGained = 95;
     recipes.push_back(halfPlate);
     
-    // Heavy Armor
+    
     Recipe bandedArmor;
     bandedArmor.id = 1120;
     bandedArmor.name = "Banded Mail";
@@ -1600,7 +1600,7 @@ void CraftingSystem::initializeRecipes() {
     dragonscale.description = "Crafted from genuine dragon scales";
     dragonscale.resultItemId = 110;
     dragonscale.resultQuantity = 1;
-    dragonscale.requiredMaterials = {{9, 12}, {1, 20}, {6, 8}};  // 12 dragon scales, 20 iron, 8 essence
+    dragonscale.requiredMaterials = {{9, 12}, {1, 20}, {6, 8}};  
     dragonscale.requiredGold = 900;
     dragonscale.requiredLevel = 20;
     dragonscale.isDiscovered = false;
@@ -1609,7 +1609,7 @@ void CraftingSystem::initializeRecipes() {
     dragonscale.experienceGained = 250;
     recipes.push_back(dragonscale);
     
-    // Shields
+    
     Recipe woodenShield;
     woodenShield.id = 1130;
     woodenShield.name = "Wooden Shield";
@@ -1655,7 +1655,7 @@ void CraftingSystem::initializeRecipes() {
     towerShield.experienceGained = 88;
     recipes.push_back(towerShield);
     
-    // ==================== ACCESSORY RECIPES ====================
+    
     
     Recipe strengthRing;
     strengthRing.id = 1200;
@@ -1663,7 +1663,7 @@ void CraftingSystem::initializeRecipes() {
     strengthRing.description = "Increases physical strength";
     strengthRing.resultItemId = 130;
     strengthRing.resultQuantity = 1;
-    strengthRing.requiredMaterials = {{1, 5}, {5, 2}};  // 5 iron, 2 gems
+    strengthRing.requiredMaterials = {{1, 5}, {5, 2}};  
     strengthRing.requiredGold = 120;
     strengthRing.requiredLevel = 8;
     strengthRing.isDiscovered = false;
@@ -1678,7 +1678,7 @@ void CraftingSystem::initializeRecipes() {
     defenseRing.description = "Enhances defensive capabilities";
     defenseRing.resultItemId = 131;
     defenseRing.resultQuantity = 1;
-    defenseRing.requiredMaterials = {{1, 4}, {5, 2}, {6, 1}};  // 4 iron, 2 gems, 1 essence
+    defenseRing.requiredMaterials = {{1, 4}, {5, 2}, {6, 1}};  
     defenseRing.requiredGold = 110;
     defenseRing.requiredLevel = 7;
     defenseRing.isDiscovered = false;
@@ -1693,7 +1693,7 @@ void CraftingSystem::initializeRecipes() {
     vitalityAmulet.description = "Increases maximum health";
     vitalityAmulet.resultItemId = 132;
     vitalityAmulet.resultQuantity = 1;
-    vitalityAmulet.requiredMaterials = {{5, 4}, {6, 3}, {7, 5}};  // 4 gems, 3 essence, 5 herbs
+    vitalityAmulet.requiredMaterials = {{5, 4}, {6, 3}, {7, 5}};  
     vitalityAmulet.requiredGold = 200;
     vitalityAmulet.requiredLevel = 10;
     vitalityAmulet.isDiscovered = false;
@@ -1708,7 +1708,7 @@ void CraftingSystem::initializeRecipes() {
     shadowCloak.description = "Enhances stealth and evasion";
     shadowCloak.resultItemId = 133;
     shadowCloak.resultQuantity = 1;
-    shadowCloak.requiredMaterials = {{4, 15}, {6, 4}, {8, 3}};  // 15 cloth, 4 essence, 3 bones
+    shadowCloak.requiredMaterials = {{4, 15}, {6, 4}, {8, 3}};  
     shadowCloak.requiredGold = 250;
     shadowCloak.requiredLevel = 12;
     shadowCloak.isDiscovered = false;
@@ -1723,7 +1723,7 @@ void CraftingSystem::initializeRecipes() {
     dragonHeart.description = "Contains the essence of a slain dragon";
     dragonHeart.resultItemId = 134;
     dragonHeart.resultQuantity = 1;
-    dragonHeart.requiredMaterials = {{9, 8}, {6, 10}, {10, 4}};  // 8 dragon scales, 10 essence, 4 crystals
+    dragonHeart.requiredMaterials = {{9, 8}, {6, 10}, {10, 4}};  
     dragonHeart.requiredGold = 750;
     dragonHeart.requiredLevel = 18;
     dragonHeart.isDiscovered = false;
@@ -1732,16 +1732,16 @@ void CraftingSystem::initializeRecipes() {
     dragonHeart.experienceGained = 220;
     recipes.push_back(dragonHeart);
     
-    // ==================== CONSUMABLE RECIPES ====================
     
-    // Potions
+    
+    
     Recipe minorHealthPotion;
     minorHealthPotion.id = 1300;
     minorHealthPotion.name = "Minor Health Potion";
     minorHealthPotion.description = "Restores 25 HP";
     minorHealthPotion.resultItemId = 1;
     minorHealthPotion.resultQuantity = 3;
-    minorHealthPotion.requiredMaterials = {{7, 2}};  // 2 herbs
+    minorHealthPotion.requiredMaterials = {{7, 2}};  
     minorHealthPotion.requiredGold = 10;
     minorHealthPotion.requiredLevel = 1;
     minorHealthPotion.isDiscovered = true;
@@ -1756,7 +1756,7 @@ void CraftingSystem::initializeRecipes() {
     healthPotion.description = "Restores 50 HP";
     healthPotion.resultItemId = 2;
     healthPotion.resultQuantity = 2;
-    healthPotion.requiredMaterials = {{7, 4}};  // 4 herbs
+    healthPotion.requiredMaterials = {{7, 4}};  
     healthPotion.requiredGold = 25;
     healthPotion.requiredLevel = 3;
     healthPotion.isDiscovered = true;
@@ -1771,7 +1771,7 @@ void CraftingSystem::initializeRecipes() {
     greaterHealthPotion.description = "Restores 100 HP";
     greaterHealthPotion.resultItemId = 3;
     greaterHealthPotion.resultQuantity = 1;
-    greaterHealthPotion.requiredMaterials = {{7, 6}, {6, 1}};  // 6 herbs, 1 essence
+    greaterHealthPotion.requiredMaterials = {{7, 6}, {6, 1}};  
     greaterHealthPotion.requiredGold = 50;
     greaterHealthPotion.requiredLevel = 6;
     greaterHealthPotion.isDiscovered = false;
@@ -1786,7 +1786,7 @@ void CraftingSystem::initializeRecipes() {
     supremePotion.description = "Restores 200 HP";
     supremePotion.resultItemId = 4;
     supremePotion.resultQuantity = 1;
-    supremePotion.requiredMaterials = {{7, 10}, {6, 3}, {10, 1}};  // 10 herbs, 3 essence, 1 crystal
+    supremePotion.requiredMaterials = {{7, 10}, {6, 3}, {10, 1}};  
     supremePotion.requiredGold = 140;
     supremePotion.requiredLevel = 12;
     supremePotion.isDiscovered = false;
@@ -1795,14 +1795,14 @@ void CraftingSystem::initializeRecipes() {
     supremePotion.experienceGained = 75;
     recipes.push_back(supremePotion);
     
-    // Elixirs
+    
     Recipe strengthElixir;
     strengthElixir.id = 1310;
     strengthElixir.name = "Elixir of Strength";
     strengthElixir.description = "Temporarily increases attack power";
     strengthElixir.resultItemId = 60;
     strengthElixir.resultQuantity = 1;
-    strengthElixir.requiredMaterials = {{7, 3}, {8, 2}};  // 3 herbs, 2 bones
+    strengthElixir.requiredMaterials = {{7, 3}, {8, 2}};  
     strengthElixir.requiredGold = 55;
     strengthElixir.requiredLevel = 5;
     strengthElixir.isDiscovered = false;
@@ -1817,7 +1817,7 @@ void CraftingSystem::initializeRecipes() {
     defenseElixir.description = "Temporarily increases defense";
     defenseElixir.resultItemId = 61;
     defenseElixir.resultQuantity = 1;
-    defenseElixir.requiredMaterials = {{7, 3}, {1, 3}};  // 3 herbs, 3 iron
+    defenseElixir.requiredMaterials = {{7, 3}, {1, 3}};  
     defenseElixir.requiredGold = 55;
     defenseElixir.requiredLevel = 5;
     defenseElixir.isDiscovered = false;
@@ -1832,7 +1832,7 @@ void CraftingSystem::initializeRecipes() {
     speedElixir.description = "Temporarily increases speed and dodge chance";
     speedElixir.resultItemId = 62;
     speedElixir.resultQuantity = 1;
-    speedElixir.requiredMaterials = {{7, 5}, {6, 2}};  // 5 herbs, 2 essence
+    speedElixir.requiredMaterials = {{7, 5}, {6, 2}};  
     speedElixir.requiredGold = 85;
     speedElixir.requiredLevel = 8;
     speedElixir.isDiscovered = false;
@@ -1847,7 +1847,7 @@ void CraftingSystem::initializeRecipes() {
     berserkPotion.description = "Massive attack boost, reduced defense";
     berserkPotion.resultItemId = 141;
     berserkPotion.resultQuantity = 1;
-    berserkPotion.requiredMaterials = {{7, 6}, {8, 4}, {6, 2}};  // 6 herbs, 4 bones, 2 essence
+    berserkPotion.requiredMaterials = {{7, 6}, {8, 4}, {6, 2}};  
     berserkPotion.requiredGold = 115;
     berserkPotion.requiredLevel = 10;
     berserkPotion.isDiscovered = false;
@@ -1862,7 +1862,7 @@ void CraftingSystem::initializeRecipes() {
     invisPotion.description = "Become invisible to enemies";
     invisPotion.resultItemId = 142;
     invisPotion.resultQuantity = 1;
-    invisPotion.requiredMaterials = {{7, 8}, {6, 5}, {10, 2}};  // 8 herbs, 5 essence, 2 crystals
+    invisPotion.requiredMaterials = {{7, 8}, {6, 5}, {10, 2}};  
     invisPotion.requiredGold = 220;
     invisPotion.requiredLevel = 14;
     invisPotion.isDiscovered = false;
@@ -1871,7 +1871,7 @@ void CraftingSystem::initializeRecipes() {
     invisPotion.experienceGained = 95;
     recipes.push_back(invisPotion);
 
-    // ==================== MAW-ONLY RECIPES ====================
+    
 
     Recipe mawReaver;
     mawReaver.id = 1050;
@@ -1950,7 +1950,7 @@ void CraftingSystem::initializeRecipes() {
 }
 
 void CraftingSystem::initializeMaterials() {
-    // Initialize material types
+    
     CraftingMaterial iron;
     iron.id = 1;
     iron.name = "Iron Ore";
@@ -2210,9 +2210,9 @@ void CraftingSystem::displayCraftingProgress() const {
     }
 }
 
-// ---
-// MerchantSystem Implementation
-// ---
+
+
+
 
 MerchantSystem::MerchantSystem(Player& player) 
     : playerRef(player), reputationPoints(0), merchantTier(0) {
@@ -2237,7 +2237,7 @@ void MerchantSystem::displayShop(const MerchantInventory& merchant) {
         const auto& item = merchant.items[i];
         int price = calculateBuyPrice(item, merchant);
         
-        // Get stock info
+        
         std::string stockInfo = "∞";
         auto stockIt = merchant.stock.find(item.id);
         if (stockIt != merchant.stock.end() && stockIt->second != -1) {
@@ -2252,7 +2252,7 @@ void MerchantSystem::displayShop(const MerchantInventory& merchant) {
 }
 
 bool MerchantSystem::buyItem(MerchantInventory& merchant, int slotIndex) {
-    // Adjust for 1-based indexing from UI
+    
     int index = slotIndex - 1;
     
     if (index < 0 || index >= static_cast<int>(merchant.items.size())) {
@@ -2263,7 +2263,7 @@ bool MerchantSystem::buyItem(MerchantInventory& merchant, int slotIndex) {
     Item& item = merchant.items[index];
     int itemId = item.id;
     
-    // Check stock
+    
     if (!hasStock(merchant, itemId)) {
         std::cout << "Item is out of stock!\n";
         return false;
@@ -2276,27 +2276,27 @@ bool MerchantSystem::buyItem(MerchantInventory& merchant, int slotIndex) {
         return false;
     }
     
-    // Execute transaction
+    
     playerRef.gold -= price;
     merchant.merchantGold += price;
     
-    // Add to player inventory
+    
     Item purchasedItem = item;
     purchasedItem.quantity = 1;
     playerRef.inventory.push_back(purchasedItem);
     
-    // Reduce stock
+    
     reduceStock(merchant, itemId);
     
     std::cout << "\nPurchased " << item.name << " for " << price << " gold!\n";
-    updateDemand(itemId, 1);  // Increase demand
+    updateDemand(itemId, 1);  
     increaseReputation(5);
     
     return true;
 }
 
 bool MerchantSystem::sellItem(MerchantInventory& merchant, int slotIndex) {
-    // Adjust for 1-based indexing from UI
+    
     int index = slotIndex - 1;
     
     if (index < 0 || index >= static_cast<int>(playerRef.inventory.size())) {
@@ -2307,7 +2307,7 @@ bool MerchantSystem::sellItem(MerchantInventory& merchant, int slotIndex) {
     Item& item = playerRef.inventory[index];
     int itemId = item.id;
     
-    // Check if merchant accepts this item
+    
     if (!merchant.acceptsAllItems && item.type == ItemType::QUEST) {
         std::cout << "The merchant won't buy quest items.\n";
         return false;
@@ -2320,18 +2320,18 @@ bool MerchantSystem::sellItem(MerchantInventory& merchant, int slotIndex) {
         return false;
     }
     
-    // Execute transaction
+    
     playerRef.gold += price;
     merchant.merchantGold -= price;
     
-    // Add to merchant inventory
+    
     addItemToStock(merchant, item, 1);
     
-    // Remove from player inventory
+    
     std::cout << "\nSold " << item.name << " for " << price << " gold!\n";
     playerRef.inventory.erase(playerRef.inventory.begin() + index);
     
-    updateDemand(itemId, -1);  // Decrease demand
+    updateDemand(itemId, -1);  
     increaseReputation(2);
     
     return true;
@@ -2343,18 +2343,18 @@ TradeOffer MerchantSystem::createTradeOffer(const std::vector<int>& offered,
     trade.offeredItemIds = offered;
     trade.requestedItemIds = requested;
     
-    // Calculate value difference
+    
     int offeredValue = 0;
     int requestedValue = 0;
     
     for (int id : offered) {
-        (void)id;  // ID would be used to look up item in actual implementation
-        offeredValue += evaluateItemValue(Item());  // Simplified
+        (void)id;  
+        offeredValue += evaluateItemValue(Item());  
     }
     
     for (int id : requested) {
-        (void)id;  // ID would be used to look up item in actual implementation
-        requestedValue += evaluateItemValue(Item());  // Simplified
+        (void)id;  
+        requestedValue += evaluateItemValue(Item());  
     }
     
     trade.goldDifference = requestedValue - offeredValue;
@@ -2376,7 +2376,7 @@ bool MerchantSystem::executeTrade(MerchantInventory& merchant, const TradeOffer&
         return false;
     }
     
-    // Execute trade
+    
     playerRef.gold -= trade.goldDifference;
     
     std::cout << "Trade completed!\n";
@@ -2386,7 +2386,7 @@ bool MerchantSystem::executeTrade(MerchantInventory& merchant, const TradeOffer&
 int MerchantSystem::evaluateItemValue(const Item& item) const {
     int baseValue = item.value;
     
-    // Adjust based on rarity
+    
     switch (item.rarity) {
         case ItemRarity::COMMON: break;
         case ItemRarity::UNCOMMON: baseValue = static_cast<int>(baseValue * 1.5f); break;
@@ -2403,7 +2403,7 @@ void MerchantSystem::updatePrices(MerchantInventory& merchant) {
         auto it = itemDemand.find(item.id);
         int demand = (it != itemDemand.end()) ? it->second : 0;
         
-        // Adjust price based on demand
+        
         float multiplier = calculatePriceMultiplier(item.id, merchant.items.size(), demand);
         merchant.priceMultipliers[item.id] = multiplier;
     }
@@ -2414,12 +2414,12 @@ float MerchantSystem::calculatePriceMultiplier(int itemId, int supply, int deman
     
     float baseMultiplier = 1.0f;
     
-    // Low supply = higher prices
+    
     if (supply < 5) {
         baseMultiplier += 0.1f * (5 - supply);
     }
     
-    // High demand = higher prices
+    
     if (demand > 0) {
         baseMultiplier += 0.05f * demand;
     }
@@ -2430,7 +2430,7 @@ float MerchantSystem::calculatePriceMultiplier(int itemId, int supply, int deman
 void MerchantSystem::increaseReputation(int amount) {
     reputationPoints += amount;
     
-    // Update tier based on reputation
+    
     if (reputationPoints >= 1000) {
         merchantTier = 3;
     } else if (reputationPoints >= 500) {
@@ -2441,7 +2441,7 @@ void MerchantSystem::increaseReputation(int amount) {
 }
 
 float MerchantSystem::getReputationDiscount() const {
-    // 5% discount per tier
+    
     return merchantTier * 0.05f;
 }
 
@@ -2471,7 +2471,7 @@ void MerchantSystem::displayTravelingMerchant() {
 
 bool MerchantSystem::unlockMerchantTier(int tier) {
     if (tier <= merchantTier) {
-        return true;  // Already unlocked
+        return true;  
     }
     
     int requiredRep = tier * 300;
@@ -2490,7 +2490,7 @@ void MerchantSystem::updateDemand(int itemId, int change) {
 }
 
 bool MerchantSystem::checkBarterSkill(int difficulty) const {
-    // Simple skill check - could be expanded
+    
     int barterSkill = playerRef.level * 2;
     return barterSkill >= difficulty;
 }
@@ -2498,13 +2498,13 @@ bool MerchantSystem::checkBarterSkill(int difficulty) const {
 int MerchantSystem::calculateBuyPrice(const Item& item, const MerchantInventory& merchant) const {
     float multiplier = merchant.buyPriceMultiplier;
     
-    // Check for item-specific multiplier
+    
     auto it = merchant.priceMultipliers.find(item.id);
     if (it != merchant.priceMultipliers.end()) {
         multiplier *= it->second;
     }
     
-    // Apply reputation discount
+    
     float discount = 1.0f - getReputationDiscount();
     
     return static_cast<int>(item.value * multiplier * discount);
@@ -2517,9 +2517,9 @@ int MerchantSystem::calculateSellPrice(const Item& item, const MerchantInventory
 bool MerchantSystem::hasStock(const MerchantInventory& merchant, int itemId) const {
     auto it = merchant.stock.find(itemId);
     if (it == merchant.stock.end()) {
-        return true;  // No stock tracking = infinite
+        return true;  
     }
-    return it->second != 0;  // -1 = infinite, >0 = has stock
+    return it->second != 0;  
 }
 
 void MerchantSystem::reduceStock(MerchantInventory& merchant, int itemId) {
@@ -2530,14 +2530,14 @@ void MerchantSystem::reduceStock(MerchantInventory& merchant, int itemId) {
 }
 
 void MerchantSystem::restockVendor(MerchantInventory& merchant) {
-    // Restock all items to initial quantities
+    
     for (auto& stockPair : merchant.stock) {
-        if (stockPair.second != -1) {  // Don't modify infinite stock
-            stockPair.second = 3 + (rand() % 5);  // Restock to 3-7 items
+        if (stockPair.second != -1) {  
+            stockPair.second = 3 + (rand() % 5);  
         }
     }
     
-    // Add some merchant gold
+    
     merchant.merchantGold += 500 + (rand() % 500);
     
     merchant.restockTurns = 0;
@@ -2545,10 +2545,10 @@ void MerchantSystem::restockVendor(MerchantInventory& merchant) {
 }
 
 void MerchantSystem::addItemToStock(MerchantInventory& merchant, const Item& item, int quantity) {
-    // Check if item already exists
+    
     for (auto& existingItem : merchant.items) {
         if (existingItem.id == item.id) {
-            // Update stock
+            
             auto it = merchant.stock.find(item.id);
             if (it != merchant.stock.end() && it->second != -1) {
                 it->second += quantity;
@@ -2557,7 +2557,7 @@ void MerchantSystem::addItemToStock(MerchantInventory& merchant, const Item& ite
         }
     }
     
-    // Add new item
+    
     merchant.items.push_back(item);
     merchant.stock[item.id] = quantity;
 }
@@ -2715,7 +2715,7 @@ MerchantInventory MerchantSystem::createGeneralStore(int level) {
     shop.sellPriceMultiplier = 0.6f;
     shop.acceptsAllItems = true;
     
-    // Add basic items (these would come from game's item templates)
+    
     Item potion1, potion2, potion3;
     potion1.id = 1; potion1.name = "Minor Health Potion"; potion1.value = 10; 
     potion1.type = ItemType::CONSUMABLE; potion1.rarity = ItemRarity::COMMON;
@@ -2732,9 +2732,9 @@ MerchantInventory MerchantSystem::createGeneralStore(int level) {
     shop.items.push_back(potion2);
     if (level >= 3) shop.items.push_back(potion3);
     
-    shop.stock[1] = 10;  // Plenty of minor potions
-    shop.stock[2] = 5;   // Some health potions
-    if (level >= 3) shop.stock[3] = 2;  // Few greater potions
+    shop.stock[1] = 10;  
+    shop.stock[2] = 5;   
+    if (level >= 3) shop.stock[3] = 2;  
     
     return shop;
 }
@@ -2931,4 +2931,4 @@ MerchantInventory MerchantSystem::createTravelingMerchant(int level) {
     return shop;
 }
 
-}  // namespace AQE
+}  

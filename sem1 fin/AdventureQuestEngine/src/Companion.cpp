@@ -1,8 +1,8 @@
-//! Copyright (c) Alexander Matzen. All rights reserved.
-//! Author: Alexander Matzen
-//! Licensed under the MIT license
 
-// Companion system implementation (partially implemented - many features scrapped)
+
+
+
+
 
 #include "../include/Companion.h"
 #include <iostream>
@@ -13,9 +13,9 @@
 
 namespace AQE {
 
-// ---
-// CompanionManager Implementation
-// ---
+
+
+
 
 CompanionManager::CompanionManager(Player& player) 
     : playerRef(player), activeCompanionId(-1), maxActiveCompanions(1) {
@@ -75,7 +75,7 @@ bool CompanionManager::recruitCompanion(int companionId) {
     recruitedCompanionIds.push_back(companionId);
     std::cout << comp->name << " has joined your party!\n";
     
-    // Auto-set as active if no active companion
+    
     if (activeCompanionId == -1) {
         setActiveCompanion(companionId);
     }
@@ -110,7 +110,7 @@ bool CompanionManager::dismissCompanion(int companionId) {
 }
 
 int CompanionManager::getMaxCompanions() const {
-    // Base + bonus from level
+    
     return maxActiveCompanions + (playerRef.level / 10);
 }
 
@@ -216,7 +216,7 @@ void CompanionManager::manageCompanions() {
     std::cout << "5. Dismiss Companion\n";
     std::cout << "6. Back\n";
     
-    // This would be called from a menu loop in the game engine
+    
 }
 
 void CompanionManager::changeLoyalty(int companionId, int amount, const std::string& reason) {
@@ -225,7 +225,7 @@ void CompanionManager::changeLoyalty(int companionId, int amount, const std::str
     
     comp->loyaltyPoints += amount;
     
-    // Clamp to 0-100
+    
     if (comp->loyaltyPoints < 0) comp->loyaltyPoints = 0;
     if (comp->loyaltyPoints > 100) comp->loyaltyPoints = 100;
     
@@ -258,24 +258,24 @@ void CompanionManager::updateMood(int companionId) {
 }
 
 void CompanionManager::checkLoyaltyEvents() {
-    // Collect IDs to dismiss first to avoid iterator invalidation
+    
     std::vector<int> toRemove;
     
     for (int id : recruitedCompanionIds) {
         Companion* comp = findCompanion(id);
         if (comp == nullptr) continue;
         
-        // Check if companion might leave
+        
         if (comp->mood == CompanionMood::ANGRY && !comp->cantDie) {
             int leaveChance = rand() % 100;
-            if (leaveChance < 10) {  // 10% chance to leave when angry
+            if (leaveChance < 10) {  
                 std::cout << comp->name << " has left your party due to low loyalty!\n";
                 toRemove.push_back(id);
             }
         }
     }
     
-    // Now safely dismiss companions
+    
     for (int id : toRemove) {
         dismissCompanion(id);
     }
@@ -285,7 +285,7 @@ void CompanionManager::companionTakeTurn(Enemy& enemy, std::vector<std::string>&
     Companion* comp = getActiveCompanion();
     if (comp == nullptr || !comp->isActiveInCombat) return;
     
-    // Get effectiveness modifier based on mood
+    
     float effectiveMod = 1.0f;
     switch (comp->mood) {
         case CompanionMood::ANGRY: effectiveMod = 0.8f; break;
@@ -295,7 +295,7 @@ void CompanionManager::companionTakeTurn(Enemy& enemy, std::vector<std::string>&
         case CompanionMood::DEVOTED: effectiveMod = 1.25f; break;
     }
     
-    // Find an ability to use
+    
     for (auto& ability : comp->abilities) {
         if (ability.isPassive) continue;
         
@@ -304,7 +304,7 @@ void CompanionManager::companionTakeTurn(Enemy& enemy, std::vector<std::string>&
             continue;
         }
         
-        // Use ability
+        
         if (ability.damage > 0) {
             int damage = static_cast<int>(ability.damage * effectiveMod);
             enemy.stats.currentHP -= damage;
@@ -388,7 +388,7 @@ void CompanionManager::talkToCompanion(int companionId) {
         }
     }
     
-    // Talking increases loyalty slightly
+    
     changeLoyalty(companionId, 1, "conversation");
 }
 
@@ -399,12 +399,12 @@ void CompanionManager::giveGift(int companionId, int itemId) {
         return;
     }
     
-    // Find and remove item from player inventory
+    
     for (auto it = playerRef.inventory.begin(); it != playerRef.inventory.end(); ++it) {
         if (it->id == itemId) {
             std::cout << "You give " << it->name << " to " << comp->name << ".\n";
             
-            // Base loyalty gain from item value
+            
             int loyaltyGain = it->value / 20;
             if (loyaltyGain < 1) loyaltyGain = 1;
             if (loyaltyGain > 20) loyaltyGain = 20;
@@ -461,7 +461,7 @@ bool CompanionManager::hasActiveLootBonus() const {
 }
 
 void CompanionManager::initializeCompanions() {
-    // Create Archer Companion - Lyra Swiftarrow
+    
     Companion lyra;
     lyra.id = 1;
     lyra.name = "Lyra Swiftarrow";
@@ -476,7 +476,7 @@ void CompanionManager::initializeCompanions() {
     lyra.experienceLevel = 1;
     lyra.likes = {"Helping innocents", "Precision", "Nature"};
     lyra.dislikes = {"Recklessness", "Cruelty", "Destruction of nature"};
-    lyra.moralityPreference = 10;  // Prefers good
+    lyra.moralityPreference = 10;  
     lyra.grantsXPBonus = true;
     lyra.xpBonusPercent = 0.1f;
     lyra.dialogueOptions = {
@@ -502,7 +502,7 @@ void CompanionManager::initializeCompanions() {
     
     allCompanions.push_back(lyra);
     
-    // Create Healer Companion - Brother Aldric
+    
     Companion aldric;
     aldric.id = 2;
     aldric.name = "Brother Aldric";
@@ -517,7 +517,7 @@ void CompanionManager::initializeCompanions() {
     aldric.experienceLevel = 1;
     aldric.likes = {"Mercy", "Peace", "Helping others"};
     aldric.dislikes = {"Evil choices", "Unnecessary killing", "Dark magic"};
-    aldric.moralityPreference = 20;  // Strongly prefers good
+    aldric.moralityPreference = 20;  
     aldric.grantsGoldBonus = false;
     aldric.dialogueOptions = {
         "May the Light guide your path.",
@@ -540,7 +540,7 @@ void CompanionManager::initializeCompanions() {
     
     allCompanions.push_back(aldric);
     
-    // Create Tank Companion - Gorath Ironshield
+    
     Companion gorath;
     gorath.id = 3;
     gorath.name = "Gorath Ironshield";
@@ -555,7 +555,7 @@ void CompanionManager::initializeCompanions() {
     gorath.experienceLevel = 1;
     gorath.likes = {"Honor", "Bravery", "Protecting others"};
     gorath.dislikes = {"Cowardice", "Theft", "Breaking oaths"};
-    gorath.moralityPreference = 5;  // Slightly prefers good
+    gorath.moralityPreference = 5;  
     gorath.grantsLootBonus = false;
     gorath.dialogueOptions = {
         "A shield is only as strong as the arm that wields it.",
@@ -578,7 +578,7 @@ void CompanionManager::initializeCompanions() {
     
     allCompanions.push_back(gorath);
     
-    // Create Mage Companion - Elara Flamecaster
+    
     Companion elara;
     elara.id = 4;
     elara.name = "Elara Flamecaster";
@@ -594,7 +594,7 @@ void CompanionManager::initializeCompanions() {
     elara.experienceLevel = 1;
     elara.likes = {"Magic", "Knowledge", "Experimentation"};
     elara.dislikes = {"Anti-magic sentiments", "Closed-mindedness", "Destruction of books"};
-    elara.moralityPreference = 0;  // Neutral
+    elara.moralityPreference = 0;  
     elara.grantsXPBonus = true;
     elara.xpBonusPercent = 0.15f;
     elara.dialogueOptions = {
@@ -618,7 +618,7 @@ void CompanionManager::initializeCompanions() {
     
     allCompanions.push_back(elara);
     
-    // Create Thief Companion - Shadow
+    
     Companion shadow;
     shadow.id = 5;
     shadow.name = "Shadow";
@@ -633,7 +633,7 @@ void CompanionManager::initializeCompanions() {
     shadow.experienceLevel = 1;
     shadow.likes = {"Stealth", "Cunning", "Freedom"};
     shadow.dislikes = {"Authority", "Direct confrontation", "Being in the spotlight"};
-    shadow.moralityPreference = -5;  // Slightly prefers chaos
+    shadow.moralityPreference = -5;  
     shadow.grantsGoldBonus = true;
     shadow.goldBonusPercent = 0.2f;
     shadow.grantsLootBonus = true;
@@ -687,9 +687,9 @@ void CompanionManager::triggerLoyaltyDialogue(int companionId, bool isPositive) 
     }
 }
 
-// ---
-// FactionManager Implementation
-// ---
+
+
+
 
 FactionManager::FactionManager(Player& player) : playerRef(player) {
     initializeFactions();
@@ -805,7 +805,7 @@ std::vector<int> FactionManager::getAvailableQuests(FactionId faction) const {
 std::vector<Item> FactionManager::getFactionShop(FactionId faction) const {
     std::vector<Item> items;
     
-    // Return faction-specific items based on rank
+    
     auto it = factionReps.find(faction);
     if (it != factionReps.end() && static_cast<int>(it->second.rank) >= 1) {
         Item factionItem;
@@ -875,7 +875,7 @@ bool FactionManager::canWearTabard(FactionId faction) const {
 }
 
 void FactionManager::initializeFactions() {
-    // Initialize all factions with neutral standing
+    
     FactionReputation knights;
     knights.faction = FactionId::KNIGHTS_ORDER;
     knights.reputationPoints = 500;
@@ -918,13 +918,13 @@ void FactionManager::initializeFactions() {
     undead.rank = FactionRank::NEUTRAL;
     factionReps[FactionId::UNDEAD_LEGION] = undead;
     
-    // Set up faction conflicts
+    
     enemyFactions[FactionId::KNIGHTS_ORDER] = {FactionId::THIEVES_GUILD, FactionId::CULT_OF_SHADOWS, FactionId::UNDEAD_LEGION};
     enemyFactions[FactionId::THIEVES_GUILD] = {FactionId::KNIGHTS_ORDER, FactionId::MERCHANTS_LEAGUE};
     enemyFactions[FactionId::CULT_OF_SHADOWS] = {FactionId::KNIGHTS_ORDER, FactionId::DRAGON_RIDERS};
     enemyFactions[FactionId::UNDEAD_LEGION] = {FactionId::KNIGHTS_ORDER, FactionId::DRAGON_RIDERS};
     
-    // Set up faction alliances
+    
     alliedFactions[FactionId::KNIGHTS_ORDER] = {FactionId::DRAGON_RIDERS};
     alliedFactions[FactionId::DRAGON_RIDERS] = {FactionId::KNIGHTS_ORDER};
 }
@@ -941,7 +941,7 @@ FactionRank FactionManager::calculateRank(int reputationPoints) const {
 
 void FactionManager::applyFactionConflict(FactionId faction1, FactionId faction2, int amount) {
     (void)faction1;
-    // Gaining rep with one enemy causes rep loss with the other
+    
     factionReps[faction2].reputationPoints -= amount;
     if (factionReps[faction2].reputationPoints < 0) {
         factionReps[faction2].reputationPoints = 0;
@@ -951,4 +951,4 @@ void FactionManager::applyFactionConflict(FactionId faction1, FactionId faction2
     factionReps[faction2].rank = calculateRank(factionReps[faction2].reputationPoints);
 }
 
-}  // namespace AQE
+}  

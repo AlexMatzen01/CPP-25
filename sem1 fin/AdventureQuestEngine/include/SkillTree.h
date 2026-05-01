@@ -1,8 +1,8 @@
-//! Copyright (c) Alexander Matzen. All rights reserved.
-//! Author: Alexander Matzen
-//! Licensed under the MIT license
 
-// Skill tree system (partially implemented - some features scrapped)
+
+
+
+
 
 #ifndef SKILLTREE_H
 #define SKILLTREE_H
@@ -14,32 +14,32 @@
 
 namespace AQE {
 
-// ---
-// TALENT NODE SYSTEM
-// ---
+
+
+
 
 enum class TalentType {
-    PASSIVE,         // Always active bonus
-    ACTIVE,          // Usable ability
-    ULTIMATE,        // Powerful capstone ability
-    SYNERGY          // Unlocks combo interactions
+    PASSIVE,         
+    ACTIVE,          
+    ULTIMATE,        
+    SYNERGY          
 };
 
-// DamageElement is now defined in Types.h
-// enum class DamageElement moved to Types.h to avoid duplication
+
+
 
 struct TalentNode {
     int id;
     std::string name;
     std::string description;
     TalentType type;
-    int tier;                        // 1-7 tiers
-    std::vector<int> prerequisites;  // Talent IDs required
-    int currentRank;                 // 0-5 ranks
-    int maxRank;                     // Usually 5
-    int pointCost;                   // Usually 1 per rank
+    int tier;                        
+    std::vector<int> prerequisites;  
+    int currentRank;                 
+    int maxRank;                     
+    int pointCost;                   
     
-    // Passive bonuses (per rank)
+    
     int hpBonus;
     int manaBonus;
     int attackBonus;
@@ -50,22 +50,22 @@ struct TalentNode {
     int speedBonus;
     int magicPowerBonus;
     int magicResistBonus;
-    float damageMultiplier;          // 1.05 = 5% per rank
-    float cooldownReduction;         // 0.05 = 5% per rank
-    float resourceRegen;             // Mana/HP regen bonus
+    float damageMultiplier;          
+    float cooldownReduction;         
+    float resourceRegen;             
     
-    // Active ability data
-    Skill ability;                   // Full ability definition
-    DamageElement element;           // Elemental type
     
-    // Special effects
-    bool grantsDoubleJump;           // Movement ability
-    bool grantsShieldRecharge;       // Shield on kill
-    bool grantsVampirism;            // Lifesteal
-    float vampirismPercent;          // % of damage healed
-    bool grantsThorns;               // Reflect damage
-    int thornsPercent;               // % damage reflected
-    bool grantsCounterattack;        // Free attack when dodging
+    Skill ability;                   
+    DamageElement element;           
+    
+    
+    bool grantsDoubleJump;           
+    bool grantsShieldRecharge;       
+    bool grantsVampirism;            
+    float vampirismPercent;          
+    bool grantsThorns;               
+    int thornsPercent;               
+    bool grantsCounterattack;        
     
     TalentNode() : id(0), type(TalentType::PASSIVE), tier(1), currentRank(0),
                    maxRank(5), pointCost(1), hpBonus(0), manaBonus(0),
@@ -79,58 +79,58 @@ struct TalentNode {
                    grantsCounterattack(false) {}
 };
 
-// ---
-// SPECIALIZATION PATHS
-// ---
+
+
+
 
 enum class WarriorSpec {
-    BERSERKER,       // High damage, risky gameplay
-    TANK,            // Defense and shields
-    BLADESTORM       // AoE and movement
+    BERSERKER,       
+    TANK,            
+    BLADESTORM       
 };
 
 enum class MageSpec {
-    PYROMANCER,      // Fire damage
-    CRYOMANCER,      // Ice control
-    ARCANIST         // Pure magic power
+    PYROMANCER,      
+    CRYOMANCER,      
+    ARCANIST         
 };
 
 enum class RogueSpec {
-    ASSASSIN,        // Single target burst
-    SHADOWDANCER,    // Stealth and evasion
-    POISONER         // DoTs and debuffs
+    ASSASSIN,        
+    SHADOWDANCER,    
+    POISONER         
 };
 
 enum class PaladinSpec {
-    CRUSADER,        // Holy damage
-    PROTECTOR,       // Healing and defense
-    JUSTICAR         // Balanced offense/defense
+    CRUSADER,        
+    PROTECTOR,       
+    JUSTICAR         
 };
 
-// ---
-// COMBO SYSTEM
-// ---
+
+
+
 
 struct ComboChain {
     std::string name;
-    std::vector<int> skillSequence;  // Order of skill IDs
-    int currentStep;                 // Progress in chain
-    int bonusDamage;                 // Extra damage on completion
-    StatusEffect bonusEffect;        // Effect applied on completion
-    float damageMultiplier;          // Final hit multiplier
+    std::vector<int> skillSequence;  
+    int currentStep;                 
+    int bonusDamage;                 
+    StatusEffect bonusEffect;        
+    float damageMultiplier;          
     
     ComboChain() : currentStep(0), bonusDamage(0), damageMultiplier(1.0f) {}
 };
 
-// ---
-// SKILL TREE MANAGER
-// ---
+
+
+
 
 class SkillTreeManager {
 public:
     SkillTreeManager(Player& player);
     
-    // Tree management
+    
     void initializeTalentTree();
     void displayTalentTree() const;
     bool interactiveTalentMenu();
@@ -139,33 +139,33 @@ public:
     bool canUnlockTalent(int talentId) const;
     int getAvailableTalentPoints() const;
     
-    // Specialization
+    
     void chooseSpecialization(int specIndex);
     std::string getCurrentSpecialization() const;
 
-    // Point management
+    
     void addTalentPoints(int amount = 1);
     
-    // Stat calculation
+    
     void applyAllTalentBonuses();
     void recalculateStats();
     
-    // Active abilities
+    
     std::vector<Skill> getActiveAbilities() const;
     bool useAbility(int abilityId, Enemy& target);
     void updateCooldowns();
     
-    // Combo system
+    
     void registerSkillUse(int skillId);
     bool checkComboCompletion();
     void resetCombo();
     std::string getCurrentComboProgress() const;
     
-    // Passive effects
+    
     bool hasPassive(const std::string& passiveName) const;
     float getPassiveValue(const std::string& passiveName) const;
     
-    // Save/Load
+    
     std::string serializeTalents() const;
     void deserializeTalents(const std::string& data);
     
@@ -179,7 +179,7 @@ private:
     int totalTalentPoints;
     int spentTalentPoints;
     
-    // Internal helpers
+    
     void buildWarriorTree();
     void buildMageTree();
     void buildRogueTree();
@@ -188,6 +188,6 @@ private:
     TalentNode* findTalent(int talentId);
 };
 
-}  // namespace AQE
+}  
 
-#endif // SKILLTREE_H
+#endif 
