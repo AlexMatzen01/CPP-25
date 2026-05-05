@@ -1,62 +1,94 @@
 //! Copyright (c) Alexander Matzen. All rights reserved.
 //! Author: Alexander Matzen
 //! Licensed under the MIT license
+//! Edit started 1/2/26
+
+// Magic.cpp - Magic and spell system
+// Manages spells, learning, and casting for magic-capable classes
+//
+// CLASS: MagicSystem
+// PURPOSE: Provides spell management and casting for magical classes
+//
+// KEY ATTRIBUTES:
+//   - playerRef: Reference to player character
+//   - knownSpells: Vector of spells player has learned
+//   - spellHistory: Vector of recently cast spells
+//
+// KEY METHODS:
+//   - learnSpell(spell): Learn a new spell (if class permits)
+//   - getKnownSpells(): Get all spells currently known
+//   - canCastMagic(charClass): Check if class can use magic
+//   - canLearnSpell(charClass, spell): Check spell availability for class
+//   - castSpell(spellId, target): Execute spell on target
+//   - getAvailableSchools(charClass): Get magic schools for class
+//   - getManaCost(spell): Calculate mana required to cast
+//   - displaySpellMenu(): Show available spells to cast
 
 #include "Magic.h"
 #include <algorithm>
 
 namespace AQE {
 
-// ---
-// MAGIC SYSTEM IMPLEMENTATION
-// ---
+
+
+
 
 MagicSystem::MagicSystem(Player& player) : playerRef(player) {}
 
 bool MagicSystem::learnSpell(const Spell& spell) {
-    // Check if player's class can learn this spell
     if (!canLearnSpell(playerRef.charClass, spell)) {
         return false;
     }
-    
-    // Check if already learned
+    // Try to teach player a new spell
+    // Returns true if successfully learned, false if already known
+    // Check if player already knows this spell (prevent duplicates)
     for (const auto& known : knownSpells) {
         if (known.id == spell.id) {
-            return false; // Already learned
+            return false;  // Already learned this spell
         }
     }
     
+    // Add spell to known spells list
     knownSpells.push_back(spell);
-    playerRef.spellsLearned++;
+    playerRef.spellsLearned++;  // Update player's spell count
     return true;
 }
 
+// Get reference to list of all spells player knows
 std::vector<Spell>& MagicSystem::getKnownSpells() {
     return knownSpells;
 }
 
+// Determine if character class has access to magic spells
+// Some classes are magical, others rely on combat only
 bool MagicSystem::canCastMagic(CharacterClass charClass) {
+    // These classes can cast: Mage (pure magic), Paladin (healing), Necromancer (dark), Ranger (utility)
     return charClass == CharacterClass::MAGE || 
            charClass == CharacterClass::PALADIN ||
            charClass == CharacterClass::NECROMANCER ||
            charClass == CharacterClass::RANGER;
 }
 
+// Check if character class can learn a specific spell
+// Spells may be restricted to certain classes (e.g., Necromancy forbidden to Paladin)
 bool MagicSystem::canLearnSpell(CharacterClass charClass, const Spell& spell) {
-    // Check if class can learn this spell
+    // Check if this class is in the spell's restricted classes list
     for (const auto& restrictedClass : spell.restrictedClasses) {
         if (restrictedClass == charClass) {
-            return true;
+            return true;  // Class CAN learn (is in allowed list)
         }
     }
-    return false;
+    return false;  // Class cannot learn this spell
 }
 
+// Get list of magic schools available to character class
+// Different classes have access to different schools of magic
 std::vector<MagicSchool> MagicSystem::getAvailableSchools(CharacterClass charClass) {
     std::vector<MagicSchool> schools;
     
     switch (charClass) {
         case CharacterClass::MAGE:
+            // Mage: Pure damage and utility magic
             schools = { MagicSchool::EVOCATION, MagicSchool::ABJURATION, 
                        MagicSchool::TRANSMUTATION, MagicSchool::CONJURATION };
             break;
@@ -79,9 +111,9 @@ std::vector<MagicSchool> MagicSystem::getAvailableSchools(CharacterClass charCla
     return schools;
 }
 
-// ---
-// SPELL LIBRARY IMPLEMENTATIONS
-// ---
+
+
+
 
 namespace SpellLibrary {
 
@@ -91,10 +123,10 @@ Spell createFirebolt() {
     spell.name = "Firebolt";
     spell.description = "Launch a bolt of fire at a single target";
     spell.school = MagicSchool::EVOCATION;
-    spell.manaCost = 25;  // Increased from 20
+    spell.manaCost = 25;  
     spell.cooldown = 1;
     spell.level = 1;
-    spell.damageMultiplier = 1.0f;  // Reduced from 1.2f
+    spell.damageMultiplier = 1.0f;  
     spell.isAOE = false;
     spell.isHeal = false;
     spell.isDebuff = false;
@@ -108,10 +140,10 @@ Spell createFrostbolt() {
     spell.name = "Frostbolt";
     spell.description = "Launch a bolt of ice, slowing the target";
     spell.school = MagicSchool::EVOCATION;
-    spell.manaCost = 28;  // Increased from 20
-    spell.cooldown = 2;  // Increased from 1
+    spell.manaCost = 28;  
+    spell.cooldown = 2;  
     spell.level = 2;
-    spell.damageMultiplier = 0.9f;  // Reduced from 1.1f
+    spell.damageMultiplier = 0.9f;  
     spell.isAOE = false;
     spell.isHeal = false;
     spell.isDebuff = true;
@@ -132,10 +164,10 @@ Spell createChainLightning() {
     spell.name = "Chain Lightning";
     spell.description = "Lightning jumps between all enemies";
     spell.school = MagicSchool::EVOCATION;
-    spell.manaCost = 45;  // Increased from 35
-    spell.cooldown = 3;  // Increased from 2
+    spell.manaCost = 45;  
+    spell.cooldown = 3;  
     spell.level = 4;
-    spell.damageMultiplier = 1.1f;  // Reduced from 1.5f
+    spell.damageMultiplier = 1.1f;  
     spell.isAOE = true;
     spell.isHeal = false;
     spell.isDebuff = false;
@@ -149,10 +181,10 @@ Spell createInferno() {
     spell.name = "Inferno";
     spell.description = "Massive fire explosion, deals damage and applies burn";
     spell.school = MagicSchool::EVOCATION;
-    spell.manaCost = 60;  // Increased from 50
-    spell.cooldown = 4;  // Increased from 3
+    spell.manaCost = 60;  
+    spell.cooldown = 4;  
     spell.level = 8;
-    spell.damageMultiplier = 1.5f;  // Reduced from 2.0f
+    spell.damageMultiplier = 1.5f;  
     spell.isAOE = true;
     spell.isHeal = false;
     spell.isDebuff = true;
@@ -175,10 +207,10 @@ Spell createBlizzard() {
     spell.name = "Blizzard";
     spell.description = "Winter storm hits all enemies, chilling them";
     spell.school = MagicSchool::EVOCATION;
-    spell.manaCost = 60;  // Increased from 50
-    spell.cooldown = 4;  // Increased from 3
+    spell.manaCost = 60;  
+    spell.cooldown = 4;  
     spell.level = 8;
-    spell.damageMultiplier = 1.4f;  // Reduced from 1.8f
+    spell.damageMultiplier = 1.4f;  
     spell.isAOE = true;
     spell.isHeal = false;
     spell.isDebuff = true;
@@ -200,8 +232,8 @@ Spell createMagicShield() {
     spell.name = "Magic Shield";
     spell.description = "Create a magical barrier to reduce damage";
     spell.school = MagicSchool::ABJURATION;
-    spell.manaCost = 30;  // Increased from 25
-    spell.cooldown = 2;  // Increased from 1
+    spell.manaCost = 30;  
+    spell.cooldown = 2;  
     spell.level = 1;
     spell.isAOE = false;
     spell.isHeal = false;
@@ -343,11 +375,11 @@ Spell createDrainLife() {
     spell.name = "Drain Life";
     spell.description = "Siphon life from target, healing yourself";
     spell.school = MagicSchool::NECROMANCY;
-    spell.manaCost = 40;  // Increased from 35
+    spell.manaCost = 40;  
     spell.cooldown = 2;
     spell.level = 3;
-    spell.damageMultiplier = 1.1f;  // Reduced from 1.3f
-    spell.healMultiplier = 0.4f;  // Reduced from 0.6f
+    spell.damageMultiplier = 1.1f;  
+    spell.healMultiplier = 0.4f;  
     spell.isAOE = false;
     spell.isHeal = true;
     spell.isDebuff = false;
@@ -403,10 +435,10 @@ Spell createDeathWish() {
     spell.name = "Death Wish";
     spell.description = "Extreme damage at great personal risk";
     spell.school = MagicSchool::NECROMANCY;
-    spell.manaCost = 75;  // Increased from 60
-    spell.cooldown = 5;  // Increased from 4
+    spell.manaCost = 75;  
+    spell.cooldown = 5;  
     spell.level = 10;
-    spell.damageMultiplier = 2.2f;  // Reduced from 3.0f
+    spell.damageMultiplier = 2.2f;  
     spell.isAOE = true;
     spell.isHeal = false;
     spell.isDebuff = false;
@@ -428,10 +460,10 @@ Spell createHeal() {
     spell.name = "Heal";
     spell.description = "Restore health to self or ally";
     spell.school = MagicSchool::RESTORATION;
-    spell.manaCost = 35;  // Increased from 25
-    spell.cooldown = 2;  // Increased from 1
+    spell.manaCost = 35;  
+    spell.cooldown = 2;  
     spell.level = 1;
-    spell.healMultiplier = 1.2f;  // Reduced from 1.5f
+    spell.healMultiplier = 1.2f;  
     spell.isAOE = false;
     spell.isHeal = true;
     spell.isDebuff = false;
@@ -446,10 +478,10 @@ Spell createGreaterHeal() {
     spell.name = "Greater Heal";
     spell.description = "Restore substantial health";
     spell.school = MagicSchool::RESTORATION;
-    spell.manaCost = 55;  // Increased from 45
-    spell.cooldown = 3;  // Increased from 2
+    spell.manaCost = 55;  
+    spell.cooldown = 3;  
     spell.level = 5;
-    spell.healMultiplier = 1.8f;  // Reduced from 2.5f
+    spell.healMultiplier = 1.8f;  
     spell.isAOE = false;
     spell.isHeal = true;
     spell.isDebuff = false;
@@ -558,6 +590,6 @@ Spell createFascinate() {
     return spell;
 }
 
-} // namespace SpellLibrary
+} 
 
-} // namespace AQE
+} 

@@ -169,6 +169,63 @@ public:
     std::string serializeTalents() const;
     void deserializeTalents(const std::string& data);
     
+    //==========================================================================
+    // UTILITY METHODS - Status Checking
+    //==========================================================================
+    
+    /**
+// Get talent node by ID
+     * @param talentId ID to search for
+     * @return Pointer to talent node or nullptr
+     */
+    TalentNode* getTalentById(int talentId);
+    
+    /**
+// Check if talent is unlocked
+     * @param talentId Talent ID to check
+     * @return True if unlocked (rank > 0)
+     */
+    bool isTalentUnlocked(int talentId) const;
+    
+    /**
+// Check if talent is fully maxed
+     * @param talentId Talent ID to check
+     * @return True if at max rank
+     */
+    bool isTalentMaxed(int talentId) const;
+    
+    /**
+// Get total stat bonuses from all talents
+     * @return CombatStats with total bonuses
+     */
+    CombatStats getTotalBonuses() const;
+    
+    /**
+// Get specialization name as string
+     * @param spec Specialization enum
+     * @return Specialization name
+     */
+    static std::string getSpecializationName(const std::string& spec);
+    
+    /**
+// Check prerequisites for talent
+     * @param talentId Talent to check
+     * @return True if all prerequisites met
+     */
+    bool checkTalentPrerequisites(int talentId) const;
+    
+    /**
+// Get talents that can be unlocked
+     * @return Vector of available talent IDs
+     */
+    std::vector<int> getAvailableTalents() const;
+    
+    /**
+// Count total ranks invested in talents
+     * @return Total ranks
+     */
+    int getTotalRanksInvested() const;
+    
 private:
     Player& playerRef;
     std::vector<TalentNode> talentTree;

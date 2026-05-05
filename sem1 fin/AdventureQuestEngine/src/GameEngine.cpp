@@ -1,8 +1,33 @@
 //! Copyright (c) Alexander Matzen. All rights reserved.
 //! Author: Alexander Matzen
 //! Licensed under the MIT license
+//! Edit started 1/1/26
 
-// Main game engine implementation
+// GameEngine.cpp - Core game engine implementation
+// Manages game state, main loop, and overall game flow
+//
+// CLASS: GameEngine
+// PURPOSE: Central controller for the entire game, coordinating all systems
+//
+// KEY ATTRIBUTES:
+//   - gameState: Current game state (current dungeon, player position, etc.)
+//   - player: The active player character
+//   - mapGenerator: Procedural dungeon generation system
+//   - combatSystem: Turn-based combat handler
+//   - inventorySystem: Player inventory management
+//   - eventSystem: Random events and quest system
+//   - fileIO: Save/load and data persistence
+//
+// KEY METHODS:
+//   - run(): Main entry point, starts the game loop
+//   - startNewGame(): Initialize new character and dungeon
+//   - gameLoop(): Main exploration/combat/event loop
+//   - characterCreation(): Player creation wizard
+//   - displayCurrentRoom(): Show room description and options
+//   - movePlayer(direction): Navigate the dungeon map
+//   - determineEnding(): Calculate and display final ending
+//   - saveGame(filename): Persist game progress
+//   - loadGame(filename): Restore previous game
 
 #include "../include/GameEngine.h"
 #include "../include/Constants.h"
@@ -49,89 +74,109 @@ std::string getSaveDisplayName(const std::string& path) {
 
 }
 
+// Extract skill tree data from a configuration file
+// Parses INI-style format with [SKILLTREE] section and data= key
 std::string extractSkillTreeData(const std::string& filename) {
     std::ifstream file(filename);
     if (!file.is_open()) {
-        return "";
+        return "";  // Return empty if file not found
     }
 
     std::string line;
-    std::string section;
+    std::string section;  // Track current section for context
+    
+    // Line-by-line file parsing
     while (std::getline(file, line)) {
-        line = trim(line);
+        line = trim(line);  // Remove whitespace
+        
+        // Skip empty lines and comments
         if (line.empty() || line[0] == '#') {
             continue;
         }
+        
+        // Detect section headers [SECTIONNAME]
         if (line == "[SKILLTREE]") {
-            section = line;
+            section = line;  // Now we're in SKILLTREE section
             continue;
         }
+        
+        // New section found, exit current section
         if (line.size() > 0 && line[0] == '[') {
             section.clear();
             continue;
         }
 
+        // Parse key=value pairs within SKILLTREE section
         if (section == "[SKILLTREE]") {
             const size_t equalsPos = line.find('=');
             if (equalsPos != std::string::npos) {
                 const std::string key = trim(line.substr(0, equalsPos));
                 const std::string value = trim(line.substr(equalsPos + 1));
+                
+                // Found the data field
                 if (key == "data") {
-                    return value;
+                    return value;  // Return the serialized data
                 }
             }
         }
     }
 
-    return "";
+    return "";  // Data not found in file
 }
 
-// ---
-// CONSTRUCTOR / DESTRUCTOR
-// ---
 
+
+
+
+// Constructor: Initialize all game subsystems  
+// Each subsystem is constructed with required dependencies (passed by reference)
 GameEngine::GameEngine()
-    : m_mapGenerator(DEFAULT_MAP_WIDTH, DEFAULT_MAP_HEIGHT),
-    m_mawMapGenerator(DEFAULT_MAP_WIDTH, DEFAULT_MAP_HEIGHT),
-      m_combatSystem(m_gameState.player, m_gameState.difficulty),
-      m_inventorySystem(m_gameState.player),
-      m_eventSystem(m_gameState.player, m_gameState),
-      m_fileIO(DATA_FOLDER),
-      m_merchantSystem(m_gameState.player),
-      m_craftingSystem(m_gameState.player),
-      m_isRunning(false),
-    m_debugMode(false),
-    m_isInMawRealm(false),
-    m_leaveMawRequested(false),
-    m_currentMawStratum(0),
-    m_activeSaveFile(SAVE_FILE) {
-    
-    initializeRandom(0);  // Use time-based seed
+    : m_mapGenerator(DEFAULT_MAP_WIDTH, DEFAULT_MAP_HEIGHT),        // Dungeon map generator
+    m_mawMapGenerator(DEFAULT_MAP_WIDTH, DEFAULT_MAP_HEIGHT),       // Special realm generator
+      m_combatSystem(m_gameState.player, m_gameState.difficulty),   // Combat handler
+      m_inventorySystem(m_gameState.player),                        // Inventory management
+      m_eventSystem(m_gameState.player, m_gameState),              // Event/quest system
+      m_fileIO(DATA_FOLDER),                                        // File I/O handler
+      m_merchantSystem(m_gameState.player),                         // Trading system
+      m_craftingSystem(m_gameState.player),                         // Crafting system
+      m_isRunning(false),                                           // Game loop control
+    m_debugMode(false),                                             // Debug mode toggle
+    m_isInMawRealm(false),                                          // Special realm flag
+    m_leaveMawRequested(false),                                     // Exit realm request
+    m_currentMawStratum(0),                                         // Depth in realm
+    m_activeSaveFile(SAVE_FILE)                                     // Current save file
+{
+    // Seed random number generator (0 = use system clock)
+    initializeRandom(0);
 }
 
 GameEngine::~GameEngine() {
-    // Cleanup if needed
+    
 }
 
-// ---
-// MAIN GAME FLOW
-// ---
 
+
+
+
+// Main entry point: Run the game loop
+// Displays intro, then loops through main menu until game ends
 int GameEngine::run() {
-    m_isRunning = true;
+    m_isRunning = true;  // Set flag to keep game running
     
-    showIntro();
+    showIntro();  // Display title screen and story
     
+    // Main game loop: Keep running until user quits
     while (m_isRunning) {
+        // Get user's menu choice from main menu
         int choice = showMainMenu();
         
         switch (choice) {
-            case 1:  // New Game
+            case 1:  
                 startNewGame();
                 gameLoop();
                 endGame();
                 break;
-            case 2:  // Load Game
+            case 2:  
             {
                 std::string selectedFile = selectSaveFileForLoad();
                 if (!selectedFile.empty() && loadGame(selectedFile)) {
@@ -144,13 +189,13 @@ int GameEngine::run() {
                 }
                 break;
             }
-            case 3:  // Settings
+            case 3:  
                 showSettings();
                 break;
-            case 4:  // Leaderboard
+            case 4:  
                 displayLeaderboard();
                 break;
-            case 5:  // Quit
+            case 5:  
                 std::cout << "\nThanks for playing Adventure Quest Engine!\n";
                 m_isRunning = false;
                 break;
@@ -224,17 +269,17 @@ void GameEngine::startNewGame() {
     clearScreen();
     std::cout << "\n=== Starting New Adventure ===\n\n";
     
-    // Load game data
+    
     if (!loadGameData()) {
         std::cout << "\nWarning: Could not load all game data files.\n";
         std::cout << "Proceeding with default data...\n";
         waitForEnter();
     }
     
-    // Character creation
+    
     characterCreation();
     
-    // Generate dungeon
+    
     std::cout << "\nGenerating dungeon...\n";
     m_gameState.randomSeed = static_cast<unsigned int>(
         std::chrono::high_resolution_clock::now().time_since_epoch().count());
@@ -249,16 +294,16 @@ void GameEngine::startNewGame() {
         return;
     }
     
-    // Set starting position
+    
     m_gameState.player.currentRoomId = m_mapGenerator.getEntranceRoomId();
     
-    // Initialize game
+    
     initializeGame();
     
-    // Show epic story introduction
+    
     showStoryIntro();
     
-    // Give starter quest
+    
     giveStarterQuests();
     
     std::cout << "\nYour adventure begins...\n";
@@ -305,7 +350,7 @@ void GameEngine::showStoryIntro() {
 }
 
 void GameEngine::giveStarterQuests() {
-    // Create and assign starter quests
+    
     Quest mainQuest;
     mainQuest.id = 1;
     mainQuest.name = "Defeat the Shadow Lord";
@@ -334,13 +379,13 @@ void GameEngine::giveStarterQuests() {
     exploreQuest.name = "Explorer";
     exploreQuest.description = "Explore 10 different rooms in the dungeon.";
     exploreQuest.completionText = "Your exploration has revealed many secrets!";
-    exploreQuest.targetEnemyCount = 10;  // Using for room count
+    exploreQuest.targetEnemyCount = 10;  
     exploreQuest.goldReward = 50;
     exploreQuest.experienceReward = 60;
     exploreQuest.status = QuestStatus::IN_PROGRESS;
     m_gameState.player.activeQuests.push_back(exploreQuest);
     
-    // Give starting items
+    
     addStarterItems();
     
     clearScreen();
@@ -357,7 +402,7 @@ void GameEngine::giveStarterQuests() {
 }
 
 void GameEngine::addStarterItems() {
-    // Add health potions
+    
     Item healthPotion;
     healthPotion.id = 1001;
     healthPotion.name = "Health Potion";
@@ -371,7 +416,7 @@ void GameEngine::addStarterItems() {
     healthPotion.isStackable = true;
     m_gameState.player.inventory.push_back(healthPotion);
 
-    // Add a starter weapon based on class
+    
     Item weapon;
     weapon.id = 2001;
     weapon.type = ItemType::WEAPON;
@@ -384,14 +429,14 @@ void GameEngine::addStarterItems() {
         case CharacterClass::WARRIOR:
             weapon.name = "Steel Longsword";
             weapon.description = "A sturdy blade forged for battle.";
-            // Lowered starter weapon damage for easier early game balance
+            
             weapon.attackBonus = 16;
             weapon.value = 100;
             break;
         case CharacterClass::MAGE:
             weapon.name = "Enchanted Staff";
             weapon.description = "A staff humming with magical energy.";
-            // Reduced attack and crit to make early encounters less punishing
+            
             weapon.attackBonus = 9;
             weapon.critBonus = 12;
             weapon.value = 120;
@@ -399,7 +444,7 @@ void GameEngine::addStarterItems() {
         case CharacterClass::ROGUE:
             weapon.name = "Shadow Daggers";
             weapon.description = "Twin daggers perfect for swift strikes.";
-            // Slightly reduced damage/crit and speed bonus to keep rogue viable but not overpowering
+            
             weapon.attackBonus = 7;
             weapon.critBonus = 10;
             weapon.speedBonus = 3;
@@ -408,7 +453,7 @@ void GameEngine::addStarterItems() {
         case CharacterClass::PALADIN:
             weapon.name = "Blessed Warhammer";
             weapon.description = "A holy weapon that smites evil.";
-            // Toned down both attack and defense bonuses for starter paladin
+            
             weapon.attackBonus = 13;
             weapon.defenseBonus = 10;
             weapon.value = 170;
@@ -444,52 +489,52 @@ void GameEngine::addStarterItems() {
     }
     
     m_gameState.player.inventory.push_back(weapon);
-    // Auto-equip starter weapon
+    
     m_inventorySystem.equipItem(static_cast<int>(m_gameState.player.inventory.size()) - 1);
     
-    // Add starting armor
+    
     Item armor;
     armor.id = 3001;
     armor.name = "Adventurer's Armor";
     armor.description = "Basic protective gear for dungeon delving.";
     armor.type = ItemType::ARMOR;
     armor.rarity = ItemRarity::COMMON;
-    // Slightly reduced starting armor to match lowered weapon stats
+    
     armor.defenseBonus = 3;
     armor.quantity = 1;
     armor.value = 75;
     armor.isUsable = false;
     armor.isStackable = false;
     m_gameState.player.inventory.push_back(armor);
-    // Auto-equip starter armor
+    
     m_inventorySystem.equipItem(static_cast<int>(m_gameState.player.inventory.size()) - 1);
 }
 
 void GameEngine::gameLoop() {
     while (m_isRunning && m_gameState.player.isAlive && !m_gameState.player.hasWon) {
-        // Update status effects
+        
         updateStatusEffects();
         
-        // Check quest progress
+        
         checkQuestProgress();
         
-        // Increment exploration turn counter
+        
         m_gameState.player.explorationTurns++;
         m_gameState.player.totalTurns = m_gameState.player.explorationTurns + m_gameState.player.combatTurns;
         
-        // Display current room
+        
         displayCurrentRoom();
         
-        // Get player action
+        
         std::string action = getExplorationAction();
         
-        // Process action
+        
         if (!processAction(action)) {
             std::cout << "\nInvalid action. Type 'help' for commands.\n";
             waitForEnter();
         }
         
-        // Check for room events
+        
         checkRoomEvents();
     }
 }
@@ -506,24 +551,24 @@ void GameEngine::endGame() {
         std::cout << "\nCongratulations! You have completed the adventure!\n";
     }
     
-    // Determine and display ending
+    
     EndingType ending = determineEnding();
     displayEnding(ending);
     
-    // Calculate and display final score
+    
     int score = calculateFinalScore();
     
-    // Display stats
+    
     displayGameStats();
     
-    // Add to leaderboard
+    
     LeaderboardEntry entry;
     entry.playerName = m_gameState.player.name;
     entry.score = score;
     entry.turns = m_gameState.player.totalTurns;
     entry.characterClass = getClassName(m_gameState.player.charClass);
     
-    // Determine ending string
+    
     std::string endingStr;
     switch (ending) {
         case EndingType::DEFEAT_DEATH: endingStr = "Death"; break;
@@ -551,9 +596,9 @@ void GameEngine::endGame() {
     waitForEnter();
 }
 
-// ---
-// CHARACTER CREATION
-// ---
+
+
+
 
 void GameEngine::characterCreation() {
     clearScreen();
@@ -562,17 +607,17 @@ void GameEngine::characterCreation() {
     displayDivider(80, '=');
     std::cout << "\n";
     
-    // Get player name
+    
     m_gameState.player.name = getPlayerName();
     
-    // Choose class
+    
     CharacterClass chosenClass = chooseClass();
     m_gameState.player.charClass = chosenClass;
     
-    // Apply class stats
+    
     applyClassStats(chosenClass);
     
-    // Show final character
+    
     clearScreen();
     std::cout << "\n=== Character Created ===\n\n";
     std::cout << "Name: " << m_gameState.player.name << std::endl;
@@ -612,13 +657,13 @@ CharacterClass GameEngine::chooseClass() {
     
     CharacterClass chosenClass = static_cast<CharacterClass>(choice - 1);
     
-    // Show class info
+    
     displayClassInfo(chosenClass);
     
     if (getYesNo("\nConfirm this class? (y/n): ")) {
         return chosenClass;
     } else {
-        return chooseClass();  // Recurse to choose again
+        return chooseClass();  
     }
 }
 
@@ -732,7 +777,7 @@ void GameEngine::applyClassStats(CharacterClass charClass) {
     
     m_gameState.player.gold = STARTING_GOLD;
     
-    // Add starting skills
+    
     Skill skill;
     m_gameState.player.skills.clear();
     
@@ -745,7 +790,7 @@ void GameEngine::applyClassStats(CharacterClass charClass) {
             skill.damageMultiplier = 1.5f;
             m_gameState.player.skills.push_back(skill);
             
-            skill = Skill(); // Reset
+            skill = Skill(); 
             skill.name = "Shield Bash";
             skill.description = "Bash the enemy with your shield.";
             skill.manaCost = 15;
@@ -785,7 +830,7 @@ void GameEngine::applyClassStats(CharacterClass charClass) {
             skill.name = "Quick Slash";
             skill.description = "A fast attack.";
             skill.manaCost = 5;
-            // Quick Slash now has a short cooldown so frequent spamming is punished
+            
             skill.cooldown = 1;
             skill.damageMultiplier = 1.2f;
             m_gameState.player.skills.push_back(skill);
@@ -804,9 +849,9 @@ void GameEngine::applyClassStats(CharacterClass charClass) {
             skill.name = "Heal";
             skill.description = "Restore health.";
             skill.manaCost = 20;
-            // Increase heal cooldown to make resource management more meaningful
+            
             skill.cooldown = 6;
-            skill.damageMultiplier = 4.0f; // Heals 2x Magic Power
+            skill.damageMultiplier = 4.0f; 
             skill.isHeal = true;
             skill.isMagical = true;
             m_gameState.player.skills.push_back(skill);
@@ -834,7 +879,7 @@ void GameEngine::applyClassStats(CharacterClass charClass) {
             skill.cooldown = 4;
             skill.damageMultiplier = 1.5f;
             skill.isMagical = true;
-            skill.isHeal = true; // Heals based on damage
+            skill.isHeal = true; 
             m_gameState.player.skills.push_back(skill);
             
             skill = Skill();
@@ -881,13 +926,13 @@ void GameEngine::applyClassStats(CharacterClass charClass) {
             break;
     }
     
-    // Initialize spells for magic-capable classes
+    
     m_gameState.player.learnedSpells.clear();
     m_gameState.player.spellsLearned = 0;
     
     switch (charClass) {
         case CharacterClass::MAGE:
-            // Mage gets access to multiple schools
+            
             m_gameState.player.learnedSpells.push_back(SpellLibrary::createFirebolt());
             m_gameState.player.learnedSpells.push_back(SpellLibrary::createMagicShield());
             m_gameState.player.learnedSpells.push_back(SpellLibrary::createArcaneMissiles());
@@ -895,7 +940,7 @@ void GameEngine::applyClassStats(CharacterClass charClass) {
             break;
             
         case CharacterClass::PALADIN:
-            // Paladin gets healing and protection
+            
             m_gameState.player.learnedSpells.push_back(SpellLibrary::createHeal());
             m_gameState.player.learnedSpells.push_back(SpellLibrary::createMagicShield());
             m_gameState.player.learnedSpells.push_back(SpellLibrary::createStrengthBoost());
@@ -903,7 +948,7 @@ void GameEngine::applyClassStats(CharacterClass charClass) {
             break;
             
         case CharacterClass::NECROMANCER:
-            // Necromancer gets dark magic
+            
             m_gameState.player.learnedSpells.push_back(SpellLibrary::createDrainLife());
             m_gameState.player.learnedSpells.push_back(SpellLibrary::createCurseOfWeakness());
             m_gameState.player.learnedSpells.push_back(SpellLibrary::createEnfeeblement());
@@ -911,7 +956,7 @@ void GameEngine::applyClassStats(CharacterClass charClass) {
             break;
             
         case CharacterClass::RANGER:
-            // Ranger gets support and healing magic
+            
             m_gameState.player.learnedSpells.push_back(SpellLibrary::createHeal());
             m_gameState.player.learnedSpells.push_back(SpellLibrary::createAnalyzeWeakness());
             m_gameState.player.learnedSpells.push_back(SpellLibrary::createHaste());
@@ -919,11 +964,11 @@ void GameEngine::applyClassStats(CharacterClass charClass) {
             break;
             
         default:
-            // Warriors, Rogues, Barbarians, and Monks cannot cast spells
+            
             break;
     }
     
-    // Initialize the talent tree system for this player
+    
     m_skillTreeManager = std::make_unique<SkillTreeManager>(m_gameState.player);
 }
 
@@ -971,9 +1016,9 @@ void GameEngine::displayClassInfo(CharacterClass charClass) {
     }
 }
 
-// ---
-// EXPLORATION
-// ---
+
+
+
 
 void GameEngine::displayCurrentRoom() {
     clearScreen();
@@ -993,7 +1038,7 @@ void GameEngine::displayCurrentRoom() {
         }
     }
     
-    // Mark room as explored
+    
     if (firstVisit) {
         room.isExplored = true;
         m_gameState.player.visitedRooms.push_back(room.id);
@@ -1076,7 +1121,7 @@ std::string GameEngine::getExplorationAction() {
 bool GameEngine::processAction(const std::string& action) {
     if (action.empty()) return false;
     
-    // Movement commands
+    
     if (action == "n" || action == "north") {
         return movePlayer('N');
     } else if (action == "s" || action == "south") {
@@ -1087,7 +1132,7 @@ bool GameEngine::processAction(const std::string& action) {
         return movePlayer('W');
     }
     
-    // Action commands
+    
     else if (action == "look" || action == "l") {
         displayCurrentRoom();
         return true;
@@ -1107,7 +1152,7 @@ bool GameEngine::processAction(const std::string& action) {
         }
         return true;
     } else if (action.substr(0, 6) == "pickup" || action.substr(0, 4) == "take") {
-        // Try to extract item number
+        
         int itemNum = 1;
         if (action.length() > 7) {
             try {
@@ -1117,7 +1162,7 @@ bool GameEngine::processAction(const std::string& action) {
         return pickupItem(itemNum - 1);
     }
     
-    // Menu commands
+    
     else if (action == "inventory" || action == "inv") {
         openInventory();
         return true;
@@ -1221,11 +1266,11 @@ bool GameEngine::movePlayer(char direction) {
             break;
     }
     
-    // Check if room is locked
+    
     for (auto& room : m_gameState.dungeon) {
         if (room.id == newRoomId) {
             if (room.isLocked) {
-                // Check if player has key
+                
                 bool hasKey = false;
                 for (const auto& item : m_gameState.player.inventory) {
                     if (item.id == room.requiredKeyId) {
@@ -1248,7 +1293,7 @@ bool GameEngine::movePlayer(char direction) {
         }
     }
     
-    // Move player
+    
     m_gameState.player.currentRoomId = newRoomId;
 
     if (m_isInMawRealm) {
@@ -1268,7 +1313,7 @@ void GameEngine::searchRoom() {
     
     bool foundSomething = false;
     
-    // Chance to find hidden items
+    
     if (randomChance(30)) {
         std::cout << "\nYou found a hidden item!\n";
         const int contextLevel = std::max(1, m_gameState.player.level);
@@ -1307,29 +1352,29 @@ void GameEngine::searchRoom() {
         foundSomething = true;
     }
     
-    // Chance to discover secret
+    
     if (room.isSecret && randomChance(40)) {
         std::cout << "\nYou discovered this is a secret room!\n";
         m_gameState.player.secretsFound++;
         foundSomething = true;
     }
 
-    // Chance to gather crafting materials based on room type.
+    
     if (randomChance(45)) {
         if (room.type == RoomType::FORGE || room.type == RoomType::ARMORY) {
-            m_craftingSystem.addMaterial(1, randomInt(1, 3));  // Iron Ore
+            m_craftingSystem.addMaterial(1, randomInt(1, 3));  
             if (randomChance(35)) {
-                m_craftingSystem.addMaterial(5, 1);  // Rough Gem
+                m_craftingSystem.addMaterial(5, 1);  
             }
         } else if (room.type == RoomType::LABORATORY || room.type == RoomType::SHRINE) {
-            m_craftingSystem.addMaterial(7, randomInt(1, 3));  // Herbs
+            m_craftingSystem.addMaterial(7, randomInt(1, 3));  
             if (randomChance(40)) {
-                m_craftingSystem.addMaterial(6, 1);  // Essence
+                m_craftingSystem.addMaterial(6, 1);  
             }
         } else {
-            m_craftingSystem.addMaterial(2, randomInt(1, 2));  // Wood
+            m_craftingSystem.addMaterial(2, randomInt(1, 2));  
             if (randomChance(30)) {
-                m_craftingSystem.addMaterial(3, 1);  // Leather
+                m_craftingSystem.addMaterial(3, 1);  
             }
         }
         foundSomething = true;
@@ -1345,14 +1390,14 @@ void GameEngine::searchRoom() {
 void GameEngine::interactWithRoom() {
     Room& room = getCurrentRoom();
     
-    // Check for enemies first
+    
     if (!room.enemies.empty()) {
         std::cout << "\nYou cannot interact while enemies are present!\n";
         waitForEnter();
         return;
     }
     
-    // Check for puzzle
+    
     if (room.type == RoomType::PUZZLE && !room.puzzleSolved) {
         std::cout << "\n=== Puzzle Room ===\n";
         std::cout << room.puzzleQuestion << "\n\n";
@@ -1364,7 +1409,7 @@ void GameEngine::interactWithRoom() {
             room.puzzleSolved = true;
             m_gameState.player.puzzlesSolved++;
             
-            // Give reward
+            
             if (room.puzzleRewardItemId != -1) {
                 Item reward;
                 reward.id = room.puzzleRewardItemId;
@@ -1417,14 +1462,14 @@ bool GameEngine::pickupItem(int itemIndex) {
     
     Item item = room.items[itemIndex];
     
-    // Check inventory space
+    
     if (m_gameState.player.inventory.size() >= static_cast<size_t>(m_gameState.player.maxInventorySize)) {
         std::cout << "\nYour inventory is full!\n";
         waitForEnter();
         return false;
     }
     
-    // Add to inventory
+    
     m_gameState.player.inventory.push_back(item);
     room.items.erase(room.items.begin() + itemIndex);
     
@@ -1438,9 +1483,9 @@ bool GameEngine::pickupItem(int itemIndex) {
     return true;
 }
 
-// ---
-// MENUS & UI
-// ---
+
+
+
 
 int GameEngine::showGameMenu() {
     clearScreen();
@@ -1792,27 +1837,27 @@ void GameEngine::openCheatMenu() {
                 inMenu = false;
                 break;
                 
-            case 1: // Full Heal
+            case 1: 
                 m_gameState.player.stats.currentHP = m_gameState.player.stats.maxHP;
                 m_gameState.player.stats.currentMana = m_gameState.player.stats.maxMana;
                 std::cout << "\n" << Color::BRIGHT_GREEN << "❤️ Full heal applied! HP and Mana restored!" << Color::RESET << "\n";
                 waitForEnter();
                 break;
                 
-            case 2: // Add Gold
+            case 2: 
                 m_gameState.player.gold += 1000;
                 std::cout << "\n" << Color::BRIGHT_YELLOW << "💰 +1000 gold added! Total: " << m_gameState.player.gold << Color::RESET << "\n";
                 waitForEnter();
                 break;
                 
-            case 3: // Add XP
+            case 3: 
                 m_gameState.player.experience += 5000;
                 std::cout << "\n" << Color::BRIGHT_CYAN << "✨ +5000 XP added! Total: " << m_gameState.player.experience << Color::RESET << "\n";
                 checkLevelUp();
                 waitForEnter();
                 break;
                 
-            case 4: // Max Stats
+            case 4: 
                 m_gameState.player.stats.maxHP += 200;
                 m_gameState.player.stats.currentHP = m_gameState.player.stats.maxHP;
                 m_gameState.player.stats.maxMana += 200;
@@ -1826,7 +1871,7 @@ void GameEngine::openCheatMenu() {
                 waitForEnter();
                 break;
                 
-            case 5: // Full Inventory of Potions
+            case 5: 
                 {
                     Item healthPotion;
                     healthPotion.id = 9001;
@@ -1846,7 +1891,7 @@ void GameEngine::openCheatMenu() {
                 }
                 break;
                 
-            case 6: // Clear Enemies
+            case 6: 
                 {
                     Room& room = getCurrentRoom();
                     int enemyCount = room.enemies.size();
@@ -1856,7 +1901,7 @@ void GameEngine::openCheatMenu() {
                 }
                 break;
                 
-            case 7: // Reveal Map
+            case 7: 
                 for (auto& room : m_gameState.dungeon) {
                     room.isExplored = true;
                 }
@@ -1864,7 +1909,7 @@ void GameEngine::openCheatMenu() {
                 waitForEnter();
                 break;
                 
-            case 8: // Teleport to Shadow Lord chamber
+            case 8: 
                 m_gameState.player.currentRoomId = getActiveShadowLordRoomId();
                 std::cout << "\n" << Color::BRIGHT_MAGENTA << "✨ Teleported to the Shadow Lord chamber!" << Color::RESET << "\n";
                 waitForEnter();
@@ -1872,7 +1917,7 @@ void GameEngine::openCheatMenu() {
                 displayCurrentRoom();
                 break;
                 
-            case 9: // Complete Quests
+            case 9: 
                 {
                     int completed = 0;
                     for (auto& quest : m_gameState.player.activeQuests) {
@@ -1889,7 +1934,7 @@ void GameEngine::openCheatMenu() {
                 }
                 break;
                 
-            case 10: // Reset Quests
+            case 10: 
                 m_gameState.player.activeQuests.clear();
                 m_gameState.player.completedQuests.clear();
                 giveStarterQuests();
@@ -1897,7 +1942,7 @@ void GameEngine::openCheatMenu() {
                 waitForEnter();
                 break;
                 
-            case 11: // God Weapon
+            case 11: 
                 {
                     Item godWeapon;
                     godWeapon.id = 9999;
@@ -1918,7 +1963,7 @@ void GameEngine::openCheatMenu() {
                 }
                 break;
                 
-            case 12: // God Armor
+            case 12: 
                 {
                     Item godArmor;
                     godArmor.id = 9998;
@@ -1962,53 +2007,53 @@ void GameEngine::waitForEnter() {
     pause();
 }
 
-// ---
-// ENDING SYSTEM
-// ---
+
+
+
 
 EndingType GameEngine::determineEnding() {
     const Player& p = m_gameState.player;
     
-    // Death endings
+    
     if (!p.isAlive) {
         return EndingType::DEFEAT_DEATH;
     }
     
-    // Victory endings
+    
     if (p.hasWon) {
-        // Surviving deep Maw runs counts as a secret-tier accomplishment.
+        
         if (p.mawDepthReached >= 10) {
             return EndingType::VICTORY_SECRET;
         }
 
-        // Check for secret ending
+        
         if (p.hasSecretEnding || p.secretsFound >= 3) {
             return EndingType::VICTORY_SECRET;
         }
         
-        // Check for speedrun
+        
         if (p.totalTurns <= SPEEDRUN_TURN_LIMIT) {
             return EndingType::VICTORY_SPEEDRUN;
         }
         
-        // Check for completionist
+        
         if (p.completedQuests.size() >= COMPLETIONIST_QUEST_COUNT) {
             return EndingType::ENDING_COMPLETIONIST;
         }
         
-        // Check morality endings
+        
         if (p.moralityScore >= MORALITY_HERO_THRESHOLD) {
             return EndingType::ENDING_HERO;
         } else if (p.moralityScore <= MORALITY_EVIL_THRESHOLD) {
             return EndingType::ENDING_EVIL;
         }
         
-        // Check for pacifist
+        
         if (p.totalKills == 0) {
             return EndingType::ENDING_PACIFIST;
         }
         
-        // Default victory
+        
         return EndingType::VICTORY_NORMAL;
     }
     
@@ -2089,36 +2134,36 @@ int GameEngine::calculateFinalScore() {
     
     int score = 0;
     
-    // Base score from level and gold
+    
     score += p.level * 100;
     score += p.gold;
     
-    // Combat achievements
+    
     score += p.totalKills * 10;
     score += p.bossesDefeated * 100;
     
-    // Exploration
+    
     score += p.secretsFound * 50;
     score += p.visitedRooms.size() * 5;
     score += p.puzzlesSolved * 75;
     
-    // Quests
+    
     score += p.completedQuests.size() * 150;
 
-    // Endgame challenge bonus
+    
     score += p.mawDepthReached * 200;
     
-    // Time bonus (fewer turns = higher bonus)
+    
     if (p.totalTurns < 100) {
         score += (100 - p.totalTurns) * 5;
     }
     
-    // Survival bonus
+    
     if (p.isAlive) {
         score += 500;
     }
     
-    // Special ending bonuses
+    
     if (p.hasSecretEnding) {
         score += 1000;
     }
@@ -2155,15 +2200,15 @@ void GameEngine::displayGameStats() {
 }
 
 bool GameEngine::checkLeaderboard(int score) {
-    // Load leaderboard and check if score qualifies
+    
     std::vector<LeaderboardEntry> entries = m_fileIO.loadLeaderboard("data/leaderboard.txt");
     
-    // If less than 20 entries, always qualifies
+    
     if (entries.size() < 20) {
         return true;
     }
     
-    // Check if score beats the lowest entry
+    
     return score > entries.back().score;
 }
 
@@ -2172,16 +2217,16 @@ void GameEngine::displayLeaderboard() {
     
     std::cout << UIManager::createTitle("🏆 HALL OF LEGENDS 🏆", 80) << "\n\n";
     
-    // Use FileIO's display function
+    
     m_fileIO.displayLeaderboard("data/leaderboard.txt", 15);
     
     std::cout << "\n";
     waitForEnter();
 }
 
-// ---
-// SAVE / LOAD
-// ---
+
+
+
 
 bool GameEngine::saveGame(const std::string& filename) {
     m_gameState.isInMawRealm = m_isInMawRealm;
@@ -2351,9 +2396,9 @@ std::string GameEngine::sanitizeSaveSlotName(const std::string& slotName) const 
     return cleaned;
 }
 
-// ---
-// UTILITY METHODS
-// ---
+
+
+
 
 void GameEngine::logEvent(const std::string& message) {
     m_gameState.player.gameLog.push_back(message);
@@ -2404,9 +2449,9 @@ void GameEngine::initializeRandom(unsigned int seed) {
     initRandom(seed);
 }
 
-// ---
-// GETTERS
-// ---
+
+
+
 
 GameState& GameEngine::getGameState() {
     return m_gameState;
@@ -2420,9 +2465,9 @@ bool GameEngine::isRunning() const {
     return m_isRunning;
 }
 
-// ---
-// PRIVATE HELPER METHODS
-// ---
+
+
+
 
 bool GameEngine::loadGameData() {
     return m_fileIO.loadAllGameData(m_gameState);
@@ -2445,7 +2490,7 @@ void GameEngine::initializeGame() {
 void GameEngine::checkRoomEvents() {
     Room& room = getCurrentRoom();
     
-    // Check for shop encounter
+    
     if (room.type == RoomType::SHOP && !room.isCleared) {
         handleShopEncounter();
         room.isCleared = true;
@@ -2470,7 +2515,7 @@ void GameEngine::checkRoomEvents() {
         return;
     }
     
-    // Process room events
+    
     if (!room.eventIds.empty()) {
         std::vector<EventResult> results = m_eventSystem.processRoomEvents(room);
         
@@ -2478,7 +2523,7 @@ void GameEngine::checkRoomEvents() {
             if (result.occurred) {
                 std::cout << "\n" << result.message << "\n";
                 
-                // Apply effects
+                
                 m_gameState.player.stats.currentHP += result.hpChange;
                 if (m_gameState.player.stats.currentHP > m_gameState.player.stats.maxHP) {
                     m_gameState.player.stats.currentHP = m_gameState.player.stats.maxHP;
@@ -2491,14 +2536,14 @@ void GameEngine::checkRoomEvents() {
                 m_gameState.player.moralityScore += result.moralityChange;
                 m_gameState.player.experience += result.experienceGained;
                 
-                // Add items
+                
                 for (const auto& item : result.itemsGained) {
                     m_gameState.player.inventory.push_back(item);
                 }
                 
-                // Trigger combat if needed
+                
                 if (result.triggersCombat) {
-                    // Find enemy and start combat
+                    
                     for (auto& enemy : m_gameState.enemyTemplates) {
                         if (enemy.id == result.combatEnemyId) {
                             std::vector<Enemy> enemies = {enemy};
@@ -2521,7 +2566,7 @@ void GameEngine::checkRoomEvents() {
         }
     }
     
-    // Start combat if enemies present
+    
     if (!room.enemies.empty() && !room.isCleared) {
         std::cout << "\nEnemies attack!\n";
         waitForEnter();
@@ -2535,18 +2580,18 @@ void GameEngine::checkRoomEvents() {
             room.enemies.clear();
             m_gameState.player.experience += result.experienceGained;
             m_gameState.player.gold += result.goldGained;
-            m_gameState.player.totalKills += result.experienceGained / 10;  // Rough estimate
+            m_gameState.player.totalKills += result.experienceGained / 10;  
 
-            // Reward crafting materials for cleared combat encounters.
-            m_craftingSystem.addMaterial(1, randomInt(1, 2));  // Iron Ore
+            
+            m_craftingSystem.addMaterial(1, randomInt(1, 2));  
             if (randomChance(40)) {
-                m_craftingSystem.addMaterial(8, 1);  // Monster Bone
+                m_craftingSystem.addMaterial(8, 1);  
             }
             if (randomChance(20)) {
-                m_craftingSystem.addMaterial(6, 1);  // Magical Essence
+                m_craftingSystem.addMaterial(6, 1);  
             }
             
-            // Add loot to room
+            
             for (const auto& item : result.loot) {
                 room.items.push_back(item);
             }
@@ -2567,9 +2612,9 @@ void GameEngine::handleLibraryEncounter() {
     int recipeId = recipePool[randomInt(0, static_cast<int>(recipePool.size()) - 1)];
     m_craftingSystem.discoverRecipe(recipeId);
 
-    m_craftingSystem.addMaterial(4, randomInt(1, 3));  // Cloth scraps
+    m_craftingSystem.addMaterial(4, randomInt(1, 3));  
     if (randomChance(35)) {
-        m_craftingSystem.addMaterial(6, 1);  // Essence
+        m_craftingSystem.addMaterial(6, 1);  
     }
 
     waitForEnter();
@@ -2580,10 +2625,10 @@ void GameEngine::handleForgeEncounter() {
     std::cout << "\n=== Ancient Forge ===\n\n";
     std::cout << "The forge still burns. You salvage useful materials and prepare to craft.\n";
 
-    m_craftingSystem.addMaterial(1, randomInt(2, 5));  // Iron Ore
-    m_craftingSystem.addMaterial(2, randomInt(1, 3));  // Wood
+    m_craftingSystem.addMaterial(1, randomInt(2, 5));  
+    m_craftingSystem.addMaterial(2, randomInt(1, 3));  
     if (randomChance(30)) {
-        m_craftingSystem.addMaterial(5, 1);  // Gem
+        m_craftingSystem.addMaterial(5, 1);  
     }
 
     m_craftingSystem.runCraftingMenu();
@@ -2594,12 +2639,12 @@ void GameEngine::handleLaboratoryEncounter() {
     std::cout << "\n=== Arcane Laboratory ===\n\n";
     std::cout << "Shelves of herbs and reagents line the walls.\n";
 
-    m_craftingSystem.addMaterial(7, randomInt(2, 5));  // Herbs
+    m_craftingSystem.addMaterial(7, randomInt(2, 5));  
     if (randomChance(50)) {
-        m_craftingSystem.addMaterial(6, 1);  // Essence
+        m_craftingSystem.addMaterial(6, 1);  
     }
 
-    m_craftingSystem.discoverRecipe(1302);  // Greater Health Potion
+    m_craftingSystem.discoverRecipe(1302);  
     m_craftingSystem.runCraftingMenu();
 }
 
@@ -2616,9 +2661,9 @@ void GameEngine::handleShopEncounter() {
 
     if (currentRoom.name == "Basic Equipment Shop") {
         vendorType = VendorType::GENERAL_STORE;
-        dungeonLevel = 1; // Only basic equipment
+        dungeonLevel = 1; 
     } else {
-        // Determine vendor type based on dungeon level and randomness
+        
         int roll = randomInt(1, 100);
         
         if (roll <= 40) {
@@ -2638,10 +2683,10 @@ void GameEngine::handleShopEncounter() {
         }
     }
     
-    // Create vendor inventory
+    
     MerchantInventory merchant = m_merchantSystem.createVendor(vendorType, dungeonLevel);
     
-    // Run shop menu
+    
     m_merchantSystem.runShopMenu(merchant);
     
     clearScreen();
@@ -2663,18 +2708,18 @@ void GameEngine::updateStatusEffects() {
 }
 
 void GameEngine::checkQuestProgress() {
-    // Quest ID constants for maintainability
-    constexpr int MAIN_QUEST_ID = 1;            // Defeat the Shadow Lord
-    constexpr int MONSTER_SLAYER_QUEST_ID = 2;  // Kill enemy count quest
-    constexpr int EXPLORER_QUEST_ID = 3;        // Room exploration quest
     
-    (void)MAIN_QUEST_ID;  // Main quest tracked separately via boss defeat
+    constexpr int MAIN_QUEST_ID = 1;            
+    constexpr int MONSTER_SLAYER_QUEST_ID = 2;  
+    constexpr int EXPLORER_QUEST_ID = 3;        
     
-    // Check kill quest progress
+    (void)MAIN_QUEST_ID;  
+    
+    
     for (auto& quest : m_gameState.player.activeQuests) {
         if (quest.status != QuestStatus::IN_PROGRESS) continue;
         
-        // Monster Slayer quest - track kills
+        
         if (quest.id == MONSTER_SLAYER_QUEST_ID && quest.targetEnemyCount > 0) {
             quest.currentEnemyCount = m_gameState.player.totalKills;
             if (quest.currentEnemyCount >= quest.targetEnemyCount && 
@@ -2689,7 +2734,7 @@ void GameEngine::checkQuestProgress() {
             }
         }
         
-        // Explorer quest - track rooms visited
+        
         if (quest.id == EXPLORER_QUEST_ID && quest.targetEnemyCount > 0) {
             quest.currentEnemyCount = static_cast<int>(m_gameState.player.visitedRooms.size());
             if (quest.currentEnemyCount >= quest.targetEnemyCount && 
@@ -2705,7 +2750,7 @@ void GameEngine::checkQuestProgress() {
         }
     }
     
-    // Check for level up
+    
     checkLevelUp();
 }
 
@@ -2722,11 +2767,11 @@ void GameEngine::checkLevelUp() {
             m_skillTreeManager->addTalentPoints(1);
         }
         
-        // Increase experience needed for next level
+        
         m_gameState.player.experienceToLevel = static_cast<int>(
             BASE_XP_TO_LEVEL * std::pow(XP_MULTIPLIER_PER_LEVEL, m_gameState.player.level - 1));
         
-        // Stat increases based on class
+        
         int hpGain = 10;
         int manaGain = 5;
         int atkGain = 2;
@@ -2786,7 +2831,7 @@ void GameEngine::checkLevelUp() {
         m_gameState.player.stats.attack += atkGain;
         m_gameState.player.stats.defense += defGain;
         
-        // Show level up message
+        
         clearScreen();
         std::cout << Color::BRIGHT_YELLOW;
         std::cout << R"(
@@ -2805,7 +2850,7 @@ void GameEngine::checkLevelUp() {
         std::cout << "    Skill Point: +1 (Available: " << m_gameState.player.talentPoints << ")\n";
         std::cout << "\n  Your health and mana have been restored!\n\n";
         
-        // Restore some health on level up
+        
         m_gameState.player.stats.currentHP = m_gameState.player.stats.maxHP;
         m_gameState.player.stats.currentMana = m_gameState.player.stats.maxMana;
         
@@ -2862,7 +2907,7 @@ int GameEngine::getActiveShadowLordRoomId() const {
 }
 
 bool GameEngine::triggerFinalBoss() {
-    // Create the Shadow Lord - an epic final boss!
+    
     Enemy shadowLord;
     shadowLord.id = 9999;
     shadowLord.name = "The Shadow Lord";
@@ -2870,7 +2915,7 @@ bool GameEngine::triggerFinalBoss() {
     shadowLord.dialogue = "Your soul will join my collection of fallen heroes!";
     shadowLord.isBoss = true;
     
-    // Scale boss stats based on player level for a fair but challenging fight
+    
     int playerLevel = m_gameState.player.level;
     int baseMult = std::max(1, playerLevel);
     
@@ -2887,7 +2932,7 @@ bool GameEngine::triggerFinalBoss() {
     shadowLord.experienceReward = 300 + (playerLevel * 60);
     shadowLord.goldReward = 300 + (playerLevel * 50);
     
-    // Add boss abilities
+    
     EnemyAbility shadowBolt;
     shadowBolt.name = "Shadow Bolt";
     shadowBolt.description = "Launches a bolt of pure darkness";
@@ -2907,7 +2952,7 @@ bool GameEngine::triggerFinalBoss() {
     darkHeal.triggerChance = 0.3f;
     shadowLord.abilities.push_back(darkHeal);
     
-    // Show boss intro with ASCII art
+    
     clearScreen();
     std::cout << Color::BRIGHT_RED;
     std::cout << R"(
@@ -2939,7 +2984,7 @@ bool GameEngine::triggerFinalBoss() {
     std::cout << "\n" << Color::YELLOW << "This is the FINAL BATTLE! Prepare yourself!" << Color::RESET << "\n\n";
     waitForEnter();
     
-    // Start the epic boss battle!
+    
     std::vector<Enemy> bossBattle = { shadowLord };
     CombatResult result = m_combatSystem.startCombat(bossBattle);
     
@@ -2956,7 +3001,7 @@ bool GameEngine::triggerFinalBoss() {
         m_gameState.player.shadowLordDefeated = true;
         m_gameState.player.mawUnlocked = true;
         
-        // Give legendary loot!
+        
         Item legendaryWeapon;
         legendaryWeapon.id = 99001;
         legendaryWeapon.name = "Shadow Lord's Blade";
@@ -3341,7 +3386,7 @@ void GameEngine::completeMainQuestAfterShadowLord() {
 void GameEngine::showVictoryCelebration() {
     clearScreen();
     
-    // Epic victory ASCII art
+    
     std::cout << Color::BRIGHT_YELLOW;
     std::cout << R"(
     ██╗   ██╗██╗ ██████╗████████╗ ██████╗ ██████╗ ██╗   ██╗██╗
@@ -3386,14 +3431,14 @@ void GameEngine::showVictoryCelebration() {
     std::cout << "  " << Color::BRIGHT_WHITE << "Total Turns:" << Color::RESET << " " << m_gameState.player.totalTurns << "\n";
     std::cout << "\n";
     
-    // Calculate a score
+    
     int score = (m_gameState.player.level * 100) + 
                 (m_gameState.player.totalKills * 10) + 
                 (m_gameState.player.bossesDefeated * 500) +
                 (m_gameState.player.secretsFound * 50) +
                 (m_gameState.player.puzzlesSolved * 75) +
                 m_gameState.player.gold +
-                (500 - std::min(500, m_gameState.player.totalTurns));  // Speed bonus
+                (500 - std::min(500, m_gameState.player.totalTurns));  
     
     std::cout << Color::BRIGHT_YELLOW << "  FINAL SCORE: " << score << " POINTS!" << Color::RESET << "\n\n";
     
@@ -3404,4 +3449,4 @@ void GameEngine::showVictoryCelebration() {
     waitForEnter();
 }
 
-}  // namespace AQE
+}  

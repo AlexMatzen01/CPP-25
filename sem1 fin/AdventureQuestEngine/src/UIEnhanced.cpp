@@ -1,8 +1,30 @@
 //! Copyright (c) Alexander Matzen. All rights reserved.
-//! Author: Alexander   Matzen
+//! Author: Alexander Matzen
 //! Licensed under the MIT license
+//! Edit started 1/4/26
 
-// Enhanced UI system implementation (partially implemented - many features scrapped)
+// UIEnhanced.cpp - User interface and display management
+// Handles console output, colors, animations, and UI rendering
+//
+// CLASS: UIManager
+// PURPOSE: Handles all terminal-based UI rendering and visual effects
+//
+// KEY ATTRIBUTES:
+//   - animations: Map of named ASCII animations
+//   - globalLog: Vector of log entries for display
+//   - currentFrame: Current frame of animation being displayed
+//   - colorSupported: True if terminal supports ANSI colors
+//
+// KEY METHODS:
+//   - colorize(text, color): Apply color to text
+//   - colorizeRGB(text, r, g, b): Apply RGB color to text
+//   - addEffect(text, effect): Apply text effect (bold, italic, etc)
+//   - drawHealthBar(current, max, width): Draw graphical health bar
+//   - drawProgressBar(current, max): Draw progress bar
+//   - displayMenu(menu): Render menu with options
+//   - displayAnimation(animationName): Show ASCII animation
+//   - drawBorder(title, width): Draw decorative border
+//   - clearScreen(): Clear terminal screen
 
 #include "../include/UIEnhanced.h"
 #include <iostream>
@@ -14,50 +36,66 @@
 
 namespace AQE {
 
-// Static member definitions
+
 std::map<std::string, Animation> UIManager::animations;
 std::vector<LogEntry> UIManager::globalLog;
 
-// ---
-// UIManager Implementation
-// ---
 
+
+
+
+// Constructor: Initialize UI manager for terminal rendering
+// Loads animation frame data
 UIManager::UIManager() {
-    initializeAnimations();
+    initializeAnimations();  // Load animated sprite sequences
 }
 
+// Apply ANSI color codes to text
+// Supports standard colors with optional text effects (bold, italic, etc.)
 std::string UIManager::colorize(const std::string& text, UIColor color, UIEffect effect) {
     std::stringstream ss;
-    ss << "\033[";
+    ss << "\033[";  // ANSI escape sequence start
+    
+    // Add text effect code if specified (0 means no effect)
     if (static_cast<int>(effect) != 0) {
         ss << static_cast<int>(effect) << ";";
     }
-    ss << static_cast<int>(color) << "m" << text << "\033[0m";
+    
+    // Add color code and apply to text
+    ss << static_cast<int>(color) << "m" << text << "\033[0m";  // Reset after text
     return ss.str();
 }
 
+// Apply true-color RGB to text (24-bit color support)
+// Creates vivid custom colors for special UI elements
 std::string UIManager::colorizeRGB(const std::string& text, int r, int g, int b) {
     std::stringstream ss;
+    // RGB format: ESC[38;2;R;G;B
     ss << "\033[38;2;" << r << ";" << g << ";" << b << "m" << text << "\033[0m";
     return ss.str();
 }
 
+// Add text effect to text (bold, italic, underline, etc.)
 std::string UIManager::addEffect(const std::string& text, UIEffect effect) {
     std::stringstream ss;
     ss << "\033[" << static_cast<int>(effect) << "m" << text << "\033[0m";
     return ss.str();
 }
 
+// Return ANSI reset code to restore default terminal colors
 std::string UIManager::resetColor() {
     return "\033[0m";
 }
 
+// Render visual health bar with current/max HP
+// Shows filled/empty segments for progress visualization
 std::string UIManager::renderHealthBar(const HealthBar& bar) {
     std::stringstream ss;
     ss << bar.prefix;
     
+    // Error check: maximum must be valid
     if (bar.maximum <= 0) {
-        return bar.prefix + "[ERROR: Invalid maximum]";  // Safeguard against division by zero
+        return bar.prefix + "[ERROR: Invalid maximum]";  
     }
     
     int filled = (bar.current * bar.width) / bar.maximum;
@@ -74,16 +112,16 @@ std::string UIManager::renderHealthBar(const HealthBar& bar) {
         color = bar.lowColor;
     }
     
-    // Use Unicode block characters for gradient effect
+    
     ss << "[";
     ss << "\033[" << static_cast<int>(color) << "m";
     for (int i = 0; i < bar.width; ++i) {
         if (i < filled) {
-            ss << "█";  // Full block
+            ss << "█";  
         } else if (i == filled && (bar.current * bar.width) % bar.maximum > bar.maximum / 4) {
-            ss << "▓";  // Partial block for smooth transition
+            ss << "▓";  
         } else {
-            ss << "░";  // Light shade for empty
+            ss << "░";  
         }
     }
     ss << "\033[0m]";
@@ -156,12 +194,12 @@ std::string UIManager::renderXPBar(int current, int needed, int width) {
 void UIManager::displayPlayerStatus(const StatusDisplay& status) {
     int boxWidth = 70;
     
-    // Top border
+    
     std::cout << "\n" << colorize("╔", UIColor::BRIGHT_CYAN);
     for (int i = 0; i < boxWidth - 2; ++i) std::cout << colorize("═", UIColor::BRIGHT_CYAN);
     std::cout << colorize("╗", UIColor::BRIGHT_CYAN) << "\n";
     
-    // Name and basic info
+    
     std::cout << colorize("║", UIColor::BRIGHT_CYAN) << " ";
     std::cout << colorize(status.name, UIColor::BRIGHT_YELLOW, UIEffect::BOLD);
     std::cout << colorize(" ⚔ Level ", UIColor::WHITE);
@@ -169,12 +207,12 @@ void UIManager::displayPlayerStatus(const StatusDisplay& status) {
     std::cout << std::string(boxWidth - status.name.length() - 13, ' ');
     std::cout << colorize("║", UIColor::BRIGHT_CYAN) << "\n";
     
-    // Divider
+    
     std::cout << colorize("╟", UIColor::BRIGHT_CYAN);
     for (int i = 0; i < boxWidth - 2; ++i) std::cout << colorize("─", UIColor::BRIGHT_CYAN);
     std::cout << colorize("╢", UIColor::BRIGHT_CYAN) << "\n";
     
-    // HP Bar
+    
     HealthBar hpBar;
     hpBar.current = status.hp;
     hpBar.maximum = status.maxHP;
@@ -184,19 +222,19 @@ void UIManager::displayPlayerStatus(const StatusDisplay& status) {
     std::cout << std::string(boxWidth - 38, ' ');
     std::cout << colorize("║", UIColor::BRIGHT_CYAN) << "\n";
     
-    // Mana Bar
+    
     std::cout << colorize("║", UIColor::BRIGHT_CYAN) << " " << renderManaBar(status.mana, status.maxMana);
     std::cout << std::string(boxWidth - 38, ' ');
     std::cout << colorize("║", UIColor::BRIGHT_CYAN) << "\n";
     
-    // Gold
+    
     std::cout << colorize("║", UIColor::BRIGHT_CYAN) << " ";
     std::cout << colorize("💰 Gold: ", UIColor::BRIGHT_YELLOW);
     std::cout << colorize(std::to_string(status.gold), UIColor::YELLOW, UIEffect::BOLD);
     std::cout << std::string(boxWidth - 20, ' ');
     std::cout << colorize("║", UIColor::BRIGHT_CYAN) << "\n";
     
-    // Buffs/Debuffs if present
+    
     if (!status.activeBuffs.empty() || !status.activeDebuffs.empty()) {
         std::cout << colorize("╟", UIColor::BRIGHT_CYAN);
         for (int i = 0; i < boxWidth - 2; ++i) std::cout << colorize("─", UIColor::BRIGHT_CYAN);
@@ -223,7 +261,7 @@ void UIManager::displayPlayerStatus(const StatusDisplay& status) {
         }
     }
     
-    // Location
+    
     if (!status.location.empty()) {
         std::cout << colorize("╟", UIColor::BRIGHT_CYAN);
         for (int i = 0; i < boxWidth - 2; ++i) std::cout << colorize("─", UIColor::BRIGHT_CYAN);
@@ -235,7 +273,7 @@ void UIManager::displayPlayerStatus(const StatusDisplay& status) {
         std::cout << colorize("║", UIColor::BRIGHT_CYAN) << "\n";
     }
     
-    // Bottom border
+    
     std::cout << colorize("╚", UIColor::BRIGHT_CYAN);
     for (int i = 0; i < boxWidth - 2; ++i) std::cout << colorize("═", UIColor::BRIGHT_CYAN);
     std::cout << colorize("╝", UIColor::BRIGHT_CYAN) << "\n";
@@ -272,12 +310,12 @@ void UIManager::displayCompactStats(const Player& player) {
 void UIManager::displayFullStats(const Player& player) {
     int boxWidth = 80;
     
-    // Title
+    
     std::cout << "\n";
     std::cout << createTitle("⚔ CHARACTER STATS ⚔", boxWidth, UIColor::BRIGHT_CYAN);
     std::cout << "\n";
     
-    // Character Info Section
+    
     std::cout << colorize("╔", UIColor::CYAN);
     for (int i = 0; i < boxWidth - 2; ++i) std::cout << colorize("═", UIColor::CYAN);
     std::cout << colorize("╗", UIColor::CYAN) << "\n";
@@ -296,11 +334,11 @@ void UIManager::displayFullStats(const Player& player) {
     std::cout << std::string(boxWidth - 35, ' ');
     std::cout << colorize("║", UIColor::CYAN) << "\n";
     
-    // XP Bar
+    
     std::cout << colorize("║", UIColor::CYAN) << " " << renderXPBar(player.experience, player.experienceToLevel, 70);
     std::cout << std::string(3, ' ') << colorize("║", UIColor::CYAN) << "\n";
     
-    // Combat Stats Section
+    
     std::cout << colorize("╠", UIColor::CYAN);
     for (int i = 0; i < boxWidth - 2; ++i) std::cout << colorize("═", UIColor::CYAN);
     std::cout << colorize("╣", UIColor::CYAN) << "\n";
@@ -312,7 +350,7 @@ void UIManager::displayFullStats(const Player& player) {
     for (int i = 0; i < boxWidth - 2; ++i) std::cout << colorize("─", UIColor::CYAN);
     std::cout << colorize("╣", UIColor::CYAN) << "\n";
     
-    // HP/Mana bars
+    
     HealthBar hpBar;
     hpBar.current = player.stats.currentHP;
     hpBar.maximum = player.stats.maxHP;
@@ -327,7 +365,7 @@ void UIManager::displayFullStats(const Player& player) {
     std::cout << std::string(boxWidth - 38, ' ');
     std::cout << colorize("║", UIColor::CYAN) << "\n";
     
-    // Stats in two columns
+    
     std::cout << colorize("╟", UIColor::CYAN);
     for (int i = 0; i < boxWidth - 2; ++i) std::cout << colorize("─", UIColor::CYAN);
     std::cout << colorize("╢", UIColor::CYAN) << "\n";
@@ -354,7 +392,7 @@ void UIManager::displayFullStats(const Player& player) {
     std::cout << std::string(boxWidth - 25, ' ');
     std::cout << colorize("║", UIColor::CYAN) << "\n";
     
-    // Progression Section
+    
     std::cout << colorize("╠", UIColor::CYAN);
     for (int i = 0; i < boxWidth - 2; ++i) std::cout << colorize("═", UIColor::CYAN);
     std::cout << colorize("╣", UIColor::CYAN) << "\n";
@@ -380,7 +418,7 @@ void UIManager::displayFullStats(const Player& player) {
     progLine("🔍", "Secrets Found", player.secretsFound);
     progLine("🧩", "Puzzles Solved", player.puzzlesSolved);
     
-    // Bottom border
+    
     std::cout << colorize("╚", UIColor::CYAN);
     for (int i = 0; i < boxWidth - 2; ++i) std::cout << colorize("═", UIColor::CYAN);
     std::cout << colorize("╝", UIColor::CYAN) << "\n";
@@ -403,7 +441,7 @@ std::string UIManager::createBox(const std::string& content, int width, const st
         topLeft = "╭"; topRight = "╮";
         bottomLeft = "╰"; bottomRight = "╯";
         horizontal = "─"; vertical = "│";
-    } else {  // single
+    } else {  
         topLeft = "┌"; topRight = "┐";
         bottomLeft = "└"; bottomRight = "┘";
         horizontal = "─"; vertical = "│";
@@ -426,19 +464,19 @@ std::string UIManager::createTitle(const std::string& text, int width, UIColor c
     std::stringstream ss;
     int padding = (width - static_cast<int>(text.length()) - 2) / 2;
     
-    // Top border with double line
+    
     ss << colorize("╔", color);
     for (int i = 0; i < width - 2; ++i) ss << colorize("═", color);
     ss << colorize("╗", color) << "\n";
     
-    // Title text
+    
     ss << colorize("║", color);
     for (int i = 0; i < padding; ++i) ss << " ";
     ss << colorize(text, color, UIEffect::BOLD);
     for (int i = 0; i < width - padding - static_cast<int>(text.length()) - 2; ++i) ss << " ";
     ss << colorize("║", color) << "\n";
     
-    // Bottom border
+    
     ss << colorize("╚", color);
     for (int i = 0; i < width - 2; ++i) ss << colorize("═", color);
     ss << colorize("╝", color) << "\n";
@@ -479,7 +517,7 @@ int UIManager::displayMenu(Menu& menu) {
 void UIManager::renderMenu(const Menu& menu) {
     int menuWidth = 60;
     
-    // Title with box
+    
     std::cout << "\n";
     std::cout << createTitle(menu.title, menuWidth, menu.titleColor);
     std::cout << "\n";
@@ -495,19 +533,19 @@ void UIManager::renderMenu(const Menu& menu) {
         
         std::cout << "  ";
         
-        // Icon
+        
         if (!item.icon.empty()) {
             std::cout << colorize(item.icon, UIColor::BRIGHT_YELLOW) << " ";
         } else {
             std::cout << "  ";
         }
         
-        // Number with special formatting
+        
         std::cout << colorize("[", UIColor::BRIGHT_BLACK);
         std::cout << colorize(std::to_string(index), menu.selectedColor);
         std::cout << colorize("]", UIColor::BRIGHT_BLACK) << " ";
         
-        // Item text
+        
         if (item.isEnabled) {
             if (index - 1 == menu.selectedIndex) {
                 std::cout << colorize("▶ " + item.text, menu.selectedColor, UIEffect::BOLD);
@@ -521,7 +559,7 @@ void UIManager::renderMenu(const Menu& menu) {
         
         std::cout << "\n";
         
-        // Description if available and selected
+        
         if (!item.description.empty() && index - 1 == menu.selectedIndex) {
             std::cout << "    " << colorize("└─ ", UIColor::BRIGHT_BLACK);
             std::cout << colorize(item.description, UIColor::CYAN, UIEffect::ITALIC) << "\n";
@@ -799,7 +837,7 @@ void UIManager::clearScreen() {
 #ifdef _WIN32
     system("cls");
 #else
-    // Use the system `clear` command on Unix-like systems for consistent behavior
+    
     system("clear");
 #endif
 }
@@ -1004,9 +1042,9 @@ std::string UIManager::getBoxChar(const std::string& style, const std::string& p
     return "+";
 }
 
-// ---
-// ASCIIArtLibrary Implementation
-// ---
+
+
+
 
 std::string ASCIIArtLibrary::getWarriorEmblem() {
     return "    /\\\n   /  \\\n  |    |\n  | () |\n   \\  /\n    \\/\n";
@@ -1168,4 +1206,4 @@ std::string ASCIIArtLibrary::getLevelUpBanner() {
     return "====================================\n       L E V E L  U P !\n====================================\n";
 }
 
-}  // namespace AQE
+}  

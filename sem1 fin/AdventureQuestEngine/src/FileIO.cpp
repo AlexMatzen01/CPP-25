@@ -1,8 +1,30 @@
 //! Copyright (c) Alexander Matzen. All rights reserved.
 //! Author: Alexander Matzen
 //! Licensed under the MIT license
+//! Edit started 1/1/26
 
-// File I/O implementation
+// FileIO.cpp - File input/output and save system
+// Handles saving/loading game state and JSON serialization
+//
+// CLASS: FileIO
+// PURPOSE: Manages all file I/O including game data loading and save files
+//
+// KEY ATTRIBUTES:
+//   - dataFolder: Path to the data directory containing JSON files
+//   - saveFolder: Path where save files are stored
+//   - itemTemplates: Loaded item data from JSON
+//   - enemyTemplates: Loaded enemy data from JSON
+//   - roomTemplates: Loaded room descriptions from JSON
+//
+// KEY METHODS:
+//   - loadAllGameData(gameState): Load items, enemies, rooms, quests from files
+//   - loadItems(filename): Load item templates from JSON
+//   - loadEnemies(filename): Load enemy templates from JSON
+//   - loadRooms(filename): Load room descriptions from JSON
+//   - saveGame(gameState, filename): Serialize game state to JSON file
+//   - loadGame(gameState, filename): Deserialize game state from save file
+//   - listSaveFiles(): Get available save files
+//   - deleteSave(filename): Remove a save file
 
 #include "../include/FileIO.h"
 #include "../include/Types.h"
@@ -63,20 +85,22 @@ StatusEffect statusEffectFromJson(const json& j) {
 }
 
 json skillToJson(const Skill& skill) {
+    // Serialize skill data including cooldown tracking for save/load
     return json{
-        {"name", skill.name},
-        {"description", skill.description},
-        {"manaCost", skill.manaCost},
-        {"cooldown", skill.cooldown},
-        {"currentCooldown", skill.currentCooldown},
-        {"damageMultiplier", skill.damageMultiplier},
-        {"isMagical", skill.isMagical},
-        {"isHeal", skill.isHeal},
-        {"effect", statusEffectToJson(skill.effect)}
+        {"name", skill.name},                          // Skill name for UI display
+        {"description", skill.description},            // Skill description
+        {"manaCost", skill.manaCost},                  // Mana required to use
+        {"cooldown", skill.cooldown},                  // Max cooldown turns between uses
+        {"currentCooldown", skill.currentCooldown},    // Turns until skill available again
+        {"damageMultiplier", skill.damageMultiplier},  // Damage scaling factor
+        {"isMagical", skill.isMagical},                // Is this a magical ability?
+        {"isHeal", skill.isHeal},                      // Does it restore HP?
+        {"effect", statusEffectToJson(skill.effect)}   // Recursive: status effect data
     };
 }
 
 Skill skillFromJson(const json& j) {
+    // Deserialize skill from JSON, restoring cooldown state accurately
     Skill skill;
     if (j.contains("name")) j.at("name").get_to(skill.name);
     if (j.contains("description")) j.at("description").get_to(skill.description);
@@ -91,65 +115,91 @@ Skill skillFromJson(const json& j) {
 }
 
 bool createSpellFromId(int spellId, Spell& spell) {
+    // Factory function to create spell objects from numeric IDs
+    // Used during save file loading to reconstruct player's learned spells
     switch (spellId) {
-        case 101: spell = SpellLibrary::createFirebolt(); return true;
-        case 102: spell = SpellLibrary::createFrostbolt(); return true;
-        case 103: spell = SpellLibrary::createChainLightning(); return true;
-        case 104: spell = SpellLibrary::createInferno(); return true;
-        case 105: spell = SpellLibrary::createBlizzard(); return true;
-        case 201: spell = SpellLibrary::createMagicShield(); return true;
-        case 202: spell = SpellLibrary::createReflectionAura(); return true;
-        case 301: spell = SpellLibrary::createStrengthBoost(); return true;
-        case 302: spell = SpellLibrary::createEnfeeblement(); return true;
-        case 303: spell = SpellLibrary::createHaste(); return true;
-        case 304: spell = SpellLibrary::createSlowness(); return true;
-        case 401: spell = SpellLibrary::createDrainLife(); return true;
-        case 402: spell = SpellLibrary::createCurseOfWeakness(); return true;
-        case 403: spell = SpellLibrary::createUndeadSummon(); return true;
-        case 404: spell = SpellLibrary::createDeathWish(); return true;
-        case 501: spell = SpellLibrary::createHeal(); return true;
-        case 502: spell = SpellLibrary::createGreaterHeal(); return true;
-        case 503: spell = SpellLibrary::createDispelMagic(); return true;
-        case 601: spell = SpellLibrary::createArcaneMissiles(); return true;
-        case 602: spell = SpellLibrary::createMeteorShower(); return true;
-        case 701: spell = SpellLibrary::createAnalyzeWeakness(); return true;
-        case 801: spell = SpellLibrary::createFascinate(); return true;
-        default: return false;
+        // Evocation spells (100-199): Direct damage spells
+        case 101: spell = SpellLibrary::createFirebolt(); return true;        // Single target fire
+        case 102: spell = SpellLibrary::createFrostbolt(); return true;       // Single target ice
+        case 103: spell = SpellLibrary::createChainLightning(); return true;  // Multi-target lightning
+        case 104: spell = SpellLibrary::createInferno(); return true;         // AOE fire damage
+        case 105: spell = SpellLibrary::createBlizzard(); return true;        // AOE ice damage
+        
+        // Abjuration spells (200-299): Defense and protection
+        case 201: spell = SpellLibrary::createMagicShield(); return true;      // Temporary damage shield
+        case 202: spell = SpellLibrary::createReflectionAura(); return true;   // Reflect damage back
+        
+        // Transmutation spells (300-399): Buffs and debuffs
+        case 301: spell = SpellLibrary::createStrengthBoost(); return true;    // +attack buff
+        case 302: spell = SpellLibrary::createEnfeeblement(); return true;     // -attack debuff
+        case 303: spell = SpellLibrary::createHaste(); return true;            // +speed buff
+        case 304: spell = SpellLibrary::createSlowness(); return true;         // -speed debuff
+        
+        // Necromancy spells (400-499): Dark magic
+        case 401: spell = SpellLibrary::createDrainLife(); return true;        // Damage + heal caster
+        case 402: spell = SpellLibrary::createCurseOfWeakness(); return true;  // Strong debuff
+        case 403: spell = SpellLibrary::createUndeadSummon(); return true;     // Summon minion
+        case 404: spell = SpellLibrary::createDeathWish(); return true;        // High risk attack
+        
+        // Restoration spells (500-599): Healing
+        case 501: spell = SpellLibrary::createHeal(); return true;             // Single target heal
+        case 502: spell = SpellLibrary::createGreaterHeal(); return true;      // Stronger heal
+        case 503: spell = SpellLibrary::createDispelMagic(); return true;      // Remove debuffs
+        
+        // Conjuration spells (600-699): Summoning
+        case 601: spell = SpellLibrary::createArcaneMissiles(); return true;   // Multi-projectile
+        case 602: spell = SpellLibrary::createMeteorShower(); return true;     // Heavy AOE damage
+        
+        // Divination spells (700-799): Utility
+        case 701: spell = SpellLibrary::createAnalyzeWeakness(); return true;  // Reveal weaknesses
+        
+        // Enchantment spells (800-899): Mind effects
+        case 801: spell = SpellLibrary::createFascinate(); return true;        // Control enemy
+        
+        default: return false;  // Unknown spell ID - invalid load data
     }
 }
 
 void populateDefaultSpellsForClass(Player& player) {
-    player.learnedSpells.clear();
+    // Initialize starting spells for each character class
+    // Called during character creation to give class-appropriate abilities
+    player.learnedSpells.clear();  // Remove any existing spells
 
+    // Each class gets 3 starter spells suited to their playstyle
     switch (player.charClass) {
         case CharacterClass::MAGE:
-            player.learnedSpells.push_back(SpellLibrary::createFirebolt());
-            player.learnedSpells.push_back(SpellLibrary::createMagicShield());
-            player.learnedSpells.push_back(SpellLibrary::createArcaneMissiles());
+            // Mage: pure damage and utility
+            player.learnedSpells.push_back(SpellLibrary::createFirebolt());       // Low-cost damage spell
+            player.learnedSpells.push_back(SpellLibrary::createMagicShield());    // Defensive utility
+            player.learnedSpells.push_back(SpellLibrary::createArcaneMissiles()); // Multi-target damage
             break;
         case CharacterClass::PALADIN:
-            player.learnedSpells.push_back(SpellLibrary::createHeal());
-            player.learnedSpells.push_back(SpellLibrary::createMagicShield());
-            player.learnedSpells.push_back(SpellLibrary::createStrengthBoost());
+            // Paladin: healing and support
+            player.learnedSpells.push_back(SpellLibrary::createHeal());           // Self-healing
+            player.learnedSpells.push_back(SpellLibrary::createMagicShield());    // Party defense
+            player.learnedSpells.push_back(SpellLibrary::createStrengthBoost());  // Buff ally/self
             break;
         case CharacterClass::NECROMANCER:
-            player.learnedSpells.push_back(SpellLibrary::createDrainLife());
-            player.learnedSpells.push_back(SpellLibrary::createCurseOfWeakness());
-            player.learnedSpells.push_back(SpellLibrary::createEnfeeblement());
+            // Necromancer: dark damage and debuffs
+            player.learnedSpells.push_back(SpellLibrary::createDrainLife());           // Damage + healing
+            player.learnedSpells.push_back(SpellLibrary::createCurseOfWeakness());    // Debuff
+            player.learnedSpells.push_back(SpellLibrary::createEnfeeblement());        // Weaken attacks
             break;
         case CharacterClass::RANGER:
-            player.learnedSpells.push_back(SpellLibrary::createHeal());
-            player.learnedSpells.push_back(SpellLibrary::createAnalyzeWeakness());
-            player.learnedSpells.push_back(SpellLibrary::createHaste());
+            // Ranger: utility and buffs
+            player.learnedSpells.push_back(SpellLibrary::createHeal());           // Healing item
+            player.learnedSpells.push_back(SpellLibrary::createAnalyzeWeakness()); // Scouting
+            player.learnedSpells.push_back(SpellLibrary::createHaste());          // Speed boost
             break;
         default:
-            break;
+            break;  // Other classes don't start with spells
     }
 
+    // Update spell count for UI/logic that needs to know total spells
     player.spellsLearned = static_cast<int>(player.learnedSpells.size());
 }
 
-} // namespace
+} 
 
     NLOHMANN_JSON_SERIALIZE_ENUM(ItemType, {
         {ItemType::CONSUMABLE, "CONSUMABLE"},
@@ -280,7 +330,7 @@ void populateDefaultSpellsForClass(Player& player) {
 #include <filesystem>
 #include <stdexcept>
 
-// Platform-specific includes for directory creation
+
 #ifdef _WIN32
     #include <direct.h>
     #define MKDIR(path) _mkdir(path)
@@ -291,37 +341,37 @@ void populateDefaultSpellsForClass(Player& player) {
 
 namespace AQE {
 
-// ---
-// CONSTRUCTOR
-// ---
+
+
+
 
 FileIO::FileIO(const std::string& dataFolder) : dataPath(dataFolder) {
     ensureDataDirectory();
 }
 
-// ---
-// DATA LOADING
-// ---
+
+
+
 
 bool FileIO::loadAllGameData(GameState& gameState) {
     bool success = true;
     
-    // Load items
+    
     gameState.itemTemplates = loadItems(dataPath + "items.json");
     if (gameState.itemTemplates.empty()) {
         gameState.itemTemplates = createDefaultItems();
     }
     
-    // Load enemies
+    
     gameState.enemyTemplates = loadEnemies(dataPath + "enemies.json");
     if (gameState.enemyTemplates.empty()) {
         gameState.enemyTemplates = createDefaultEnemies();
     }
     
-    // Load events
+    
     gameState.eventTemplates = loadEvents(dataPath + "events.txt");
     
-    // Load quests
+    
     gameState.questTemplates = loadQuests(dataPath + "quests.txt");
     
     return success;
@@ -447,7 +497,7 @@ std::vector<Riddle> FileIO::loadPuzzles(const std::string& filename) {
     std::ifstream file(filename);
     
     if (!file.is_open()) {
-        // Return default riddles from Constants.h
+        
         return RIDDLE_DATABASE;
     }
     
@@ -497,12 +547,12 @@ std::vector<Event> FileIO::loadEvents(const std::string& filename) {
     std::ifstream file(filename);
     
     if (!file.is_open()) {
-        // Return empty vector - events are optional
+        
         return events;
     }
     
-    // Simple stub implementation
-    // In a full implementation, this would parse event data from file
+    
+    
     file.close();
     return events;
 }
@@ -512,19 +562,19 @@ std::vector<Quest> FileIO::loadQuests(const std::string& filename) {
     std::ifstream file(filename);
     
     if (!file.is_open()) {
-        // Return empty vector - quests are optional
+        
         return quests;
     }
     
-    // Simple stub implementation
-    // In a full implementation, this would parse quest data from file
+    
+    
     file.close();
     return quests;
 }
 
-// ---
-// GAME SAVING/LOADING
-// ---
+
+
+
 
 bool FileIO::saveGame(const GameState& gameState, const std::string& filename) {
     std::ofstream file(filename);
@@ -564,7 +614,7 @@ bool FileIO::saveGame(const GameState& gameState, const std::string& filename) {
     file << "mawUnlocked=" << (p.mawUnlocked ? 1 : 0) << "\n";
     file << "mawDepthReached=" << p.mawDepthReached << "\n";
     
-    // Save talent system
+    
     file << "\n[TALENTS]\n";
     file << "selectedSpecialization=" << p.selectedSpecialization << "\n";
     file << "talentPoints=" << p.talentPoints << "\n";
@@ -574,14 +624,14 @@ bool FileIO::saveGame(const GameState& gameState, const std::string& filename) {
         file << "unlockedTalent=" << talentId << "\n";
     }
 
-    // Save learned skills
+    
     file << "\n[SKILLS]\n";
     file << "count=" << p.skills.size() << "\n";
     for (const Skill& skill : p.skills) {
         file << "skill=" << skillToJson(skill).dump() << "\n";
     }
     
-    // Save inventory
+    
     file << "\n[INVENTORY]\n";
     file << "count=" << p.inventory.size() << "\n";
     for (const Item& item : p.inventory) {
@@ -602,20 +652,20 @@ bool FileIO::saveGame(const GameState& gameState, const std::string& filename) {
                << "\n";
     }
     
-    // Save visited rooms
+    
     file << "\n[VISITED]\n";
     for (int roomId : p.visitedRooms) {
         file << "room=" << roomId << "\n";
     }
 
-    // Save learned spells
+    
     file << "\n[SPELLS]\n";
     file << "count=" << p.learnedSpells.size() << "\n";
     for (const Spell& spell : p.learnedSpells) {
         file << "spell=" << spell.id << "," << spell.currentCooldown << "\n";
     }
     
-    // Save game state
+    
     file << "\n[GAMESTATE]\n";
     file << "mapWidth=" << gameState.mapWidth << "\n";
     file << "mapHeight=" << gameState.mapHeight << "\n";
@@ -625,7 +675,7 @@ bool FileIO::saveGame(const GameState& gameState, const std::string& filename) {
     file << "currentMawStratum=" << gameState.currentMawStratum << "\n";
     file << "difficulty=" << gameState.difficulty << "\n";
     
-    // Save dungeon rooms (simplified - just cleared status)
+    
     file << "\n[DUNGEON]\n";
     for (const Room& room : gameState.dungeon) {
         file << "room=" << room.id << "," << room.isExplored << "," 
@@ -711,7 +761,7 @@ bool FileIO::loadGame(GameState& gameState, const std::string& filename) {
         }
         else if (section == "[INVENTORY]") {
             if (key == "item") {
-                // Parse item: id,name,type,rarity,quantity,equipped and optional extended fields
+                
                 std::vector<std::string> parts = split(value, ',');
                 if (parts.size() >= 6) {
                     Item item;
@@ -738,7 +788,7 @@ bool FileIO::loadGame(GameState& gameState, const std::string& filename) {
                     if (parts.size() >= 20) item.durability = std::stoi(parts[19]);
                     if (parts.size() >= 21) item.maxDurability = std::stoi(parts[20]);
 
-                    // Keep accessory stats tied to iLvl scaling even for legacy saves.
+                    
                     if (item.type == ItemType::ACCESSORY) {
                         if (item.itemLevel <= 0) {
                             item.itemLevel = defaultAccessoryItemLevel(item.rarity);
@@ -897,7 +947,7 @@ bool FileIO::deleteSave(const std::string& filename) {
 std::vector<std::string> FileIO::listSaveFiles() const {
     std::vector<std::string> saveFiles;
 
-    // Legacy root save support.
+    
     if (saveExists("savegame.txt")) {
         saveFiles.push_back("savegame.txt");
     }
@@ -925,7 +975,7 @@ std::vector<std::string> FileIO::listSaveFiles() const {
             }
         }
     } catch (...) {
-        // If directory iteration fails, continue with whatever was discovered.
+        
     }
 
     std::sort(saveFiles.begin(), saveFiles.end());
@@ -934,9 +984,9 @@ std::vector<std::string> FileIO::listSaveFiles() const {
     return saveFiles;
 }
 
-// ---
-// GAME LOG
-// ---
+
+
+
 
 bool FileIO::saveGameLog(const Player& player, const std::string& filename,
                          EndingType ending) {
@@ -1012,9 +1062,9 @@ bool FileIO::appendToLog(const std::string& message, const std::string& filename
     return true;
 }
 
-// ---
-// LEADERBOARD
-// ---
+
+
+
 
 std::vector<LeaderboardEntry> FileIO::loadLeaderboard(const std::string& filename) {
     std::vector<LeaderboardEntry> entries;
@@ -1077,13 +1127,13 @@ int FileIO::addToLeaderboard(const LeaderboardEntry& entry,
                              int maxEntries) {
     std::vector<LeaderboardEntry> entries = loadLeaderboard(filename);
     
-    // Add new entry
+    
     entries.push_back(entry);
     
-    // Sort by score (descending)
+    
     sortLeaderboardByScore(entries);
     
-    // Find position
+    
     int position = -1;
     for (size_t i = 0; i < entries.size(); ++i) {
         if (entries[i].playerName == entry.playerName && 
@@ -1093,17 +1143,17 @@ int FileIO::addToLeaderboard(const LeaderboardEntry& entry,
         }
     }
     
-    // Trim to max entries
+    
     if (static_cast<int>(entries.size()) > maxEntries) {
         entries.resize(maxEntries);
         
-        // Check if our entry was cut
+        
         if (position >= maxEntries) {
             position = -1;
         }
     }
     
-    // Save
+    
     saveLeaderboard(entries, filename);
     
     return position;
@@ -1149,7 +1199,7 @@ void FileIO::displayLeaderboard(const std::string& filename, int count) {
 }
 
 void FileIO::sortLeaderboardByScore(std::vector<LeaderboardEntry>& entries) {
-    // Using selection sort for educational purposes
+    
     int n = static_cast<int>(entries.size());
     
     for (int i = 0; i < n - 1; ++i) {
@@ -1168,7 +1218,7 @@ void FileIO::sortLeaderboardByScore(std::vector<LeaderboardEntry>& entries) {
 }
 
 void FileIO::sortLeaderboardByTurns(std::vector<LeaderboardEntry>& entries) {
-    // Using insertion sort for educational purposes (fewer turns is better)
+    
     int n = static_cast<int>(entries.size());
     
     for (int i = 1; i < n; ++i) {
@@ -1184,14 +1234,14 @@ void FileIO::sortLeaderboardByTurns(std::vector<LeaderboardEntry>& entries) {
     }
 }
 
-// ---
-// PRIVATE METHODS
-// ---
+
+
+
 
 bool FileIO::ensureDataDirectory() {
-    // Try to create directory
+    
     MKDIR(dataPath.c_str());
-    return true;  // Simplified - assume success
+    return true;  
 }
 
 bool FileIO::parseKeyValue(const std::string& line, std::string& key, std::string& value) {
@@ -1203,7 +1253,7 @@ bool FileIO::parseKeyValue(const std::string& line, std::string& key, std::strin
     key = trim(line.substr(0, eqPos));
     value = trim(line.substr(eqPos + 1));
     
-    // Remove quotes if present
+    
     if (value.size() >= 2 && value.front() == '"' && value.back() == '"') {
         value = value.substr(1, value.size() - 2);
     }
@@ -1220,14 +1270,14 @@ std::string FileIO::getCurrentDateTime() const {
     return ss.str();
 }
 
-// ---
-// DEFAULT DATA CREATION
-// ---
+
+
+
 
 std::vector<Item> createDefaultItems() {
     std::vector<Item> items;
     
-    // Health potions
+    
     Item smallPotion;
     smallPotion.id = 1;
     smallPotion.name = "Minor Health Potion";
@@ -1264,7 +1314,7 @@ std::vector<Item> createDefaultItems() {
     largePotion.isStackable = true;
     items.push_back(largePotion);
     
-    // Weapons
+    
     Item sword;
     sword.id = 10;
     sword.name = "Iron Sword";
@@ -1319,7 +1369,7 @@ std::vector<Item> createDefaultItems() {
     frostmourne.value = 1200;
     items.push_back(frostmourne);
     
-    // Armor
+    
     Item leather;
     leather.id = 20;
     leather.name = "Leather Armor";
@@ -1374,7 +1424,7 @@ std::vector<Item> createDefaultItems() {
     dominationhelm.value = 1800;
     items.push_back(dominationhelm);
     
-    // Accessories
+    
     Item ring;
     ring.id = 30;
     ring.name = "Ring of Swiftness";
@@ -1397,7 +1447,7 @@ std::vector<Item> createDefaultItems() {
     amulet.value = 180;
     items.push_back(amulet);
     
-    // Keys
+    
     Item bossKey;
     bossKey.id = 40;
     bossKey.name = "Boss Key";
@@ -1408,7 +1458,7 @@ std::vector<Item> createDefaultItems() {
     bossKey.isStackable = false;
     items.push_back(bossKey);
     
-    // Special items
+    
     Item secretItem;
     secretItem.id = 50;
     secretItem.name = "Ancient Artifact";
@@ -1419,7 +1469,7 @@ std::vector<Item> createDefaultItems() {
     secretItem.isStackable = false;
     items.push_back(secretItem);
     
-    // Buff items
+    
     Item strengthElixir;
     strengthElixir.id = 60;
     strengthElixir.name = "Elixir of Strength";
@@ -1457,7 +1507,7 @@ std::vector<Item> createDefaultItems() {
     speedElixir.isUsable = true;
     items.push_back(speedElixir);
     
-    // More Weapons - Swords
+    
     Item bronzeSword;
     bronzeSword.id = 15;
     bronzeSword.name = "Bronze Sword";
@@ -1513,7 +1563,7 @@ std::vector<Item> createDefaultItems() {
     vorpalBlade.value = 1500;
     items.push_back(vorpalBlade);
     
-    // Daggers
+    
     Item rustyDagger;
     rustyDagger.id = 70;
     rustyDagger.name = "Rusty Dagger";
@@ -1551,7 +1601,7 @@ std::vector<Item> createDefaultItems() {
     shadowDagger.value = 280;
     items.push_back(shadowDagger);
     
-    // Axes
+    
     Item woodcutterAxe;
     woodcutterAxe.id = 80;
     woodcutterAxe.name = "Woodcutter's Axe";
@@ -1587,7 +1637,7 @@ std::vector<Item> createDefaultItems() {
     greatAxe.value = 380;
     items.push_back(greatAxe);
     
-    // Spears
+    
     Item woodenSpear;
     woodenSpear.id = 85;
     woodenSpear.name = "Wooden Spear";
@@ -1621,7 +1671,7 @@ std::vector<Item> createDefaultItems() {
     halberd.value = 280;
     items.push_back(halberd);
     
-    // Staves and Wands
+    
     Item apprenticeStaff;
     apprenticeStaff.id = 90;
     apprenticeStaff.name = "Apprentice's Staff";
@@ -1668,7 +1718,7 @@ std::vector<Item> createDefaultItems() {
     archmagusStaff.value = 600;
     items.push_back(archmagusStaff);
     
-    // Armor Sets - Light
+    
     Item clothRobe;
     clothRobe.id = 100;
     clothRobe.name = "Cloth Robe";
@@ -1710,7 +1760,7 @@ std::vector<Item> createDefaultItems() {
     studdedLeather.value = 85;
     items.push_back(studdedLeather);
     
-    // Armor Sets - Medium
+    
     Item scalemail;
     scalemail.id = 104;
     scalemail.name = "Scale Mail";
@@ -1744,7 +1794,7 @@ std::vector<Item> createDefaultItems() {
     halfPlate.value = 220;
     items.push_back(halfPlate);
     
-    // Armor Sets - Heavy
+    
     Item bandedArmor;
     bandedArmor.id = 107;
     bandedArmor.name = "Banded Mail";
@@ -1802,7 +1852,7 @@ std::vector<Item> createDefaultItems() {
     celestialArmor.value = 2000;
     items.push_back(celestialArmor);
     
-    // Shields
+    
     Item woodenShield;
     woodenShield.id = 120;
     woodenShield.name = "Wooden Shield";
@@ -1834,7 +1884,7 @@ std::vector<Item> createDefaultItems() {
     towerShield.value = 200;
     items.push_back(towerShield);
     
-    // More Accessories
+    
     Item strengthRing;
     strengthRing.id = 130;
     strengthRing.name = "Ring of Might";
@@ -1905,7 +1955,7 @@ std::vector<Item> createDefaultItems() {
     phoenixFeather.value = 1200;
     items.push_back(phoenixFeather);
     
-    // More specialized accessories
+    
     Item ironSkinRing;
     ironSkinRing.id = 136;
     ironSkinRing.name = "Ring of Iron Skin";
@@ -1964,7 +2014,7 @@ std::vector<Item> createDefaultItems() {
     silverPendant.value = 105;
     items.push_back(silverPendant);
     
-    // Advanced Consumables
+    
     Item supremePotion;
     supremePotion.id = 4;
     supremePotion.name = "Supreme Health Potion";
@@ -1983,7 +2033,7 @@ std::vector<Item> createDefaultItems() {
     ultimatePotion.description = "Fully restores HP.";
     ultimatePotion.type = ItemType::CONSUMABLE;
     ultimatePotion.rarity = ItemRarity::LEGENDARY;
-    // Make ultimate potion powerful but not trivialize the game
+    
     ultimatePotion.healAmount = 999;
     ultimatePotion.value = 250;
     ultimatePotion.isUsable = true;
@@ -2043,7 +2093,7 @@ std::vector<Item> createDefaultItems() {
 std::vector<Enemy> createDefaultEnemies() {
     std::vector<Enemy> enemies;
     
-    // Basic enemies
+    
     Enemy skeleton;
     skeleton.id = 1;
     skeleton.name = "Skeleton";
@@ -2058,7 +2108,7 @@ std::vector<Enemy> createDefaultEnemies() {
     skeleton.stats.speed = 8;
     skeleton.experienceReward = 15;
     skeleton.goldReward = 10;
-    skeleton.lootTable = {1, 10};  // Potion, Sword
+    skeleton.lootTable = {1, 10};  
     skeleton.lootChances = {30, 10};
     enemies.push_back(skeleton);
     
@@ -2098,7 +2148,7 @@ std::vector<Enemy> createDefaultEnemies() {
     orc.lootChances = {25, 15};
     enemies.push_back(orc);
 
-    // New basic enemies
+    
     Enemy slime;
     slime.id = 6;
     slime.name = "Green Slime";
@@ -2155,7 +2205,7 @@ std::vector<Enemy> createDefaultEnemies() {
     darkKnight.stats.speed = 7;
     darkKnight.experienceReward = 45;
     darkKnight.goldReward = 40;
-    darkKnight.lootTable = {16, 21}; // Steel Sword, Chainmail
+    darkKnight.lootTable = {16, 21}; 
     darkKnight.lootChances = {20, 15};
     enemies.push_back(darkKnight);
 
@@ -2173,7 +2223,7 @@ std::vector<Enemy> createDefaultEnemies() {
     mimic.stats.speed = 10;
     mimic.experienceReward = 60;
     mimic.goldReward = 150;
-    mimic.lootTable = {3, 130}; // Greater Potion, Ring of Might
+    mimic.lootTable = {3, 130}; 
     mimic.lootChances = {50, 30};
     enemies.push_back(mimic);
 
@@ -2224,7 +2274,7 @@ std::vector<Enemy> createDefaultEnemies() {
     lifeDrain.damage = 12;
     lifeDrain.heals = true;
     lifeDrain.healAmount = 5;
-    // Slightly increase enemy ability cooldowns to make skill pacing more punishing
+    
     lifeDrain.cooldown = 4;
     lifeDrain.triggerChance = 0.25f;
     wraith.abilities.push_back(lifeDrain);
@@ -2257,7 +2307,7 @@ std::vector<Enemy> createDefaultEnemies() {
     
     enemies.push_back(troll);
     
-    // Boss enemies
+    
     Enemy dragon;
     dragon.id = 100;
     dragon.name = "Ancient Dragon";
@@ -2273,7 +2323,7 @@ std::vector<Enemy> createDefaultEnemies() {
     dragon.experienceReward = 300;
     dragon.goldReward = 200;
     dragon.isBoss = true;
-    dragon.lootTable = {13, 50};  // Dragonslayer, Artifact
+    dragon.lootTable = {13, 50};  
     dragon.lootChances = {50, 25};
     
     EnemyAbility fireBreath;
@@ -2359,8 +2409,8 @@ std::vector<Enemy> createDefaultEnemies() {
 }
 
 std::vector<Room> createDefaultRooms() {
-    // This returns template rooms for procedural generation to draw from
-    // The actual dungeon rooms are generated by MapGenerator
+    
+    
     std::vector<Room> rooms;
     
     Room entrance;
@@ -2381,7 +2431,7 @@ std::vector<Room> createDefaultRooms() {
 }
 
 void createDefaultDataFiles(const std::string& dataPath) {
-    // Create items.txt
+    
     std::ofstream itemsFile(dataPath + "items.txt");
     if (itemsFile.is_open()) {
         itemsFile << "# Adventure Quest Engine - Items Data File\n";
@@ -2410,7 +2460,7 @@ void createDefaultDataFiles(const std::string& dataPath) {
         itemsFile.close();
     }
     
-    // Create enemies.txt
+    
     std::ofstream enemiesFile(dataPath + "enemies.txt");
     if (enemiesFile.is_open()) {
         enemiesFile << "# Adventure Quest Engine - Enemies Data File\n\n";
@@ -2493,7 +2543,7 @@ void createDefaultDataFiles(const std::string& dataPath) {
         enemiesFile.close();
     }
     
-    // Create puzzles.txt
+    
     std::ofstream puzzlesFile(dataPath + "puzzles.txt");
     if (puzzlesFile.is_open()) {
         puzzlesFile << "# Adventure Quest Engine - Puzzles Data File\n\n";
@@ -2514,4 +2564,4 @@ void createDefaultDataFiles(const std::string& dataPath) {
     std::cout << "Default data files created in " << dataPath << "\n";
 }
 
-}  // namespace AQE
+}  

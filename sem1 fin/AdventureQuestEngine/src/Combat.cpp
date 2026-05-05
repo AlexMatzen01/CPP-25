@@ -1,8 +1,27 @@
 //! Copyright (c) Alexander Matzen. All rights reserved.
 //! Author: Alexander Matzen
 //! Licensed under the MIT license
+//! Edit started 1/10/26
 
-// Combat system implementation
+// Combat.cpp - Turn-based combat system
+// Handles player vs. enemy battles, status effects, and combat resolution
+//
+// CLASS: CombatSystem
+// PURPOSE: Manages all turn-based combat encounters between player and enemies
+// 
+// KEY ATTRIBUTES:
+//   - playerRef: Reference to the player character
+//   - gameDifficulty: Difficulty level (1-3) affecting enemy stats and AI
+//   - combatLog: Vector storing all combat messages for replay/UI
+//   - combatEnded: Flag to signal when combat concludes
+//
+// KEY METHODS:
+//   - startCombat(enemies): Initiate combat with enemy group
+//   - calculateAttack(): Determine hit/miss/damage of attack
+//   - applyStatusEffect(): Apply buff/debuff to target
+//   - healTarget(): Apply healing to character
+//   - displayCombatStatus(): Render current combat state
+//   - determineTurnOrder(): Calculate action sequence based on speed stats
 
 #include "../include/Combat.h"
 #include "../include/Utils.h"
@@ -16,6 +35,8 @@
 namespace AQE {
 
 namespace {
+    // Helper function: Convert enemy intent enum to readable string
+    // Intent display helps players predict enemy actions and make tactical decisions
     std::string intentToString(EnemyIntent intent) {
         switch (intent) {
             case EnemyIntent::ATTACK_LIGHT: return "Light Attack";
@@ -31,18 +52,24 @@ namespace {
         }
     }
 
+    // Calculate the highest vulnerability bonus from active status effects
+    // Vulnerable effects increase damage taken; we use max to prevent stacking abuse
     int computeVulnerablePercent(const std::vector<StatusEffect>& effects) {
         int bonus = 0;
         for (const auto& e : effects) {
+            // Only check effects that apply vulnerability debuff
             if (e.appliesVulnerable) {
+                // Use max() to get the strongest vulnerability, not cumulative
                 bonus = std::max(bonus, e.vulnerablePercent);
             }
         }
         return bonus;
     }
 
+    // Check if target is stunned (stun prevents any action that turn)
     bool hasStun(const std::vector<StatusEffect>& effects) {
         for (const auto& e : effects) {
+            // Stun effect must still be active (turnsRemaining > 0) to take effect
             if (e.appliesStun && e.turnsRemaining > 0) {
                 return true;
             }
@@ -51,21 +78,24 @@ namespace {
     }
 }
 
-// ---
-// CONSTRUCTOR
-// ---
 
+
+
+
+// Constructor: Initialize combat system with player reference and difficulty level
 CombatSystem::CombatSystem(Player& player, int difficulty)
     : playerRef(player), gameDifficulty(difficulty),
       combatEnded(false), playerVictory(false) {
-    // Clamp difficulty
+    
+    // Clamp difficulty to valid range (1-3)
+    // Difficulty affects enemy stats and behavior throughout combat
     if (gameDifficulty < 1) gameDifficulty = 1;
     if (gameDifficulty > 3) gameDifficulty = 3;
 }
 
-// ---
-// PUBLIC METHODS
-// ---
+
+
+
 
 CombatResult CombatSystem::startCombat(std::vector<Enemy>& enemies) {
     CombatResult result;
@@ -74,7 +104,7 @@ CombatResult CombatSystem::startCombat(std::vector<Enemy>& enemies) {
     playerVictory = false;
     std::vector<Enemy> defeatedEnemies;
     
-    // Filter out dead enemies
+    
     enemies.erase(
         std::remove_if(enemies.begin(), enemies.end(),
             [](const Enemy& e) { return e.stats.currentHP <= 0; }),
@@ -86,14 +116,14 @@ CombatResult CombatSystem::startCombat(std::vector<Enemy>& enemies) {
         return result;
     }
     
-    // Display combat start
+    
     clearScreen();
     std::cout << "\n";
     displaySeparator(60, '=');
     printColor(centerString("!!! COMBAT INITIATED !!!", 60), Color::BRIGHT_RED);
     displaySeparator(60, '=');
     
-    // List enemies
+    
     std::cout << "\nYou face:\n";
     for (size_t i = 0; i < enemies.size(); ++i) {
         std::cout << "  " << (i + 1) << ". " << colorize(enemies[i].name, Color::RED);
@@ -107,22 +137,22 @@ CombatResult CombatSystem::startCombat(std::vector<Enemy>& enemies) {
     log("Combat started against " + std::to_string(enemies.size()) + " enemies.");
     pause("\nPress Enter to begin combat...");
     
-    // Main combat loop
+    
     result.playerWon = combatLoop(enemies, defeatedEnemies);
     result.playerDied = !playerRef.isAlive;
     result.playerFled = combatEnded && !result.playerWon && playerRef.isAlive;
     
-    // Calculate rewards if won
+    
     if (result.playerWon) {
         result.experienceGained = calculateExperience(defeatedEnemies);
         result.goldGained = calculateGold(defeatedEnemies);
         result.loot = generateLoot(defeatedEnemies);
         
-        // Apply rewards
+        
         playerRef.experience += result.experienceGained;
         playerRef.gold += result.goldGained;
         
-        // Count kills
+        
         for (const Enemy& enemy : defeatedEnemies) {
             playerRef.totalKills++;
             if (enemy.isBoss) {
@@ -130,12 +160,12 @@ CombatResult CombatSystem::startCombat(std::vector<Enemy>& enemies) {
             }
         }
         
-        // Add loot to inventory
+        
         for (const Item& item : result.loot) {
             playerRef.inventory.push_back(item);
         }
         
-        // Display victory
+        
         std::cout << "\n";
         displaySeparator(60, '=');
         std::cout << VICTORY_ART;
@@ -157,13 +187,13 @@ CombatResult CombatSystem::startCombat(std::vector<Enemy>& enemies) {
             }
         }
     } else if (!playerRef.isAlive) {
-        // Player died
+        
         std::cout << "\n";
         std::cout << GAME_OVER_ART;
         std::cout << "\nYou have been defeated...\n";
         log("Player died in combat.");
     } else {
-        // Player fled
+        
         std::cout << "\nYou escaped from combat!\n";
         log("Player fled from combat.");
     }
@@ -182,7 +212,7 @@ CombatResult CombatSystem::startCombat(Enemy& enemy) {
 CombatStats CombatSystem::getEffectivePlayerStats() const {
     CombatStats effective = playerRef.stats;
     
-    // Apply equipment bonuses
+    
     for (const Item& item : playerRef.inventory) {
         if (item.isEquipped) {
             effective.attack += item.attackBonus;
@@ -193,7 +223,7 @@ CombatStats CombatSystem::getEffectivePlayerStats() const {
         }
     }
     
-    // Apply active status effects
+    
     for (const StatusEffect& effect : playerRef.activeEffects) {
         effective.attack += effect.attackMod;
         effective.defense += effect.defenseMod;
@@ -202,7 +232,7 @@ CombatStats CombatSystem::getEffectivePlayerStats() const {
         effective.speed += effect.speedMod;
     }
     
-    // Clamp values
+    
     if (effective.critChance > MAX_CRIT_CHANCE) effective.critChance = MAX_CRIT_CHANCE;
     if (effective.dodgeChance > MAX_DODGE_CHANCE) effective.dodgeChance = MAX_DODGE_CHANCE;
     if (effective.attack < 1) effective.attack = 1;
@@ -214,12 +244,12 @@ CombatStats CombatSystem::getEffectivePlayerStats() const {
 CombatStats CombatSystem::getEffectiveEnemyStats(const Enemy& enemy) const {
     CombatStats effective = enemy.stats;
     
-    // Apply difficulty modifiers
-    if (gameDifficulty == 1) {  // Easy
+    
+    if (gameDifficulty == 1) {  
         effective.attack = static_cast<int>(effective.attack * EASY_DAMAGE_MULT);
         effective.defense = static_cast<int>(effective.defense * EASY_DEFENSE_MULT);
         effective.maxHP = static_cast<int>(effective.maxHP * EASY_HP_MULT);
-    } else if (gameDifficulty == 3) {  // Hard
+    } else if (gameDifficulty == 3) {  
         effective.attack = static_cast<int>(effective.attack * HARD_DAMAGE_MULT);
         effective.defense = static_cast<int>(effective.defense * HARD_DEFENSE_MULT);
         effective.maxHP = static_cast<int>(effective.maxHP * HARD_HP_MULT);
@@ -228,40 +258,40 @@ CombatStats CombatSystem::getEffectiveEnemyStats(const Enemy& enemy) const {
     return effective;
 }
 
-// ---
-// PRIVATE METHODS - Combat Flow
-// ---
+
+
+
 
 bool CombatSystem::combatLoop(std::vector<Enemy>& enemies, std::vector<Enemy>& defeatedEnemies) {
     while (!combatEnded) {
-        // Process status effects
+        
         processPlayerStatuses();
         for (Enemy& enemy : enemies) {
             processEnemyStatuses(enemy);
         }
         
-        // Check if combat ended due to status effects
+        
         if (playerRef.stats.currentHP <= 0) {
             playerRef.isAlive = false;
             combatEnded = true;
             return false;
         }
         
-        // Roll intents after statuses tick so telegraphs are accurate
+        
         rollEnemyIntents(enemies);
 
-        // Display current state
+        
         displayCombatStatus(enemies);
         
-        // Get turn order
+        
         auto turnOrder = determineTurnOrder(enemies);
         
         for (auto& [isPlayer, index] : turnOrder) {
             if (combatEnded) break;
             
             if (isPlayer) {
-                // Player turn
-                // Regen Mana (more for casters)
+                
+                
                 int manaRegen = (playerRef.learnedSpells.size() > 0) ? 8 : 5;
                 if (playerRef.stats.currentMana < playerRef.stats.maxMana) {
                     playerRef.stats.currentMana += manaRegen;
@@ -269,12 +299,12 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies, std::vector<Enemy>& d
                         playerRef.stats.currentMana = playerRef.stats.maxMana;
                 }
                 
-                // Reduce cooldowns for skills
+                
                 for(auto& skill : playerRef.skills) {
                     if(skill.currentCooldown > 0) skill.currentCooldown--;
                 }
                 
-                // Reduce cooldowns for spells
+                
                 for(auto& spell : playerRef.learnedSpells) {
                     if(spell.currentCooldown > 0) spell.currentCooldown--;
                 }
@@ -282,12 +312,12 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies, std::vector<Enemy>& d
                 std::cout << "\n--- YOUR TURN ---\n";
                 int action = getPlayerAction();
                 
-                // Adjust case numbers based on whether magic option is available
-                int caseCastSpell = -1;  // Set if available
+                
+                int caseCastSpell = -1;  
                 int caseUseItem = -1;
                 int caseFlee = -1;
                 
-                // Count available options
+                
                 if (playerRef.learnedSpells.size() > 0) {
                     caseCastSpell = 3;
                     caseUseItem = 4;
@@ -298,7 +328,7 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies, std::vector<Enemy>& d
                 }
                 
                 switch (action) {
-                    case 1: {  // Attack
+                    case 1: {  
                         int targetIdx = (enemies.size() == 1) ? 0 : selectTarget(enemies);
                         AttackResult result = playerAttack(enemies[targetIdx]);
                         displayMessage(result.message);
@@ -309,10 +339,10 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies, std::vector<Enemy>& d
                         }
                         break;
                     }
-                    case 2: {  // Skills
+                    case 2: {  
                         if (playerRef.skills.empty()) {
                             std::cout << "You have no skills learned!\n";
-                            // Ideally we'd loop back, but for now we just lose turn
+                            
                         } else {
                             std::cout << "\nAvailable Skills:\n";
                             for (size_t i = 0; i < playerRef.skills.size(); ++i) {
@@ -339,7 +369,7 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies, std::vector<Enemy>& d
                         }
                         break;
                     }
-                    case 3: {  // Cast Spell (if available)
+                    case 3: {  
                         if (caseCastSpell == 3) {
                             if (playerRef.learnedSpells.empty()) {
                                 std::cout << "You have no spells learned!\n";
@@ -369,10 +399,10 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies, std::vector<Enemy>& d
                             }
                             break;
                         }
-                        // Fall through if no spells
+                        
                         [[fallthrough]];
                     }
-                    case 4: {  // Use item or remaining action
+                    case 4: {  
                         if (caseUseItem == action) {
                             auto combatItems = getCombatItemIndices(playerRef);
                             if (combatItems.empty()) {
@@ -397,10 +427,10 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies, std::vector<Enemy>& d
                             }
                             break;
                         }
-                        // Fall through if not item action
+                        
                         [[fallthrough]];
                     }
-                    case 5: {  // Flee
+                    case 5: {  
                         if (caseFlee == action) {
                             if (attemptFlee(enemies)) {
                                 combatEnded = true;
@@ -411,11 +441,11 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies, std::vector<Enemy>& d
                     }
                 }
             } else {
-                // Enemy turn
+                
                 if (index < 0 || index >= static_cast<int>(enemies.size())) continue;
                 Enemy& enemy = enemies[index];
                 
-                if (enemy.stats.currentHP <= 0) continue;  // Skip dead enemies
+                if (enemy.stats.currentHP <= 0) continue;  
 
                 if (hasStun(enemy.activeEffects)) {
                     displayMessage(enemy.name + " is stunned and loses the turn!");
@@ -425,7 +455,7 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies, std::vector<Enemy>& d
                 std::cout << "\n--- " << toUpper(enemy.name) << "'S TURN ---\n";
                 delay(300);
                 
-                // Check if enemy uses ability or intent dictates action
+                
                 bool acted = false;
                 if (enemy.nextIntent == EnemyIntent::HEAL || shouldEnemyUseAbility(enemy)) {
                     AbilityResult result = useEnemyAbility(enemy);
@@ -442,11 +472,11 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies, std::vector<Enemy>& d
                         enemy.activeEffects.push_back(guard);
                         displayMessage(enemy.name + " braces for impact, raising a guard!");
                     } else {
-                        // Normal attack (heavy charge simply benefits from higher damage roll)
+                        
                         AttackResult result = enemyAttack(enemy);
                         displayMessage(result.message);
                         
-                        // Check if player died
+                        
                         if (playerRef.stats.currentHP <= 0) {
                             playerRef.isAlive = false;
                             combatEnded = true;
@@ -457,21 +487,21 @@ bool CombatSystem::combatLoop(std::vector<Enemy>& enemies, std::vector<Enemy>& d
             }
         }
         
-        // Capture defeated enemies before removing them from active combat.
+        
         for (const Enemy& enemy : enemies) {
             if (enemy.stats.currentHP <= 0) {
                 defeatedEnemies.push_back(enemy);
             }
         }
 
-        // Remove dead enemies
+        
         enemies.erase(
             std::remove_if(enemies.begin(), enemies.end(),
                 [](const Enemy& e) { return e.stats.currentHP <= 0; }),
             enemies.end()
         );
         
-        // Check victory
+        
         if (enemies.empty()) {
             combatEnded = true;
             return true;
@@ -491,16 +521,16 @@ void CombatSystem::displayCombatStatus(const std::vector<Enemy>& enemies) const 
     printColor(centerString("COMBAT STATUS", 60), Color::BRIGHT_WHITE);
     displaySeparator(60, '-');
     
-    // Player status
+    
     std::cout << "\n" << colorize(playerRef.name, Color::BRIGHT_GREEN) 
               << " (" << classToString(playerRef.charClass) << ")\n";
     
-    // HP Bar
+    
     std::cout << "HP: ";
     displayProgressBar(playerRef.stats.currentHP, playerRef.stats.maxHP, 25, "");
     std::cout << " " << playerRef.stats.currentHP << "/" << playerRef.stats.maxHP << "\n";
     
-    // Mana Bar
+    
     std::cout << "MP: ";
     displayProgressBar(playerRef.stats.currentMana, playerRef.stats.maxMana, 25, "");
     std::cout << " " << playerRef.stats.currentMana << "/" << playerRef.stats.maxMana << "\n";
@@ -509,7 +539,7 @@ void CombatSystem::displayCombatStatus(const std::vector<Enemy>& enemies) const 
     std::cout << "ATK: " << pStats.attack << " | DEF: " << pStats.defense
               << " | CRIT: " << pStats.critChance << "% | SPD: " << pStats.speed << "\n";
     
-    // Show active effects
+    
     if (!playerRef.activeEffects.empty()) {
         std::cout << "Effects: ";
         for (const StatusEffect& e : playerRef.activeEffects) {
@@ -519,7 +549,7 @@ void CombatSystem::displayCombatStatus(const std::vector<Enemy>& enemies) const 
         std::cout << "\n";
     }
     
-    // Enemy status
+    
     std::cout << "\n--- " << colorize("ENEMIES", Color::RED) << " ---\n";
     for (size_t i = 0; i < enemies.size(); ++i) {
         const Enemy& enemy = enemies[i];
@@ -547,7 +577,7 @@ int CombatSystem::getPlayerAction() const {
     options.push_back("Attack");
     options.push_back("Skills");
     
-    // Add magic option if player can cast
+    
     if (playerRef.learnedSpells.size() > 0) {
         options.push_back("Cast Spell");
     }
@@ -574,11 +604,11 @@ std::vector<std::pair<bool, int>> CombatSystem::determineTurnOrder(
     
     std::vector<std::pair<int, std::pair<bool, int>>> speedList;
     
-    // Add player
+    
     CombatStats pStats = getEffectivePlayerStats();
     speedList.push_back({pStats.speed + randomInt(0, 5), {true, 0}});
     
-    // Add enemies
+    
     for (size_t i = 0; i < enemies.size(); ++i) {
         if (enemies[i].stats.currentHP > 0) {
             CombatStats eStats = getEffectiveEnemyStats(enemies[i]);
@@ -586,11 +616,11 @@ std::vector<std::pair<bool, int>> CombatSystem::determineTurnOrder(
         }
     }
     
-    // Sort by speed (descending)
+    
     std::sort(speedList.begin(), speedList.end(),
               [](const auto& a, const auto& b) { return a.first > b.first; });
     
-    // Extract turn order
+    
     std::vector<std::pair<bool, int>> result;
     for (const auto& entry : speedList) {
         result.push_back(entry.second);
@@ -606,7 +636,7 @@ void CombatSystem::rollEnemyIntents(std::vector<Enemy>& enemies) {
             continue;
         }
 
-        // Maw enemies use a distinct telegraph profile.
+        
         if (enemy.trueDamage > 0) {
             int roll = randomInt(1, 100);
             if (roll <= 30) {
@@ -622,7 +652,7 @@ void CombatSystem::rollEnemyIntents(std::vector<Enemy>& enemies) {
             continue;
         }
 
-        // Healing intent if low (very rare — only 5% chance)
+        
         if (enemy.stats.currentHP < enemy.stats.maxHP / 3) {
             bool hasHeal = std::any_of(enemy.abilities.begin(), enemy.abilities.end(),
                 [](const EnemyAbility& a) { return a.heals; });
@@ -635,7 +665,7 @@ void CombatSystem::rollEnemyIntents(std::vector<Enemy>& enemies) {
             }
         }
 
-        // Ability-based intents
+        
         EnemyAbility const* readyAbility = nullptr;
         for (const auto& ability : enemy.abilities) {
             if (ability.currentCooldown <= 0) {
@@ -646,13 +676,13 @@ void CombatSystem::rollEnemyIntents(std::vector<Enemy>& enemies) {
 
         if (readyAbility) {
             if (readyAbility->heals) {
-                // Healing abilities are rare: 15% chance to use heal intent
+                
                 if (randomChance(15)) {
                     enemy.nextIntent = EnemyIntent::HEAL;
                     enemy.intentStrength = readyAbility->damage;
                     continue;
                 } else {
-                    // If not healing, choose a fallback intent based on ability damage
+                    
                     if (readyAbility->damage > enemy.stats.attack * 1.2f) {
                         enemy.nextIntent = EnemyIntent::ATTACK_HEAVY;
                     } else {
@@ -668,7 +698,7 @@ void CombatSystem::rollEnemyIntents(std::vector<Enemy>& enemies) {
             continue;
         }
 
-        // Default: attack or defend
+        
         if (enemy.stats.currentHP < enemy.stats.maxHP / 2 && randomChance(30)) {
             enemy.nextIntent = EnemyIntent::DEFEND;
             enemy.intentStrength = 0;
@@ -679,16 +709,16 @@ void CombatSystem::rollEnemyIntents(std::vector<Enemy>& enemies) {
     }
 }
 
-// ---
-// PRIVATE METHODS - Attack Calculations
-// ---
+
+
+
 
 AttackResult CombatSystem::playerAttack(Enemy& target) {
     AttackResult result;
     CombatStats pStats = getEffectivePlayerStats();
     CombatStats eStats = getEffectiveEnemyStats(target);
     
-    // Roll to hit
+    
     if (!rollToHit(pStats.speed, eStats.dodgeChance)) {
         result.hit = false;
         result.dodged = true;
@@ -699,15 +729,15 @@ AttackResult CombatSystem::playerAttack(Enemy& target) {
     
     result.hit = true;
     
-    // Roll for critical
+    
     result.critical = rollCritical(pStats.critChance);
     
-    // Use tighter player variance so gear quality matters more than high-roll spikes.
+    
     int baseDamage = pStats.attack + randomInt(-1, 3) + 1;
     result.rawDamage = baseDamage;
     result.damageDealt = calculateFinalDamage(baseDamage, eStats.defense, result.critical);
 
-    // Apply vulnerability then shields
+    
     int vuln = computeVulnerablePercent(target.activeEffects);
     if (vuln > 0) {
         result.damageDealt += (result.damageDealt * vuln) / 100;
@@ -715,7 +745,7 @@ AttackResult CombatSystem::playerAttack(Enemy& target) {
 
     result.damageDealt = applyShieldThenDamage(result.damageDealt, target.activeEffects, target.stats.currentHP);
     
-    // Generate message
+    
     result.message = generateCombatMessage(playerRef.name, target.name, 
                                            result.damageDealt, result.critical, false);
     log(result.message);
@@ -728,7 +758,7 @@ AttackResult CombatSystem::enemyAttack(const Enemy& attacker) {
     CombatStats pStats = getEffectivePlayerStats();
     CombatStats eStats = getEffectiveEnemyStats(attacker);
     
-    // Roll to hit
+    
     if (!rollToHit(eStats.speed, pStats.dodgeChance)) {
         result.hit = false;
         result.dodged = true;
@@ -739,10 +769,10 @@ AttackResult CombatSystem::enemyAttack(const Enemy& attacker) {
     
     result.hit = true;
     
-    // Roll for critical
+    
     result.critical = rollCritical(eStats.critChance);
     
-    // Keep enemy damage slightly less swingy while preserving threat consistency.
+    
     int baseDamage = eStats.attack + randomInt(-1, 2);
     if (attacker.nextIntent == EnemyIntent::CHARGE) {
         baseDamage += std::max(1, eStats.attack / 4);
@@ -750,7 +780,7 @@ AttackResult CombatSystem::enemyAttack(const Enemy& attacker) {
     result.rawDamage = baseDamage;
     result.damageDealt = calculateFinalDamage(baseDamage, pStats.defense, result.critical);
     
-    // Difficulty already factored into enemy stats, no additional modifier needed
+    
     
     int vuln = computeVulnerablePercent(playerRef.activeEffects);
     if (vuln > 0) {
@@ -759,7 +789,7 @@ AttackResult CombatSystem::enemyAttack(const Enemy& attacker) {
 
     result.damageDealt = applyShieldThenDamage(result.damageDealt, playerRef.activeEffects, playerRef.stats.currentHP);
 
-    // The Maw introduces true damage that bypasses mitigation and shields.
+    
     if (attacker.trueDamage > 0) {
         int unavoidable = attacker.trueDamage + randomInt(0, std::max(1, attacker.trueDamage / 2));
         if (attacker.nextIntent == EnemyIntent::CHARGE) {
@@ -771,7 +801,7 @@ AttackResult CombatSystem::enemyAttack(const Enemy& attacker) {
         result.damageDealt += unavoidable;
     }
     
-    // Generate message
+    
     result.message = generateCombatMessage(attacker.name, playerRef.name,
                                            result.damageDealt, result.critical, false);
     if (attacker.trueDamage > 0) {
@@ -783,10 +813,10 @@ AttackResult CombatSystem::enemyAttack(const Enemy& attacker) {
 }
 
 bool CombatSystem::rollToHit(int attackerSpeed, int targetDodge) const {
-    // Base hit chance is 90% + speed bonus - dodge
+    
     int hitChance = 90 + attackerSpeed - targetDodge;
-    if (hitChance < 30) hitChance = 30;   // Minimum 30% hit chance
-    if (hitChance > 98) hitChance = 98;   // Maximum 98% hit chance
+    if (hitChance < 30) hitChance = 30;   
+    if (hitChance > 98) hitChance = 98;   
     return randomChance(hitChance);
 }
 
@@ -801,21 +831,21 @@ int CombatSystem::calculateFinalDamage(int baseDamage, int defense, bool isCrit)
         damage *= BASE_CRIT_MULTIPLIER;
     }
 
-    // Diminishing returns on defense for stability.
-    // Higher k and a lower cap reduce late-game over-mitigation from stacked armor.
+    
+    
     const float k = 72.0f;
     float mitigation = static_cast<float>(defense) / (static_cast<float>(defense) + k);
     if (mitigation < 0.0f) mitigation = 0.0f;
-    if (mitigation > 0.65f) mitigation = 0.65f; // keep at least 35% damage always going through
+    if (mitigation > 0.65f) mitigation = 0.65f; 
 
     int finalDamage = static_cast<int>(std::floor(damage * (1.0f - mitigation)));
     if (finalDamage < 1) finalDamage = 1;
     return finalDamage;
 }
 
-// ---
-// PRIVATE METHODS - Abilities
-// ---
+
+
+
 
 AbilityResult CombatSystem::usePlayerAbility(int abilityIndex, Enemy* target) {
     AbilityResult result;
@@ -828,21 +858,21 @@ AbilityResult CombatSystem::usePlayerAbility(int abilityIndex, Enemy* target) {
     
     Skill& skill = playerRef.skills[abilityIndex];
     
-    // Check Cooldown
+    
     if (skill.currentCooldown > 0) {
         result.used = false;
         result.message = skill.name + " is on cooldown! (" + std::to_string(skill.currentCooldown) + " turns)";
         return result;
     }
     
-    // Check Mana
+    
     if (playerRef.stats.currentMana < skill.manaCost) {
         result.used = false;
         result.message = "Not enough Mana! Need " + std::to_string(skill.manaCost);
         return result;
     }
     
-    // Consume Mana
+    
     playerRef.stats.currentMana -= skill.manaCost;
     skill.currentCooldown = skill.cooldown;
     
@@ -850,7 +880,7 @@ AbilityResult CombatSystem::usePlayerAbility(int abilityIndex, Enemy* target) {
     result.success = true;
     
     if (skill.isHeal) {
-        // Healing Skill
+        
         int healAmount = static_cast<int>(playerRef.stats.magicPower * skill.damageMultiplier);
         int oldHP = playerRef.stats.currentHP;
         playerRef.stats.currentHP += healAmount;
@@ -861,11 +891,11 @@ AbilityResult CombatSystem::usePlayerAbility(int abilityIndex, Enemy* target) {
         result.message = "You cast " + colorize(skill.name, Color::CYAN) + 
                          " and heal for " + colorize(std::to_string(result.healingDone), Color::GREEN) + " HP!";
     } else {
-        // Offensive Skill
+        
         if (target == nullptr) {
             result.used = false;
             result.message = "No target selected!";
-            return result; // Should refund mana/cooldown but keeping simple
+            return result; 
         }
         
         CombatStats pStats = getEffectivePlayerStats();
@@ -877,7 +907,7 @@ AbilityResult CombatSystem::usePlayerAbility(int abilityIndex, Enemy* target) {
         int damage = static_cast<int>(baseDamage * skill.damageMultiplier) - defense;
         if (damage < 1) damage = 1;
         
-        // Apply Crit (Spells can crit too now)
+        
         if (randomChance(pStats.critChance)) {
             damage *= BASE_CRIT_MULTIPLIER;
             result.message = "CRITICAL HIT! ";
@@ -891,7 +921,7 @@ AbilityResult CombatSystem::usePlayerAbility(int abilityIndex, Enemy* target) {
                           colorize(target->name, Color::RED) + " for " + 
                           colorize(std::to_string(damage), Color::BRIGHT_RED) + " damage!";
                           
-        // Apply status effect if any
+        
         if (skill.effect.turnsRemaining > 0) {
             target->activeEffects.push_back(skill.effect);
             result.message += "\n" + target->name + " is affected by " + skill.effect.name + "!";
@@ -913,27 +943,27 @@ SpellResult CombatSystem::castSpellInCombat(int spellIndex, Enemy* target, std::
     
     Spell& spell = playerRef.learnedSpells[spellIndex];
     
-    // Check Cooldown
+    
     if (spell.currentCooldown > 0) {
         result.cast = false;
         result.message = spell.name + " is on cooldown! (" + std::to_string(spell.currentCooldown) + " turns)";
         return result;
     }
     
-    // Check Mana
+    
     if (playerRef.stats.currentMana < spell.manaCost) {
         result.cast = false;
         result.message = "Not enough Mana! Need " + std::to_string(spell.manaCost);
         return result;
     }
     
-    // Consume Mana
+    
     playerRef.stats.currentMana -= spell.manaCost;
     spell.currentCooldown = spell.cooldown;
     
     result.cast = true;
     
-    // Healing spell
+    
     if (spell.isHeal) {
         int healAmount = static_cast<int>(playerRef.stats.magicPower * spell.healMultiplier);
         int oldHP = playerRef.stats.currentHP;
@@ -948,14 +978,14 @@ SpellResult CombatSystem::castSpellInCombat(int spellIndex, Enemy* target, std::
         return result;
     }
     
-    // Offensive spell - need target
+    
     if (target == nullptr && !spell.isAOE) {
         result.cast = false;
         result.message = "No target selected!";
         return result;
     }
     
-    // Single target offensive spell
+    
     if (!spell.isAOE) {
         CombatStats pStats = getEffectivePlayerStats();
         CombatStats eStats = getEffectiveEnemyStats(*target);
@@ -966,7 +996,7 @@ SpellResult CombatSystem::castSpellInCombat(int spellIndex, Enemy* target, std::
         int damage = baseDamage - defense;
         if (damage < 1) damage = 1;
         
-        // Apply Crit
+        
         if (randomChance(pStats.critChance)) {
             damage *= BASE_CRIT_MULTIPLIER;
             result.message = "CRITICAL SPELL! ";
@@ -981,7 +1011,7 @@ SpellResult CombatSystem::castSpellInCombat(int spellIndex, Enemy* target, std::
                           colorize(target->name, Color::RED) + " for " + 
                           colorize(std::to_string(damage), Color::BRIGHT_RED) + " damage!";
         
-        // Apply Dot
+        
         if (spell.dotDamage > 0) {
             StatusEffect dotEffect;
             dotEffect.name = spell.name + " Dot";
@@ -993,13 +1023,13 @@ SpellResult CombatSystem::castSpellInCombat(int spellIndex, Enemy* target, std::
             result.message += "\n" + target->name + " is burning!";
         }
         
-        // Apply effect
+        
         if (spell.appliedEffect.turnsRemaining > 0) {
             target->activeEffects.push_back(spell.appliedEffect);
             result.message += "\n" + target->name + " is " + spell.appliedEffect.name + "!";
         }
     } else {
-        // AOE spell - hit all enemies
+        
         if (enemies == nullptr) {
             result.cast = false;
             result.message = "No enemies available for AOE spell!";
@@ -1032,7 +1062,7 @@ SpellResult CombatSystem::castSpellInCombat(int spellIndex, Enemy* target, std::
             result.affectedTargets.push_back(i);
             result.message += "  " + enemy.name + " takes " + std::to_string(damage) + " damage!\n";
             
-            // Apply effect to all
+            
             if (spell.appliedEffect.turnsRemaining > 0) {
                 enemy.activeEffects.push_back(spell.appliedEffect);
             }
@@ -1047,20 +1077,20 @@ AbilityResult CombatSystem::useEnemyAbility(Enemy& enemy) {
     AbilityResult result;
     
     if (enemy.abilities.empty()) {
-        // Fallback to normal attack
+        
         AttackResult attack = enemyAttack(enemy);
         result.message = attack.message;
         return result;
     }
     
-    // Find usable ability (not on cooldown)
+    
     for (EnemyAbility& ability : enemy.abilities) {
         if (ability.currentCooldown <= 0) {
             result.used = true;
             result.success = true;
             
             if (ability.heals) {
-                // Healing ability
+                
                 int healed = ability.healAmount;
                 enemy.stats.currentHP += healed;
                 if (enemy.stats.currentHP > enemy.stats.maxHP) {
@@ -1070,7 +1100,7 @@ AbilityResult CombatSystem::useEnemyAbility(Enemy& enemy) {
                 result.message = enemy.name + " uses " + ability.name + 
                                 " and heals for " + std::to_string(healed) + " HP!";
             } else {
-                // Damage ability
+                
                 CombatStats pStats = getEffectivePlayerStats();
                 int damage = calculateFinalDamage(ability.damage, pStats.defense, false);
                 int vuln = computeVulnerablePercent(playerRef.activeEffects);
@@ -1092,7 +1122,7 @@ AbilityResult CombatSystem::useEnemyAbility(Enemy& enemy) {
         }
     }
     
-    // All abilities on cooldown, normal attack
+    
     AttackResult attack = enemyAttack(enemy);
     result.message = attack.message;
     return result;
@@ -1109,9 +1139,9 @@ bool CombatSystem::shouldEnemyUseAbility(const Enemy& enemy) const {
     return false;
 }
 
-// ---
-// PRIVATE METHODS - Status Effects
-// ---
+
+
+
 
 void CombatSystem::applyStatusToPlayer(const StatusEffect& effect) {
     playerRef.activeEffects.push_back(effect);
@@ -1124,7 +1154,7 @@ void CombatSystem::processPlayerStatuses() {
 }
 
 void CombatSystem::processEnemyStatuses(Enemy& enemy) {
-    // Reduce ability cooldowns
+    
     for (EnemyAbility& ability : enemy.abilities) {
         if (ability.currentCooldown > 0) {
             ability.currentCooldown--;
@@ -1138,7 +1168,7 @@ void CombatSystem::processEnemyStatuses(Enemy& enemy) {
 void CombatSystem::tickStatuses(std::vector<StatusEffect>& effects, CombatStats& stats, bool isPlayer) {
     for (StatusEffect& effect : effects) {
         if (effect.turnsRemaining > 0) {
-            // Damage over time
+            
             if (effect.dotDamage > 0) {
                 int dmg = effect.dotDamage;
                 stats.currentHP -= dmg;
@@ -1181,16 +1211,16 @@ int CombatSystem::applyShieldThenDamage(int incoming, std::vector<StatusEffect>&
     return absorbed;
 }
 
-// ---
-// PRIVATE METHODS - Flee & Items
-// ---
+
+
+
 
 bool CombatSystem::attemptFlee(const std::vector<Enemy>& enemies) {
-    // Calculate flee chance based on speed difference
+    
     CombatStats pStats = getEffectivePlayerStats();
     
     if (enemies.empty()) {
-        return 50;  // Safe default if no enemies (shouldn't happen in normal gameplay)
+        return 50;  
     }
     
     int totalEnemySpeed = 0;
@@ -1205,7 +1235,7 @@ bool CombatSystem::attemptFlee(const std::vector<Enemy>& enemies) {
     if (fleeChance < 10) fleeChance = 10;
     if (fleeChance > 80) fleeChance = 80;
     
-    // Bosses are harder to flee from
+    
     for (const Enemy& enemy : enemies) {
         if (enemy.isBoss) {
             fleeChance /= 2;
@@ -1235,7 +1265,7 @@ bool CombatSystem::useItemInCombat(int itemIndex) {
         return false;
     }
     
-    // Apply item effects
+    
     if (item.healAmount > 0) {
         int healed = item.healAmount;
         playerRef.stats.currentHP += healed;
@@ -1246,7 +1276,7 @@ bool CombatSystem::useItemInCombat(int itemIndex) {
         log("Used " + item.name + ", healed " + std::to_string(healed) + " HP.");
     }
     
-    // Apply buffs if any
+    
     if (item.duration > 0) {
         StatusEffect buff;
         buff.name = item.name + " Effect";
@@ -1262,7 +1292,7 @@ bool CombatSystem::useItemInCombat(int itemIndex) {
         std::cout << "You gain a temporary buff!\n";
     }
     
-    // Consume item
+    
     item.quantity--;
     if (item.quantity <= 0) {
         playerRef.inventory.erase(playerRef.inventory.begin() + itemIndex);
@@ -1271,9 +1301,9 @@ bool CombatSystem::useItemInCombat(int itemIndex) {
     return true;
 }
 
-// ---
-// PRIVATE METHODS - Loot
-// ---
+
+
+
 
 std::vector<Item> CombatSystem::generateLoot(const std::vector<Enemy>& enemies) {
     std::vector<Item> loot;
@@ -1289,14 +1319,14 @@ std::vector<Item> CombatSystem::generateLoot(const std::vector<Enemy>& enemies) 
 std::vector<Item> CombatSystem::rollLootTable(const Enemy& enemy) {
     std::vector<Item> drops;
     
-        // Generate crafting materials based on enemy type
-        // Boss enemies drop more materials
+        
+        
         int materialDropChance = enemy.isBoss ? 80 : 50;
         int materialCount = enemy.isBoss ? randomInt(2, 4) : randomInt(1, 2);
     
         for (int i = 0; i < materialCount; ++i) {
             if (randomChance(materialDropChance)) {
-                // Determine material type based on enemy name/type
+                
                 std::string materialType;
                 if (enemy.name.find("Skeleton") != std::string::npos || 
                     enemy.name.find("Undead") != std::string::npos ||
@@ -1325,13 +1355,13 @@ std::vector<Item> CombatSystem::rollLootTable(const Enemy& enemy) {
                            enemy.name.find("Beholder") != std::string::npos) {
                     materialType = randomChance(70) ? "Crystal" : "Essence";
                 } else {
-                    // Default: common materials
+                    
                     materialType = (randomInt(1, 6) == 1) ? "Metal" : 
                                    (randomInt(1, 5) == 1) ? "Leather" :
                                    (randomInt(1, 4) == 1) ? "Wood" : "Cloth";
                 }
             
-                // Determine rarity based on player level and enemy type
+                
                 ItemRarity rarity = ItemRarity::COMMON;
                 int rarityRoll = randomInt(1, 100);
                 if (enemy.isBoss) {
@@ -1340,7 +1370,7 @@ std::vector<Item> CombatSystem::rollLootTable(const Enemy& enemy) {
                     else rarity = ItemRarity::COMMON;
                 }
 
-                // Create a proper material Item and push it
+                
                 Item material;
                 material.id = 5000 + randomInt(0, 999);
                 material.name = (rarity == ItemRarity::LEGENDARY) ? "Refined " + materialType + " Material" :
@@ -1371,7 +1401,7 @@ int CombatSystem::calculateExperience(const std::vector<Enemy>& enemies) const {
         total += enemy.experienceReward;
     }
     
-    // Difficulty bonus
+    
     if (gameDifficulty == 3) {
         total = static_cast<int>(total * 1.5f);
     } else if (gameDifficulty == 1) {
@@ -1387,7 +1417,7 @@ int CombatSystem::calculateGold(const std::vector<Enemy>& enemies) const {
         total += enemy.goldReward + randomInt(-2, 5);
     }
     
-    // Difficulty modifier
+    
     if (gameDifficulty == 1) {
         total = static_cast<int>(total * EASY_GOLD_MULT);
     } else if (gameDifficulty == 3) {
@@ -1397,9 +1427,9 @@ int CombatSystem::calculateGold(const std::vector<Enemy>& enemies) const {
     return (total < 0) ? 0 : total;
 }
 
-// ---
-// PRIVATE METHODS - Logging
-// ---
+
+
+
 
 void CombatSystem::log(const std::string& message) {
     combatLog.push_back(message);
@@ -1410,9 +1440,9 @@ void CombatSystem::displayMessage(const std::string& message, int delayMs) const
     delay(delayMs);
 }
 
-// ---
-// STANDALONE COMBAT FUNCTIONS
-// ---
+
+
+
 
 bool quickCombat(Player& player, Enemy& enemy) {
     CombatSystem combat(player, 2);
@@ -1441,13 +1471,13 @@ std::vector<int> getCombatItemIndices(const Player& player) {
 }
 
 int applyDifficultyModifier(int damage, int difficulty, bool isPlayerDamage) {
-    if (difficulty == 1) {  // Easy
+    if (difficulty == 1) {  
         if (isPlayerDamage) {
             return static_cast<int>(damage * 1.2f);
         } else {
             return static_cast<int>(damage * EASY_DAMAGE_MULT);
         }
-    } else if (difficulty == 3) {  // Hard
+    } else if (difficulty == 3) {  
         if (isPlayerDamage) {
             return static_cast<int>(damage * 0.9f);
         } else {
@@ -1476,4 +1506,4 @@ std::string generateCombatMessage(const std::string& attackerName,
     return ss.str();
 }
 
-}  // namespace AQE
+}  

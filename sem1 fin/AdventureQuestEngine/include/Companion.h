@@ -182,6 +182,57 @@ public:
     float getTotalGoldBonus() const;
     bool hasActiveLootBonus() const;
     
+    //==========================================================================
+    // UTILITY METHODS - Status & Checking
+    //==========================================================================
+    
+    /**
+// Check if companion is recruited
+     * @param companionId Companion to check
+     * @return True if recruited
+     */
+    bool isRecruited(int companionId) const;
+    
+    /**
+// Get total recruited companions
+     * @return Number of companions in party
+     */
+    int getRecruitedCount() const;
+    
+    /**
+// Get companion by ID
+     * @param companionId Companion ID to search
+     * @return Pointer to companion or nullptr
+     */
+    Companion* getCompanionById(int companionId);
+    
+    /**
+// Get companion's loyalty level
+     * @param companionId Companion to check
+     * @return Loyalty points (0-100)
+     */
+    int getCompanionLoyalty(int companionId) const;
+    
+    /**
+// Get companion's mood
+     * @param companionId Companion to check
+     * @return Current mood
+     */
+    CompanionMood getCompanionMood(int companionId) const;
+    
+    /**
+// Check if companion is in active party
+     * @param companionId Companion to check
+     * @return True if active
+     */
+    bool isCompanionActive(int companionId) const;
+    
+    /**
+// Get all active companion bonuses
+     * @return Combined bonuses string
+     */
+    std::string getActiveBonusesText() const;
+    
 private:
     Player& playerRef;
     std::vector<Companion> allCompanions;

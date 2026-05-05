@@ -1,8 +1,29 @@
 //! Copyright (c) Alexander Matzen. All rights reserved.
 //! Author: Alexander Matzen
 //! Licensed under the MIT license
+//! Edit started 1/2/26
 
-// Utility functions for RNG, strings, and input validation
+// Utils.cpp - Utility functions and helpers
+// Common functions for random generation, string manipulation, and I/O
+//
+// MODULE: Utility Functions
+// PURPOSE: Provide reusable helper functions for random numbers, strings, and I/O
+//
+// KEY FUNCTIONS:
+//   - initRandom(seed): Initialize random number generator
+//   - getRandomInt(min, max): Generate random integer in range
+//   - getRandomFloat(min, max): Generate random float in range
+//   - getRandomBool(trueChance): Random boolean with probability
+//   - getRandomElement(vector): Get random item from vector
+//   - initRandom(seed): Seed RNG for reproducible randomness
+//   - colorize(text, colorCode): Apply color code to text
+//   - printColor(text, colorCode): Print colored text to console
+//   - toLower(string): Convert string to lowercase
+//   - toUpper(string): Convert string to uppercase
+//   - trim(string): Remove whitespace from string
+//   - split(string, delimiter): Split string by delimiter
+//   - getInput(): Get user input from keyboard
+//   - pause(): Wait for user to press enter
 
 #include "../include/Utils.h"
 #include "../include/Constants.h"
@@ -24,41 +45,47 @@
 
 namespace AQE {
 
-// ---
-// COLOR UTILITIES
-// ---
 
+
+
+
+// Apply ANSI color code to text string
+// Wraps text with color code and automatic reset
 std::string colorize(const std::string& text, const std::string& colorCode) {
-    return colorCode + text + Color::RESET;
+    return colorCode + text + Color::RESET;  // Restore default color after text
 }
 
+// Print colored text to console
+// Optional newline parameter for formatting
 void printColor(const std::string& text, const std::string& colorCode, bool newLine) {
     std::cout << colorize(text, colorCode);
     if (newLine) {
-        std::cout << std::endl;
+        std::cout << std::endl;  // Add newline if requested
     }
 }
 
-// ---
-// RANDOM NUMBER GENERATOR (Static instance)
-// ---
-
+// Global random number generator (Mersenne Twister)
+// Provides consistent random numbers throughout game
 static std::mt19937 rng;
-static bool rngInitialized = false;
+static bool rngInitialized = false;  // Track if RNG has been seeded
 
+// Initialize random number generator
+// If seed=0, uses system clock for truly random values
 void initRandom(unsigned int seed) {
     if (seed == 0) {
-        // Use high-resolution clock for truly random seed
+        // Use current time as seed for non-deterministic randomness
         auto now = std::chrono::high_resolution_clock::now();
         seed = static_cast<unsigned int>(now.time_since_epoch().count());
     }
-    rng.seed(seed);
-    rngInitialized = true;
+    rng.seed(seed);           // Seed the RNG with value
+    rngInitialized = true;    // Mark RNG as ready
 }
 
+// Generate random integer between min and max (inclusive)
+// Auto-initializes RNG if not already seeded
 int randomInt(int min, int max) {
     if (!rngInitialized) {
-        initRandom(0);
+        initRandom(0);  // Initialize with system clock if needed
     }
     if (min > max) std::swap(min, max);
     std::uniform_int_distribution<int> dist(min, max);
@@ -79,9 +106,9 @@ bool randomChance(int percentChance) {
     return randomInt(1, 100) <= percentChance;
 }
 
-// ---
-// STRING UTILITIES
-// ---
+
+
+
 
 std::string toLower(const std::string& str) {
     std::string result = str;
@@ -144,9 +171,9 @@ std::string wrapText(const std::string& text, int width) {
     return result.str();
 }
 
-// ---
-// INPUT VALIDATION
-// ---
+
+
+
 
 int getValidatedInt(const std::string& prompt, int min, int max) {
     int value;
@@ -168,7 +195,7 @@ int getValidatedInt(const std::string& prompt, int min, int max) {
             std::cin.ignore(10000, '\n');
         }
     }
-    std::cin.ignore(10000, '\n');  // Clear remaining input
+    std::cin.ignore(10000, '\n');  
     return value;
 }
 
@@ -222,12 +249,12 @@ int displayMenu(const std::string& title, const std::vector<std::string>& option
     return getValidatedInt("Enter your choice: ", 1, static_cast<int>(options.size()));
 }
 
-// ---
-// DISPLAY UTILITIES
-// ---
+
+
+
 
 void clearScreen() {
-    // Cross-platform clear screen
+    
     #ifdef _WIN32
         system("cls");
     #else
@@ -239,14 +266,14 @@ void pause(const std::string& message) {
     std::cout << "\n" << message;
     std::cout << std::flush;
 
-    // Use platform-specific raw input to ensure only Enter proceeds.
+    
 #ifdef _WIN32
-    // _getch() reads a single character without echo. Continue until Enter is pressed.
+    
     int ch;
     while (true) {
         ch = _getch();
         if (ch == '\r' || ch == '\n') break;
-        // ignore other keys
+        
     }
 #else
     struct termios oldt, newt;
@@ -256,15 +283,15 @@ void pause(const std::string& message) {
         tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 
         int c;
-        // Read characters until newline; ignore all other keystrokes
+        
         while ((c = getchar()) != '\n' && c != EOF) {
-            // consume and ignore
+            
         }
 
-        // Restore terminal settings
+        
         tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
     } else {
-        // Fallback to simple getline if termios unavailable
+        
         std::string tmp;
         std::getline(std::cin, tmp);
     }
@@ -298,7 +325,7 @@ void displaySeparator(int width, char character) {
 }
 
 void displayColored(const std::string& text, int colorCode) {
-    // ANSI color codes (may not work on all terminals)
+    
     std::cout << "\033[" << colorCode << "m" << text << "\033[0m";
 }
 
@@ -306,9 +333,9 @@ void delay(int milliseconds) {
     std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
 }
 
-// ---
-// TYPE CONVERSION UTILITIES
-// ---
+
+
+
 
 std::string rarityToString(ItemRarity rarity) {
     switch (rarity) {
@@ -387,13 +414,13 @@ std::string endingToString(EndingType ending) {
     }
 }
 
-// ---
-// GAME CALCULATIONS
-// ---
+
+
+
 
 int calculateDamage(int rawDamage, int defense) {
     int damage = rawDamage - defense;
-    return (damage < 1) ? 1 : damage;  // Minimum 1 damage
+    return (damage < 1) ? 1 : damage;  
 }
 
 int calculateExpForLevel(int level) {
@@ -544,7 +571,7 @@ void rollUniquePerk(Item& item, int tier) {
     }
 }
 
-}  // namespace
+}  
 
 int estimateEnemyPowerLevel(const Enemy& enemy) {
     const CombatStats& stats = enemy.stats;
@@ -568,7 +595,7 @@ int estimateEnemyPowerLevel(const Enemy& enemy) {
 int rollItemLevel(int contextLevel, ItemRarity rarity, bool isBoss) {
     const int normalizedContext = std::max(1, std::min(contextLevel, MAX_LEVEL));
 
-    // Convert the source level into the current iLvl curve (L60 -> iLvl120).
+    
     const int baseline = (normalizedContext * MAX_ITEM_LEVEL + (MAX_LEVEL / 2)) / MAX_LEVEL;
 
     int rarityOffset = 0;
@@ -587,20 +614,20 @@ int rollItemLevel(int contextLevel, ItemRarity rarity, bool isBoss) {
     int minLevel = center - spread;
     int maxLevel = center + spread;
 
-    // Keep loot in a safe power envelope around the player's progression.
-    // Tighter caps for low-level players to prevent overpowering
+    
+    
     const int powerFloor = std::max(1, baseline - 8);
     int powerCeil = baseline + 10 + (isBoss ? 3 : 0);
     
-    // Low-level protection: scale ceiling down significantly
+    
     if (normalizedContext <= 5) {
-        powerCeil = baseline + 2;  // Very tight for early game
+        powerCeil = baseline + 2;  
     } else if (normalizedContext <= 10) {
-        powerCeil = baseline + 4;  // Still tight but allows some progression
+        powerCeil = baseline + 4;  
     } else if (normalizedContext <= 20) {
-        powerCeil = baseline + 6;  // Moderate allowance
+        powerCeil = baseline + 6;  
     }
-    // else: use default baseline + 10 + (isBoss ? 3 : 0)
+    
 
     minLevel = std::max(minLevel, powerFloor);
     maxLevel = std::min(maxLevel, powerCeil);
@@ -734,7 +761,7 @@ int estimateItemLevelFromLegacyStats(const Item& item) {
     power += std::max(0, item.speedBonus) * 2;
     power += std::max(0, item.duration) * 2;
 
-    // Negative modifiers should lower legacy strength a bit.
+    
     power += std::min(0, item.attackBonus) * 2;
     power += std::min(0, item.defenseBonus) * 2;
     power += std::min(0, item.speedBonus) * 2;
@@ -962,7 +989,7 @@ int calculateSellValue(const Item& item) {
 int calculateScore(const Player& player) {
     int score = 0;
     
-    // Base score from survival
+    
     score += player.totalKills * 10;
     score += player.secretsFound * 50;
     score += player.puzzlesSolved * 25;
@@ -970,15 +997,15 @@ int calculateScore(const Player& player) {
     score += static_cast<int>(player.completedQuests.size()) * 50;
     score += player.gold;
     
-    // Bonus for efficiency
+    
     if (player.totalTurns > 0) {
-        score += 5000 / player.totalTurns;  // Faster = more points
+        score += 5000 / player.totalTurns;  
     }
     
-    // Bonus for health remaining
+    
     score += player.stats.currentHP;
     
-    // Level bonus
+    
     score += player.level * 100;
     
     return score;
@@ -1014,4 +1041,4 @@ void refreshAverageItemLevel(Player& player) {
     player.averageItemLevel = calculateAverageItemLevel(player);
 }
 
-}  // namespace AQE
+}  

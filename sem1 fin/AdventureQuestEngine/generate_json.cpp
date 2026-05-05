@@ -1,3 +1,28 @@
+// generate_json.cpp - JSON data file generator
+// Creates JSON serialization functions for game data types
+//
+// MODULE: JSON Serialization
+// PURPOSE: Provides JSON conversion functions for game data persistence
+//
+// KEY STRUCTURES SERIALIZED:
+//   - Item: Game items with properties and effects
+//   - Enemy: Enemy definitions with stats and abilities
+//   - Room: Room descriptions and contents
+//   - Player: Player state and inventory
+//   - GameState: Complete game progression data
+//   - StatusEffect: Buff/debuff data
+//   - Quest: Quest definitions and progress
+//
+// KEY FUNCTIONS:
+//   - to_json(json, Item): Convert item to JSON
+//   - to_json(json, Enemy): Convert enemy to JSON
+//   - to_json(json, Player): Convert player to JSON
+//   - from_json(json, Item): Parse item from JSON
+//   - from_json(json, Enemy): Parse enemy from JSON
+//   - from_json(json, Player): Parse player from JSON
+//   - serializeGame(gameState): Convert full state to JSON
+//   - deserializeGame(json): Restore state from JSON
+
 #include "include/Types.h"
 #include "include/json.hpp"
 #include "include/FileIO.h"

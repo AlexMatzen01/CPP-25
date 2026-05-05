@@ -59,6 +59,65 @@ public:
      */
     static std::vector<MagicSchool> getAvailableSchools(CharacterClass charClass);
     
+    //==========================================================================
+    // UTILITY METHODS
+    //==========================================================================
+    
+    /**
+// Get spell by ID
+     * @param spellId ID to search for
+     * @return Pointer to spell or nullptr if not found
+     */
+    Spell* getSpellById(int spellId);
+    
+    /**
+// Check if player has learned a specific spell
+     * @param spellId ID of spell to check
+     * @return True if spell is known
+     */
+    bool hasSpell(int spellId) const;
+    
+    /**
+// Get total number of spells known
+     * @return Count of known spells
+     */
+    int getSpellCount() const;
+    
+    /**
+// Calculate mana cost for a spell
+     * @param spell The spell to calculate cost for
+     * @return Mana points required
+     */
+    static int getManaCost(const Spell& spell);
+    
+    /**
+// Check if player has enough mana to cast spell
+     * @param spell Spell to check
+     * @param currentMana Current mana amount
+     * @return True if enough mana
+     */
+    static bool canCastSpell(const Spell& spell, int currentMana);
+    
+    /**
+// Get spells of a specific school
+     * @param school Magic school to filter by
+     * @return Vector of spells from that school
+     */
+    std::vector<Spell> getSpellsBySchool(MagicSchool school) const;
+    
+    /**
+// Get spells with minimum damage
+     * @param minDamage Minimum damage value
+     * @return Vector of damaging spells above threshold
+     */
+    std::vector<Spell> getDamagingSpells(int minDamage) const;
+    
+    /**
+// Get healing spells known
+     * @return Vector of healing spells
+     */
+    std::vector<Spell> getHealingSpells() const;
+    
 private:
     Player& playerRef;
     std::vector<Spell> knownSpells;

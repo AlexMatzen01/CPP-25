@@ -1,8 +1,30 @@
 //! Copyright (c) Alexander Matzen. All rights reserved.
 //! Author: Alexander Matzen
 //! Licensed under the MIT license
+//! Edit started 4/25/26
 
-// Skill tree system implementation (partially implemented - some features scrapped)
+// SkillTree.cpp - Talent tree and skill progression system
+// Manages talent points, skill upgrades, and specialization paths
+//
+// CLASS: SkillTreeManager
+// PURPOSE: Manages character talent tree, skill progression, and specializations
+//
+// KEY ATTRIBUTES:
+//   - playerRef: Reference to player character
+//   - talentTree: Vector of all talent nodes in the tree
+//   - selectedSpecialization: Current specialization path chosen
+//   - totalTalentPoints: Total points available for allocation
+//   - spentTalentPoints: Points already spent on talents
+//
+// KEY METHODS:
+//   - initializeTalentTree(): Set up talent tree for player's class
+//   - displayTalentTree(): Show talent tree UI
+//   - unlockTalent(talentId): Spend point to unlock/rank up talent
+//   - chooseSpecialization(specIndex): Select specialization path
+//   - addTalentPoints(amount): Award new talent points
+//   - applyAllTalentBonuses(): Recalculate player stats from talents
+//   - canUnlockTalent(talentId): Check if talent prerequisites met
+//   - getAvailableTalentPoints(): Return unspent points
 
 #include "../include/SkillTree.h"
 #include <iostream>
@@ -13,7 +35,7 @@
 
 namespace AQE {
 
-// Portable console clear helper (works on Windows and POSIX)
+
 static void clearConsole() {
 #ifdef _WIN32
     std::system("cls");
@@ -23,47 +45,51 @@ static void clearConsole() {
 }
 
 
-// ---
-// SkillTreeManager Implementation
-// ---
 
+
+
+
+// Constructor: Initialize skill tree for player character
+// Creates talent tree based on character class
 SkillTreeManager::SkillTreeManager(Player& player) 
     : playerRef(player), selectedSpecialization(0), totalTalentPoints(0), spentTalentPoints(0) {
-    initializeTalentTree();
+    initializeTalentTree();  // Load class-specific talent tree
 }
 
+// Build talent tree based on player's character class
+// Each class has unique talents and progression paths
 void SkillTreeManager::initializeTalentTree() {
-    talentTree.clear();
+    talentTree.clear();  // Remove any existing talents
     
-    // Build the appropriate tree based on player class
+    // Load class-specific talent tree structure
     switch (playerRef.charClass) {
         case CharacterClass::WARRIOR:
-            buildWarriorTree();
+            buildWarriorTree();  // Melee offense talents
             break;
         case CharacterClass::MAGE:
-            buildMageTree();
+            buildMageTree();  // Magical talent tree
             break;
         case CharacterClass::ROGUE:
-            buildRogueTree();
+            buildRogueTree();  // Stealth and finesse talents
             break;
         case CharacterClass::PALADIN:
-            buildPaladinTree();
+            buildPaladinTree();  // Holy and protection talents
             break;
         case CharacterClass::RANGER:
-            buildRogueTree();
+            buildRogueTree();  // Uses same tree as Rogue (ranged skills)
             break;
         case CharacterClass::NECROMANCER:
-            buildMageTree();
+            buildMageTree();  // Uses Mage tree for dark magic
             break;
         case CharacterClass::BARBARIAN:
-            buildWarriorTree();
+            buildWarriorTree();  // Uses Warrior tree for combat
             break;
         case CharacterClass::MONK:
             buildPaladinTree();
             break;
     }
     
-    // Initialize combo chains
+    
     currentCombo = ComboChain();
     totalTalentPoints = playerRef.level;
     spentTalentPoints = 0;
@@ -95,7 +121,7 @@ void SkillTreeManager::displayTalentTree() const {
     std::cout << "Level: " << playerRef.level << " | Available Points: " << getAvailableTalentPoints() << "\n";
     std::cout << "Specialization: " << getCurrentSpecialization() << "\n\n";
     
-    // Display talents by tier
+    
     for (int tier = 1; tier <= 7; ++tier) {
         std::cout << "\n=== TIER " << tier << " ===";
         int talentsInTier = 0;
@@ -109,7 +135,7 @@ void SkillTreeManager::displayTalentTree() const {
             if (talent.tier == tier) {
                 hasTalent = true;
                 
-                // Check if unlockable
+                
                 bool canUnlock = canUnlockTalent(talent.id);
                 std::string status = talent.currentRank > 0 ? "[UNLOCKED]" : 
                                     canUnlock ? "[AVAILABLE]" : "[LOCKED]";
@@ -162,7 +188,7 @@ bool SkillTreeManager::unlockTalent(int talentId) {
     talent->currentRank++;
     spentTalentPoints += talent->pointCost;
     
-    // Apply stat bonuses, etc.
+    
     playerRef.stats.maxHP += talent->hpBonus;
     playerRef.stats.maxMana += talent->manaBonus;
     playerRef.stats.attack += talent->attackBonus;
@@ -173,14 +199,14 @@ bool SkillTreeManager::unlockTalent(int talentId) {
     playerRef.stats.magicPower += talent->magicPowerBonus;
     playerRef.stats.magicResist += talent->magicResistBonus;
     
-    // If this is the first rank of an active/ultimate talent, expose the ability to the player
+    
     if ((talent->type == TalentType::ACTIVE || talent->type == TalentType::ULTIMATE)
         && talent->currentRank == 1) {
 
-        // Ensure ability cooldown initialized
+        
         talent->ability.currentCooldown = 0;
 
-        // Avoid duplicates by ability name
+        
         bool already = false;
         for (const Skill& s : playerRef.skills) {
             if (s.name == talent->ability.name) { already = true; break; }
@@ -189,15 +215,15 @@ bool SkillTreeManager::unlockTalent(int talentId) {
             playerRef.skills.push_back(talent->ability);
         }
 
-        // Optionally track unlocked ids for persistence (if Player has such vector)
-        // if (!contains(playerRef.unlockedTalentIds, talent->id)) playerRef.unlockedTalentIds.push_back(talent->id);
+        
+        
     }
 
     return true;
 }
 
 bool SkillTreeManager::canUnlockTalent(int talentId) const {
-    // Find the talent
+    
     const TalentNode* talent = nullptr;
     for (const auto& t : talentTree) {
         if (t.id == talentId) {
@@ -210,17 +236,17 @@ bool SkillTreeManager::canUnlockTalent(int talentId) const {
         return false;
     }
     
-    // Check if at max rank
+    
     if (talent->currentRank >= talent->maxRank) {
         return false;
     }
     
-    // Check available points
+    
     if (getAvailableTalentPoints() < talent->pointCost) {
         return false;
     }
     
-    // Check prerequisites
+    
     for (int prereqId : talent->prerequisites) {
         const TalentNode* prereq = nullptr;
         for (const auto& t : talentTree) {
@@ -311,8 +337,8 @@ std::string SkillTreeManager::getCurrentSpecialization() const {
 }
 
 void SkillTreeManager::applyAllTalentBonuses() {
-    // Recalculate total bonuses from all talents and apply them
-    // Useful for save/load or talent respec scenarios
+    
+    
     
     int totalHpBonus = 0, totalManaBonus = 0, totalAttackBonus = 0;
     int totalDefenseBonus = 0, totalCritBonus = 0, totalDodgeBonus = 0;
@@ -341,7 +367,7 @@ void SkillTreeManager::applyAllTalentBonuses() {
 }
 
 void SkillTreeManager::recalculateStats() {
-    // Recalculate bonuses - same as applyAllTalentBonuses
+    
     applyAllTalentBonuses();
 }
 
@@ -465,7 +491,7 @@ std::vector<Skill> SkillTreeManager::getActiveAbilities() const {
         if (talent.currentRank > 0 && 
             (talent.type == TalentType::ACTIVE || talent.type == TalentType::ULTIMATE)) {
             
-            // Check if all prerequisites are met
+            
             bool prereqsMet = true;
             for (int prereqId : talent.prerequisites) {
                 const TalentNode* prereq = nullptr;
@@ -481,7 +507,7 @@ std::vector<Skill> SkillTreeManager::getActiveAbilities() const {
                 }
             }
             
-            // Only add to active abilities if all prerequisites are met
+            
             if (prereqsMet) {
                 abilities.push_back(talent.ability);
             }
@@ -501,34 +527,34 @@ bool SkillTreeManager::useAbility(int abilityId, Enemy& target) {
         return false;
     }
     
-    // Check cooldown
+    
     if (talent->ability.currentCooldown > 0) {
         std::cout << talent->ability.name << " is on cooldown!\n";
         return false;
     }
     
-    // Check mana
+    
     if (playerRef.stats.currentMana < talent->ability.manaCost) {
         std::cout << "Not enough mana!\n";
         return false;
     }
     
-    // Use the ability
+    
     playerRef.stats.currentMana -= talent->ability.manaCost;
     talent->ability.currentCooldown = talent->ability.cooldown;
     
-    // Calculate damage
+    
     int damage = static_cast<int>(playerRef.stats.attack * talent->ability.damageMultiplier);
     if (talent->ability.isMagical) {
         damage = static_cast<int>(playerRef.stats.magicPower * talent->ability.damageMultiplier);
     }
     
-    // Apply damage to target
+    
     target.stats.currentHP -= damage;
     
     std::cout << "Used " << talent->ability.name << " for " << damage << " damage!\n";
     
-    // Track for combos
+    
     registerSkillUse(abilityId);
     
     return true;
@@ -553,7 +579,7 @@ void SkillTreeManager::registerSkillUse(int skillId) {
 }
 
 bool SkillTreeManager::checkComboCompletion() {
-    // Check if current skill sequence matches any combo
+    
     for (const auto& combo : combos) {
         if (currentCombo.skillSequence == combo.skillSequence) {
             return true;
@@ -606,12 +632,12 @@ void SkillTreeManager::deserializeTalents(const std::string& data) {
     std::stringstream ss(data);
     std::string token;
     
-    // First token is specialization
+    
     if (std::getline(ss, token, ';')) {
         selectedSpecialization = std::stoi(token);
     }
 
-    // Optional saved total/spent point counts
+    
     if (std::getline(ss, token, ';')) {
         if (!token.empty()) {
             totalTalentPoints = std::max(0, std::stoi(token));
@@ -623,7 +649,7 @@ void SkillTreeManager::deserializeTalents(const std::string& data) {
         }
     }
     
-    // Rest are talent ranks
+    
     while (std::getline(ss, token, ',')) {
         if (token.empty()) continue;
         size_t colonPos = token.find(':');
@@ -642,7 +668,7 @@ void SkillTreeManager::deserializeTalents(const std::string& data) {
 }
 
 void SkillTreeManager::buildWarriorTree() {
-    // Tier 1 - Basic talents
+    
     TalentNode strength;
     strength.id = 101;
     strength.name = "Strength Training";
@@ -663,7 +689,7 @@ void SkillTreeManager::buildWarriorTree() {
     vitality.hpBonus = 10;
     talentTree.push_back(vitality);
     
-    // Tier 2 - Active skill
+    
     TalentNode powerStrike;
     powerStrike.id = 201;
     powerStrike.name = "Power Strike";
@@ -689,7 +715,7 @@ void SkillTreeManager::buildWarriorTree() {
     ironSkin.defenseBonus = 3;
     talentTree.push_back(ironSkin);
     
-    // Tier 3 - Specialization talents
+    
     TalentNode berserkerRage;
     berserkerRage.id = 301;
     berserkerRage.name = "Berserker Rage";
@@ -701,7 +727,7 @@ void SkillTreeManager::buildWarriorTree() {
     berserkerRage.damageMultiplier = 1.2f;
     talentTree.push_back(berserkerRage);
     
-    // Tier 4 - Ultimate
+    
     TalentNode devastatingBlow;
     devastatingBlow.id = 401;
     devastatingBlow.name = "Devastating Blow";
@@ -718,7 +744,7 @@ void SkillTreeManager::buildWarriorTree() {
 }
 
 void SkillTreeManager::buildMageTree() {
-    // Tier 1 - Basic talents
+    
     TalentNode arcaneIntelligence;
     arcaneIntelligence.id = 101;
     arcaneIntelligence.name = "Arcane Intelligence";
@@ -739,7 +765,7 @@ void SkillTreeManager::buildMageTree() {
     manaPool.manaBonus = 15;
     talentTree.push_back(manaPool);
     
-    // Tier 2 - Active skill
+    
     TalentNode fireball;
     fireball.id = 201;
     fireball.name = "Fireball";
@@ -772,7 +798,7 @@ void SkillTreeManager::buildMageTree() {
     frostNova.element = DamageElement::FROST;
     talentTree.push_back(frostNova);
     
-    // Tier 3 - Specialization
+    
     TalentNode pyroblast;
     pyroblast.id = 301;
     pyroblast.name = "Pyroblast";
@@ -789,7 +815,7 @@ void SkillTreeManager::buildMageTree() {
     pyroblast.element = DamageElement::FIRE;
     talentTree.push_back(pyroblast);
     
-    // Tier 4 - Ultimate
+    
     TalentNode meteorStorm;
     meteorStorm.id = 401;
     meteorStorm.name = "Meteor Storm";
@@ -808,7 +834,7 @@ void SkillTreeManager::buildMageTree() {
 }
 
 void SkillTreeManager::buildRogueTree() {
-    // Tier 1
+    
     TalentNode agility;
     agility.id = 101;
     agility.name = "Agility";
@@ -829,7 +855,7 @@ void SkillTreeManager::buildRogueTree() {
     precision.critChanceBonus = 3;
     talentTree.push_back(precision);
     
-    // Tier 2
+    
     TalentNode backstab;
     backstab.id = 201;
     backstab.name = "Backstab";
@@ -855,7 +881,7 @@ void SkillTreeManager::buildRogueTree() {
     evasion.dodgeChanceBonus = 5;
     talentTree.push_back(evasion);
     
-    // Tier 3
+    
     TalentNode venomousBlade;
     venomousBlade.id = 301;
     venomousBlade.name = "Venomous Blade";
@@ -867,7 +893,7 @@ void SkillTreeManager::buildRogueTree() {
     venomousBlade.element = DamageElement::SHADOW;
     talentTree.push_back(venomousBlade);
     
-    // Tier 4 - Ultimate
+    
     TalentNode assassinate;
     assassinate.id = 401;
     assassinate.name = "Assassinate";
@@ -884,7 +910,7 @@ void SkillTreeManager::buildRogueTree() {
 }
 
 void SkillTreeManager::buildPaladinTree() {
-    // Tier 1
+    
     TalentNode divineStrength;
     divineStrength.id = 101;
     divineStrength.name = "Divine Strength";
@@ -907,7 +933,7 @@ void SkillTreeManager::buildPaladinTree() {
     holyResilience.magicResistBonus = 2;
     talentTree.push_back(holyResilience);
     
-    // Tier 2
+    
     TalentNode holySmite;
     holySmite.id = 201;
     holySmite.name = "Holy Smite";
@@ -940,7 +966,7 @@ void SkillTreeManager::buildPaladinTree() {
     layOnHands.ability.isMagical = true;
     talentTree.push_back(layOnHands);
     
-    // Tier 3
+    
     TalentNode divineShield;
     divineShield.id = 301;
     divineShield.name = "Divine Shield";
@@ -954,7 +980,7 @@ void SkillTreeManager::buildPaladinTree() {
     divineShield.ability.cooldown = 8;
     talentTree.push_back(divineShield);
     
-    // Tier 4 - Ultimate
+    
     TalentNode divineJudgment;
     divineJudgment.id = 401;
     divineJudgment.name = "Divine Judgment";
@@ -1027,4 +1053,4 @@ void SkillTreeManager::displaySkillLevelUpMenu() {
     }
 }
 
-}  // namespace AQE
+}  

@@ -1,8 +1,32 @@
 //! Copyright (c) Alexander Matzen. All rights reserved.
 //! Author: Alexander Matzen
 //! Licensed under the MIT license
+//! Edit started 1/2/26
 
-// Inventory management implementation
+// Inventory.cpp - Item and inventory management
+// Manages player inventory, equipment slots, and item operations
+//
+// CLASS: InventorySystem
+// PURPOSE: Manages all items the player carries and equipment slots
+//
+// KEY ATTRIBUTES:
+//   - playerRef: Reference to player whose inventory this manages
+//   - items: Vector of items currently in inventory
+//   - equippedWeapon: Currently equipped weapon item
+//   - equippedArmor: Currently equipped armor item
+//   - equippedAccessory: Currently equipped accessory item
+//   - maxSlots: Maximum number of items that can be carried
+//
+// KEY METHODS:
+//   - addItem(item): Add item to inventory
+//   - removeItem(index): Remove item from inventory
+//   - equipItem(index): Equip item to appropriate slot
+//   - unequipItem(index): Remove equipped item
+//   - useItem(index): Consume/use item from inventory
+//   - sortInventory(sortType): Organize items by various criteria
+//   - getInventorySpace(): Check how much space is available
+//   - displayInventoryMenu(): Interactive inventory UI
+//   - applyItemEffect(item): Execute item's effect on player
 
 #include "../include/Inventory.h"
 #include "../include/Utils.h"
@@ -36,20 +60,16 @@ std::string getSlotLabel(ItemType type) {
     }
 }
 
+// Map item rarity to default item level for accessories
+// Higher rarity items scale their power (iLvl) accordingly
 int defaultAccessoryItemLevel(ItemRarity rarity) {
     switch (rarity) {
-        case ItemRarity::COMMON:
-            return 8;
-        case ItemRarity::UNCOMMON:
-            return 16;
-        case ItemRarity::RARE:
-            return 28;
-        case ItemRarity::EPIC:
-            return 42;
-        case ItemRarity::LEGENDARY:
-            return 58;
-        default:
-            return 8;
+        case ItemRarity::COMMON:      return 8;   // Base level for common gear
+        case ItemRarity::UNCOMMON:    return 16;  // Double for uncommon items
+        case ItemRarity::RARE:        return 28;  // More than 3x for rare items
+        case ItemRarity::EPIC:        return 42;  // Scales with progression needs
+        case ItemRarity::LEGENDARY:   return 58;  // Highest base level
+        default:                      return 8;   // Fallback to common level
     }
 }
 
@@ -166,17 +186,17 @@ const Item* getComparisonBaseline(const Player& player, const Item& item) {
     return findEquippedItemForType(player, item.type);
 }
 
-}  // namespace
+}  
 
-// ---
-// CONSTRUCTOR
-// ---
+
+
+
 
 InventorySystem::InventorySystem(Player& player) : playerRef(player) {}
 
-// ---
-// INVENTORY DISPLAY
-// ---
+
+
+
 
 void InventorySystem::displayInventoryMenu() {
     bool exitMenu = false;
@@ -390,7 +410,7 @@ void InventorySystem::displayItemDetails(int itemIndex) const {
     }
     std::cout << "  Description: " << wrapText(item.description, 40) << "\n";
     
-    // Show stats if applicable
+    
     if (item.type == ItemType::WEAPON || item.type == ItemType::ARMOR || 
         item.type == ItemType::ACCESSORY) {
         std::cout << "  Stats:\n";
@@ -431,7 +451,7 @@ void InventorySystem::displayEquipment() const {
     std::cout << centerString("EQUIPMENT", 50) << "\n";
     displaySeparator(50, '=');
     
-    // Find equipped items
+    
     std::string weapon = "Empty";
     std::string armor = "Empty";
     std::string accessory = "Empty";
@@ -532,23 +552,23 @@ void InventorySystem::displayEquipment() const {
     displaySeparator(50, '=');
 }
 
-// ---
-// ITEM MANAGEMENT
-// ---
+
+
+
 
 bool InventorySystem::addItem(const Item& item) {
-    // Check inventory space
+    
     if (!hasSpace()) {
         std::cout << "Inventory is full! Cannot add " << item.name << ".\n";
         return false;
     }
     
-    // Try to stack with existing item
+    
     if (item.isStackable && tryStackItem(item)) {
         return true;
     }
     
-    // Add as new item
+    
     playerRef.inventory.push_back(item);
     return true;
 }
@@ -592,7 +612,7 @@ bool InventorySystem::removeItemById(int itemId, int quantity) {
 }
 
 bool InventorySystem::hasSpace() const {
-    if (playerRef.maxInventorySize <= 0) return true;  // Unlimited
+    if (playerRef.maxInventorySize <= 0) return true;  
     return static_cast<int>(playerRef.inventory.size()) < playerRef.maxInventorySize;
 }
 
@@ -617,9 +637,9 @@ bool InventorySystem::tryStackItem(const Item& item) {
         if (existing.id == item.id && existing.isStackable) {
             int newQty = existing.quantity + item.quantity;
             if (newQty > STACK_LIMIT) {
-                // Partial stack - stack is now full
+                
                 existing.quantity = STACK_LIMIT;
-                // Would need to add new stack for overflow
+                
                 return true;
             }
             existing.quantity = newQty;
@@ -629,9 +649,9 @@ bool InventorySystem::tryStackItem(const Item& item) {
     return false;
 }
 
-// ---
-// SORTING ALGORITHMS
-// ---
+
+
+
 
 void InventorySystem::sortInventory(SortType sortType) {
     switch (sortType) {
@@ -666,14 +686,14 @@ void InventorySystem::sortInventory(SortType sortType) {
 }
 
 void InventorySystem::bubbleSortByName() {
-    // Classic bubble sort - O(n^2)
+    
     int n = static_cast<int>(playerRef.inventory.size());
     
     for (int i = 0; i < n - 1; ++i) {
         bool swapped = false;
         
         for (int j = 0; j < n - i - 1; ++j) {
-            // Compare names (case-insensitive)
+            
             std::string nameA = toLower(playerRef.inventory[j].name);
             std::string nameB = toLower(playerRef.inventory[j + 1].name);
             
@@ -683,13 +703,13 @@ void InventorySystem::bubbleSortByName() {
             }
         }
         
-        // Optimization: if no swaps, already sorted
+        
         if (!swapped) break;
     }
 }
 
 void InventorySystem::selectionSortByValue() {
-    // Classic selection sort - O(n^2)
+    
     int n = static_cast<int>(playerRef.inventory.size());
     
     for (int i = 0; i < n - 1; ++i) {
@@ -708,14 +728,14 @@ void InventorySystem::selectionSortByValue() {
 }
 
 void InventorySystem::insertionSortByRarity() {
-    // Classic insertion sort - O(n^2)
+    
     int n = static_cast<int>(playerRef.inventory.size());
     
     for (int i = 1; i < n; ++i) {
         Item key = playerRef.inventory[i];
         int j = i - 1;
         
-        // Move items with higher rarity up
+        
         while (j >= 0 && static_cast<int>(playerRef.inventory[j].rarity) > 
                          static_cast<int>(key.rarity)) {
             playerRef.inventory[j + 1] = playerRef.inventory[j];
@@ -726,12 +746,12 @@ void InventorySystem::insertionSortByRarity() {
     }
 }
 
-// ---
-// SEARCHING ALGORITHMS
-// ---
+
+
+
 
 int InventorySystem::linearSearchByName(const std::string& name) const {
-    // Simple linear search - O(n)
+    
     std::string searchName = toLower(name);
     
     for (size_t i = 0; i < playerRef.inventory.size(); ++i) {
@@ -740,11 +760,11 @@ int InventorySystem::linearSearchByName(const std::string& name) const {
         }
     }
     
-    return -1;  // Not found
+    return -1;  
 }
 
 int InventorySystem::binarySearchByName(const std::string& name) const {
-    // Binary search - O(log n) - requires sorted inventory
+    
     std::string searchName = toLower(name);
     
     int left = 0;
@@ -755,7 +775,7 @@ int InventorySystem::binarySearchByName(const std::string& name) const {
         std::string midName = toLower(playerRef.inventory[mid].name);
         
         if (midName == searchName) {
-            return mid;  // Found
+            return mid;  
         } else if (midName < searchName) {
             left = mid + 1;
         } else {
@@ -763,7 +783,7 @@ int InventorySystem::binarySearchByName(const std::string& name) const {
         }
     }
     
-    return -1;  // Not found
+    return -1;  
 }
 
 int InventorySystem::searchById(int itemId) const {
@@ -813,9 +833,9 @@ std::vector<int> InventorySystem::searchPartial(const std::string& partialName) 
     return results;
 }
 
-// ---
-// ITEM USAGE
-// ---
+
+
+
 
 bool InventorySystem::useItem(int itemIndex) {
     if (itemIndex < 0 || itemIndex >= static_cast<int>(playerRef.inventory.size())) {
@@ -846,7 +866,7 @@ bool InventorySystem::equipItem(int itemIndex) {
     
     Item& item = playerRef.inventory[itemIndex];
     
-    // Check if equippable
+    
     if (item.type != ItemType::WEAPON && item.type != ItemType::ARMOR &&
         item.type != ItemType::ACCESSORY) {
         std::cout << item.name << " cannot be equipped.\n";
@@ -859,14 +879,14 @@ bool InventorySystem::equipItem(int itemIndex) {
     }
 
     if (item.type == ItemType::ACCESSORY) {
-        // Accessories should always derive bonuses from dynamic iLvl scaling.
+        
         if (item.itemLevel <= 0) {
             item.itemLevel = defaultAccessoryItemLevel(item.rarity);
         }
         rebuildItemStatsFromLevel(item);
     }
     
-    // Unequip existing item in same slot
+    
     for (Item& existing : playerRef.inventory) {
         if (existing.isEquipped && existing.type == item.type) {
             existing.isEquipped = false;
@@ -875,11 +895,11 @@ bool InventorySystem::equipItem(int itemIndex) {
         }
     }
     
-    // Equip new item
+    
     item.isEquipped = true;
     std::cout << "Equipped " << item.name << "!\n";
     
-    // Update player equipment IDs
+    
     switch (item.type) {
         case ItemType::WEAPON:
             playerRef.equippedWeaponId = item.id;
@@ -913,7 +933,7 @@ bool InventorySystem::unequipItem(int itemIndex) {
     
     item.isEquipped = false;
     
-    // Update player equipment IDs
+    
     switch (item.type) {
         case ItemType::WEAPON:
             playerRef.equippedWeaponId = -1;
@@ -937,7 +957,7 @@ bool InventorySystem::unequipItem(int itemIndex) {
 bool InventorySystem::applyItemEffect(const Item& item) {
     bool hasEffect = false;
     
-    // Healing
+    
     if (item.healAmount > 0) {
         int healed = item.healAmount;
         int before = playerRef.stats.currentHP;
@@ -950,7 +970,7 @@ bool InventorySystem::applyItemEffect(const Item& item) {
         hasEffect = true;
     }
     
-    // Temporary buff
+    
     if (item.duration > 0 && (item.attackBonus != 0 || item.defenseBonus != 0 ||
                               item.critBonus != 0 || item.dodgeBonus != 0 ||
                               item.speedBonus != 0)) {
@@ -990,9 +1010,9 @@ Item InventorySystem::dropItem(int itemIndex) {
     return dropped;
 }
 
-// ---
-// ECONOMY
-// ---
+
+
+
 
 int InventorySystem::calculateTotalValue() const {
     int total = 0;
@@ -1040,14 +1060,14 @@ std::function<bool(const Item&, const Item&)> InventorySystem::getComparator(Sor
     }
 }
 
-// ---
-// STANDALONE FUNCTIONS
-// ---
+
+
+
 
 std::vector<Item> createStartingItems(CharacterClass charClass) {
     std::vector<Item> items;
     
-    // Common starting items
+    
     Item healthPotion;
     healthPotion.id = 1;
     healthPotion.name = "Minor Health Potion";
@@ -1061,7 +1081,7 @@ std::vector<Item> createStartingItems(CharacterClass charClass) {
     healthPotion.isStackable = true;
     items.push_back(healthPotion);
     
-    // Class-specific starting weapon
+    
     Item weapon;
     weapon.id = 100;
     weapon.type = ItemType::WEAPON;
@@ -1118,7 +1138,7 @@ Item generateRandomItem(ItemRarity rarity, int targetLevel) {
     item.rarity = rarity;
     item.quantity = 1;
     
-    // Random type
+    
     int typeRoll = randomInt(1, 100);
     if (typeRoll <= 40) {
         item.type = ItemType::CONSUMABLE;
@@ -1130,7 +1150,7 @@ Item generateRandomItem(ItemRarity rarity, int targetLevel) {
         item.type = ItemType::ACCESSORY;
     }
     
-    // Generate stats based on rarity
+    
     int statMult = static_cast<int>(rarity) + 1;
     
     switch (item.type) {
@@ -1168,7 +1188,7 @@ Item generateRandomItem(ItemRarity rarity, int targetLevel) {
             break;
     }
     
-    // Add rarity prefix
+    
     switch (rarity) {
         case ItemRarity::UNCOMMON:
             item.name = "Quality " + item.name;
@@ -1196,7 +1216,7 @@ Item generateRandomItem(ItemRarity rarity, int targetLevel) {
 Item generateItemFromTemplate(const Item& templateItem, int targetLevel, bool rollPerk) {
     Item item = templateItem;
     
-    // Add some randomization
+    
     item.id = randomInt(10000, 99999);
     item.value += randomInt(-5, 10);
     if (item.value < 1) item.value = 1;
@@ -1205,7 +1225,7 @@ Item generateItemFromTemplate(const Item& templateItem, int targetLevel, bool ro
     const int rolledItemLevel = rollItemLevel(contextLevel, item.rarity, false);
     applyItemLevelScaling(item, rolledItemLevel, rollPerk);
     
-    // Small stat variance
+    
     if (item.attackBonus > 0) item.attackBonus += randomInt(-1, 2);
     if (item.defenseBonus > 0) item.defenseBonus += randomInt(-1, 2);
     if (item.healAmount > 0) item.healAmount += randomInt(0, 4);
@@ -1220,10 +1240,10 @@ bool canUseItem(const Item& item, bool inCombat) {
     
     switch (item.type) {
         case ItemType::CONSUMABLE:
-            return true;  // Always usable
+            return true;  
         case ItemType::KEY:
         case ItemType::QUEST:
-            return !inCombat;  // Only out of combat
+            return !inCombat;  
         default:
             return false;
     }
@@ -1231,11 +1251,11 @@ bool canUseItem(const Item& item, bool inCombat) {
 
 int getRarityColor(ItemRarity rarity) {
     switch (rarity) {
-        case ItemRarity::COMMON:    return 37;  // White
-        case ItemRarity::UNCOMMON:  return 32;  // Green
-        case ItemRarity::RARE:      return 34;  // Blue
-        case ItemRarity::EPIC:      return 35;  // Purple
-        case ItemRarity::LEGENDARY: return 33;  // Yellow/Gold
+        case ItemRarity::COMMON:    return 37;  
+        case ItemRarity::UNCOMMON:  return 32;  
+        case ItemRarity::RARE:      return 34;  
+        case ItemRarity::EPIC:      return 35;  
+        case ItemRarity::LEGENDARY: return 33;  
         default:                    return 37;
     }
 }
@@ -1247,4 +1267,4 @@ std::string formatItemName(const Item& item) {
     return ss.str();
 }
 
-}  // namespace AQE
+}  

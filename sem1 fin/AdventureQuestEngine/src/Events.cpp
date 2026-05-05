@@ -1,8 +1,30 @@
 //! Copyright (c) Alexander Matzen. All rights reserved.
 //! Author: Alexander Matzen
 //! Licensed under the MIT license
+//! Edit started 1/7/26
 
-// Event and quest system implementation
+// Events.cpp - In-game event and trap system
+// Manages random events, traps, and special occurrences
+//
+// CLASS: EventSystem
+// PURPOSE: Manages events, quests, and story progression during gameplay
+//
+// KEY ATTRIBUTES:
+//   - playerRef: Reference to active player
+//   - gameRef: Reference to game state
+//   - eventHistory: Log of all events that have occurred
+//   - questLog: Player's active and completed quests
+//
+// KEY METHODS:
+//   - processRoomEvents(room): Execute events when entering room
+//   - processEvent(event): Handle specific event occurrence
+//   - checkTrap(room): Detect and trigger trap in room
+//   - presentPuzzle(room): Display puzzle and get player attempt
+//   - presentRiddle(question, answer): Show riddle puzzle
+//   - processChoiceEvent(event): Handle branching story choice
+//   - getAvailableChoices(event): Determine valid options based on state
+//   - triggerQuest(questId): Start new quest
+//   - completeQuest(questId): Mark quest as finished
 
 #include "../include/Events.h"
 #include "../include/Utils.h"
@@ -27,35 +49,37 @@ namespace {
 
 namespace AQE {
 
-// ---
-// CONSTRUCTOR
-// ---
 
+
+
+
+// Constructor: Initialize event system with player and game state references
+// Allows events to query and modify player data
 EventSystem::EventSystem(Player& player, GameState& gameState)
     : playerRef(player), gameRef(gameState) {}
 
-// ---
-// EVENT PROCESSING
-// ---
-
+// Process all events that trigger when entering a room
+// Returns list of results describing what happened (rewards, damage, etc.)
 std::vector<EventResult> EventSystem::processRoomEvents(Room& room) {
     std::vector<EventResult> results;
     
-    // Check trap first
+    // Check if room has an active trap that damages player
     if (room.type == RoomType::TRAP && room.isTrapActive) {
-        EventResult trapResult = checkTrap(room);
+        EventResult trapResult = checkTrap(room);  // Execute trap effects
         results.push_back(trapResult);
     }
     
-    // Process room events
+    // Process all events tied to this room
+    // Iterate through room's event IDs and find matching events in templates
     for (int eventId : room.eventIds) {
         for (Event& event : gameRef.eventTemplates) {
             if (event.id == eventId) {
+                // Check if player meets requirements (level, skills, items, etc.)
                 if (meetsEventRequirements(event)) {
-                    EventResult result = processEvent(event);
+                    EventResult result = processEvent(event);  // Execute event logic
                     results.push_back(result);
                 }
-                break;
+                break;  // Found the event, stop searching
             }
         }
     }
@@ -67,13 +91,13 @@ EventResult EventSystem::processEvent(Event& event) {
     EventResult result;
     result.occurred = true;
     
-    // Check one-time events
+    
     if (event.oneTimeOnly && event.hasOccurred) {
         result.occurred = false;
         return result;
     }
     
-    // Check trigger chance
+    
     if (!randomChance(event.triggerChance)) {
         result.occurred = false;
         return result;
@@ -163,13 +187,13 @@ EventResult EventSystem::processEvent(Event& event) {
             break;
     }
     
-    // Mark event as occurred
+    
     event.hasOccurred = true;
     
-    // Apply effects
+    
     applyEventEffects(result);
     
-    // Display result
+    
     if (!result.message.empty()) {
         std::cout << "\n" << result.message << "\n";
     }
@@ -189,13 +213,13 @@ EventResult EventSystem::checkTrap(Room& room) {
     
     result.occurred = true;
     
-    // Rogue has higher chance to detect traps
+    
     int detectChance = 20;
     if (playerRef.charClass == CharacterClass::ROGUE) {
         detectChance = 50;
     }
     
-    // Check if player detects trap
+    
     if (randomChance(detectChance)) {
         std::cout << "\n*** WARNING! You detect a trap! ***\n";
         std::cout << "Do you try to:\n";
@@ -207,7 +231,7 @@ EventResult EventSystem::checkTrap(Room& room) {
         
         switch (choice) {
             case 1: {
-                // Disarm attempt
+                
                 int disarmChance = 30 + playerRef.stats.speed;
                 if (playerRef.charClass == CharacterClass::ROGUE) disarmChance += 30;
                 
@@ -224,7 +248,7 @@ EventResult EventSystem::checkTrap(Room& room) {
                 break;
             }
             case 2: {
-                // Bypass
+                
                 int bypassChance = 50 + playerRef.stats.dodgeChance;
                 if (randomChance(bypassChance)) {
                     result.message = "You carefully bypass the trap.";
@@ -236,7 +260,7 @@ EventResult EventSystem::checkTrap(Room& room) {
                 break;
             }
             case 3: {
-                // Intentional trigger with preparation
+                
                 result.hpChange = -(room.trapDamage / 2);
                 result.message = "You brace yourself and trigger the trap. Take " +
                                std::to_string(room.trapDamage / 2) + " damage.";
@@ -245,7 +269,7 @@ EventResult EventSystem::checkTrap(Room& room) {
             }
         }
     } else {
-        // Trap springs!
+        
         result.hpChange = -room.trapDamage;
         result.message = "TRAP! " + room.description + " You take " + 
                         std::to_string(room.trapDamage) + " damage!";
@@ -258,9 +282,9 @@ EventResult EventSystem::checkTrap(Room& room) {
     return result;
 }
 
-// ---
-// BRANCHING CHOICES
-// ---
+
+
+
 
 EventResult EventSystem::processChoiceEvent(Event& event) {
     EventResult result;
@@ -305,11 +329,11 @@ EventResult EventSystem::processChoiceEvent(Event& event) {
     }
     
     if (choice.triggersEvent) {
-        // Trigger follow-up event
+        
         for (Event& followUp : gameRef.eventTemplates) {
             if (followUp.id == choice.triggeredEventId) {
                 EventResult followResult = processEvent(followUp);
-                // Combine results
+                
                 result.hpChange += followResult.hpChange;
                 result.goldChange += followResult.goldChange;
                 result.moralityChange += followResult.moralityChange;
@@ -362,7 +386,7 @@ std::vector<int> EventSystem::getAvailableChoices(const Event& event) const {
     for (size_t i = 0; i < event.choices.size(); ++i) {
         const EventChoice& choice = event.choices[i];
         
-        // Check if player has required item for choice
+        
         bool requirementsMet = true;
         
         if (choice.itemLostId > 0) {
@@ -376,7 +400,7 @@ std::vector<int> EventSystem::getAvailableChoices(const Event& event) const {
             if (!hasItem) requirementsMet = false;
         }
         
-        // Check if player can afford gold cost
+        
         if (choice.goldChange < 0 && playerRef.gold < -choice.goldChange) {
             requirementsMet = false;
         }
@@ -389,9 +413,9 @@ std::vector<int> EventSystem::getAvailableChoices(const Event& event) const {
     return available;
 }
 
-// ---
-// PUZZLES
-// ---
+
+
+
 
 PuzzleResult EventSystem::presentPuzzle(Room& room) {
     PuzzleResult result;
@@ -425,7 +449,7 @@ PuzzleResult EventSystem::presentPuzzle(Room& room) {
         }
         
         if (answer == "hint") {
-            // Find hint from riddle database
+            
             for (const Riddle& r : RIDDLE_DATABASE) {
                 if (toLower(r.answer) == room.puzzleAnswer) {
                     std::cout << "Hint: " << r.hint << "\n\n";
@@ -521,15 +545,15 @@ bool EventSystem::presentNumberPuzzle() {
     return false;
 }
 
-// ---
-// QUESTS
-// ---
+
+
+
 
 bool EventSystem::startQuest(int questId) {
     Quest* quest = getQuest(questId);
     
     if (!quest) {
-        // Check templates
+        
         for (Quest& q : gameRef.questTemplates) {
             if (q.id == questId) {
                 q.status = QuestStatus::IN_PROGRESS;
@@ -546,7 +570,7 @@ bool EventSystem::startQuest(int questId) {
     }
     
     if (quest->status != QuestStatus::NOT_STARTED) {
-        return false;  // Already started
+        return false;  
     }
     
     quest->status = QuestStatus::IN_PROGRESS;
@@ -563,7 +587,7 @@ void EventSystem::updateQuestProgress(int questId, int progress) {
         std::cout << "\n[Quest Progress: " << quest->name << " - " 
                   << quest->currentEnemyCount << "/" << quest->targetEnemyCount << "]\n";
         
-        // Check if complete
+        
         if (checkQuestCompletion(questId)) {
             completeQuest(questId);
         }
@@ -577,13 +601,13 @@ bool EventSystem::checkQuestCompletion(int questId) {
         return false;
     }
     
-    // Check enemy kill count
+    
     if (quest->targetEnemyCount > 0 && 
         quest->currentEnemyCount >= quest->targetEnemyCount) {
         return true;
     }
     
-    // Check item collection
+    
     if (quest->targetItemId > 0) {
         for (const Item& item : playerRef.inventory) {
             if (item.id == quest->targetItemId) {
@@ -592,7 +616,7 @@ bool EventSystem::checkQuestCompletion(int questId) {
         }
     }
     
-    // Check room reached
+    
     if (quest->targetRoomId > 0 && 
         playerRef.currentRoomId == quest->targetRoomId) {
         return true;
@@ -614,7 +638,7 @@ EventResult EventSystem::completeQuest(int questId) {
     result.occurred = true;
     result.success = true;
     
-    // Give rewards
+    
     result.goldChange = quest->goldReward;
     result.experienceGained = quest->experienceReward;
     
@@ -629,15 +653,15 @@ EventResult EventSystem::completeQuest(int questId) {
             applyItemLevelScaling(reward, rolledLevel, true);
             result.itemsGained.push_back(reward);
         } else {
-            // Fallback to generating a random item if template missing
+            
             result.itemsGained.push_back(generateRandomItem(ItemRarity::RARE, std::max(1, playerRef.level)));
         }
     }
     
-    // Move to completed quests
+    
     playerRef.completedQuests.push_back(*quest);
     
-    // Remove from active quests
+    
     auto it = std::find_if(playerRef.activeQuests.begin(), playerRef.activeQuests.end(),
         [questId](const Quest& q) { return q.id == questId; });
     if (it != playerRef.activeQuests.end()) {
@@ -711,14 +735,14 @@ Quest* EventSystem::getQuest(int questId) {
     return nullptr;
 }
 
-// ---
-// RANDOM EVENTS
-// ---
+
+
+
 
 EventResult EventSystem::rollRandomEvent() {
     EventResult result;
     
-    if (!randomChance(15)) {  // 15% chance for random event
+    if (!randomChance(15)) {  
         result.occurred = false;
         return result;
     }
@@ -736,14 +760,14 @@ EventResult EventSystem::rollRandomEvent() {
             result = generateAmbushEvent();
             break;
         case 4:
-            // Healing fountain
+            
             result.occurred = true;
             result.hpChange = randomInt(15, 35);
             result.message = "You find a magical healing fountain! +" + 
                            std::to_string(result.hpChange) + " HP";
             break;
         case 5:
-            // Gold find
+            
             result.occurred = true;
             result.goldChange = randomInt(10, 50);
             result.message = "You discover a hidden stash of gold! +" + 
@@ -765,7 +789,7 @@ EventResult EventSystem::generateMerchantEvent() {
     displaySeparator(50, '$');
     std::cout << "\"Greetings, traveler! Care to see my wares?\"\n\n";
     
-    // Generate items for sale
+    
     std::vector<Item> forSale;
     for (int i = 0; i < 3; ++i) {
         ItemRarity rarity = static_cast<ItemRarity>(randomInt(0, 2));
@@ -823,7 +847,7 @@ EventResult EventSystem::generateTreasureEvent() {
     
     std::cout << "\n*** You discovered a treasure chest! ***\n";
     
-    // Chance for trap
+    
     if (randomChance(30)) {
         std::cout << "It's trapped!\n";
         
@@ -836,10 +860,10 @@ EventResult EventSystem::generateTreasureEvent() {
         }
     }
     
-    // Treasure
+    
     result.goldChange = randomInt(20, 75);
     
-    // Chance for item
+    
     if (randomChance(60)) {
         ItemRarity rarity = static_cast<ItemRarity>(randomInt(1, 3));
         Item treasure = generateRandomItem(rarity, std::max(1, playerRef.level));
@@ -861,12 +885,12 @@ EventResult EventSystem::generateAmbushEvent() {
     EventResult result;
     result.occurred = true;
     result.triggersCombat = true;
-    result.combatEnemyId = 0;  // Random enemy
+    result.combatEnemyId = 0;  
     
     std::cout << "\n*** AMBUSH! ***\n";
     std::cout << "Enemies leap from the shadows!\n";
     
-    // Ambushed - player takes first hit
+    
     int ambushDamage = randomInt(5, 15);
     result.hpChange = -ambushDamage;
     
@@ -876,12 +900,12 @@ EventResult EventSystem::generateAmbushEvent() {
     return result;
 }
 
-// ---
-// PRIVATE METHODS
-// ---
+
+
+
 
 void EventSystem::applyEventEffects(const EventResult& result) {
-    // Apply HP change
+    
     if (result.hpChange != 0) {
         playerRef.stats.currentHP += result.hpChange;
         
@@ -894,23 +918,23 @@ void EventSystem::applyEventEffects(const EventResult& result) {
         }
     }
     
-    // Apply gold change
+    
     if (result.goldChange != 0) {
         playerRef.gold += result.goldChange;
         if (playerRef.gold < 0) playerRef.gold = 0;
     }
     
-    // Apply morality change
+    
     if (result.moralityChange != 0) {
         playerRef.moralityScore += result.moralityChange;
     }
     
-    // Apply experience
+    
     if (result.experienceGained > 0) {
         playerRef.experience += result.experienceGained;
     }
     
-    // Remove lost items
+    
     for (int itemId : result.itemsLost) {
         InventorySystem inv(playerRef);
         inv.removeItemById(itemId, 1);
@@ -922,7 +946,7 @@ void EventSystem::logEvent(const std::string& message) {
 }
 
 bool EventSystem::meetsEventRequirements(const Event& event) const {
-    // Check required item
+    
     if (event.requiresItem) {
         bool hasItem = false;
         for (const Item& item : playerRef.inventory) {
@@ -934,7 +958,7 @@ bool EventSystem::meetsEventRequirements(const Event& event) const {
         if (!hasItem) return false;
     }
     
-    // Check one-time flag
+    
     if (event.oneTimeOnly && event.hasOccurred) {
         return false;
     }
@@ -942,9 +966,9 @@ bool EventSystem::meetsEventRequirements(const Event& event) const {
     return true;
 }
 
-// ---
-// PREDEFINED STORY CHOICES
-// ---
+
+
+
 
 EventResult storyChoice_WoundedTraveler(Player& player) {
     EventResult result;
@@ -1008,14 +1032,14 @@ EventResult storyChoice_CursedTreasure(Player& player) {
     switch (choice) {
         case 1: {
             if (randomChance(40)) {
-                // Cursed!
+                
                 result.moralityChange = -10;
                 result.hpChange = -20;
-                player.stats.maxHP -= 10;  // Permanent curse
+                player.stats.maxHP -= 10;  
                 result.message = "The artifact's curse takes hold! Max HP permanently reduced!";
                 std::cout << "\nDark energy courses through you painfully...\n";
             } else {
-                // Gained power
+                
                 player.stats.attack += 5;
                 result.message = "You resist the curse and gain the artifact's power! +5 Attack";
                 std::cout << "\nPower flows into you!\n";
@@ -1040,7 +1064,7 @@ EventResult storyChoice_CursedTreasure(Player& player) {
 EventResult storyChoice_Rebellion(Player& player) {
     EventResult result;
     result.occurred = true;
-    (void)player; // parameter unused in this story function
+    (void)player; 
     
     std::cout << "\n";
     displaySeparator(60, '-');
@@ -1059,7 +1083,7 @@ EventResult storyChoice_Rebellion(Player& player) {
     switch (choice) {
         case 1:
             result.moralityChange = 15;
-            // Quest given
+            
             result.message = "You join the rebellion! A new quest awaits.";
             std::cout << "\n\"Welcome, friend! Together we will bring justice!\"\n";
             break;
@@ -1081,7 +1105,7 @@ EventResult storyChoice_Rebellion(Player& player) {
 EventResult storyChoice_DarkRitual(Player& player, GameState& gameState) {
     EventResult result;
     result.occurred = true;
-    (void)gameState; // parameter unused here
+    (void)gameState; 
     
     std::cout << "\n";
     displaySeparator(60, '-');
@@ -1110,7 +1134,7 @@ EventResult storyChoice_DarkRitual(Player& player, GameState& gameState) {
         case 2:
             result.moralityChange = 10;
             result.triggersCombat = true;
-            result.combatEnemyId = 999;  // Cultist enemy
+            result.combatEnemyId = 999;  
             result.message = "You attack the dark cultist!";
             std::cout << "\n\"You will regret this, fool!\"\n";
             break;
@@ -1126,7 +1150,7 @@ EventResult storyChoice_DarkRitual(Player& player, GameState& gameState) {
 EventResult storyChoice_SecretKeeper(Player& player) {
     EventResult result;
     result.occurred = true;
-    (void)player; // parameter unused in this story function
+    (void)player; 
     
     std::cout << "\n";
     displaySeparator(60, '-');
@@ -1208,14 +1232,14 @@ EventResult storyChoice_BossMercy(Player& player) {
     return result;
 }
 
-// ---
-// STANDALONE FUNCTIONS
-// ---
+
+
+
 
 std::vector<Event> createDefaultEvents() {
     std::vector<Event> events;
     
-    // Trap event
+    
     Event trap;
     trap.id = 1;
     trap.name = "Arrow Trap";
@@ -1225,7 +1249,7 @@ std::vector<Event> createDefaultEvents() {
     trap.triggerChance = 100;
     events.push_back(trap);
     
-    // Healing event
+    
     Event heal;
     heal.id = 2;
     heal.name = "Healing Shrine";
@@ -1236,7 +1260,7 @@ std::vector<Event> createDefaultEvents() {
     heal.oneTimeOnly = true;
     events.push_back(heal);
     
-    // Choice event
+    
     Event choice;
     choice.id = 3;
     choice.name = "The Mysterious Chest";
@@ -1259,7 +1283,7 @@ std::vector<Event> createDefaultEvents() {
     
     events.push_back(choice);
     
-    // Riddle event
+    
     Event riddle;
     riddle.id = 4;
     riddle.name = "The Sphinx's Question";
@@ -1279,7 +1303,7 @@ std::vector<Event> createDefaultEvents() {
 std::vector<Quest> createDefaultQuests() {
     std::vector<Quest> quests;
     
-    // Main quest: Escape the dungeon
+    
     Quest main;
     main.id = 1;
     main.name = "Escape the Dungeon";
@@ -1290,7 +1314,7 @@ std::vector<Quest> createDefaultQuests() {
     main.experienceReward = 120;
     quests.push_back(main);
     
-    // Side quest: Kill enemies
+    
     Quest killQuest;
     killQuest.id = 2;
     killQuest.name = "Monster Hunter";
@@ -1301,36 +1325,36 @@ std::vector<Quest> createDefaultQuests() {
     killQuest.experienceReward = 60;
     quests.push_back(killQuest);
     
-    // Side quest: Find treasure rooms
+    
     Quest treasureQuest;
     treasureQuest.id = 3;
     treasureQuest.name = "Treasure Seeker";
     treasureQuest.description = "Discover 3 treasure rooms.";
     treasureQuest.completionText = "Your greed... I mean, exploration has paid off!";
-    treasureQuest.targetEnemyCount = 3;  // Reusing for room count
+    treasureQuest.targetEnemyCount = 3;  
     treasureQuest.goldReward = 75;
     treasureQuest.experienceReward = 45;
     quests.push_back(treasureQuest);
     
-    // Side quest: Solve puzzles
+    
     Quest puzzleQuest;
     puzzleQuest.id = 4;
     puzzleQuest.name = "Puzzle Master";
     puzzleQuest.description = "Solve 2 puzzles in the dungeon.";
     puzzleQuest.completionText = "Your wisdom is unmatched!";
-    puzzleQuest.targetEnemyCount = 2;  // Reusing for puzzle count
+    puzzleQuest.targetEnemyCount = 2;  
     puzzleQuest.goldReward = 60;
     puzzleQuest.experienceReward = 72;
     quests.push_back(puzzleQuest);
     
-    // Morality quest: Good path
+    
     Quest heroQuest;
     heroQuest.id = 5;
     heroQuest.name = "The Hero's Path";
     heroQuest.description = "Make noble choices throughout your journey.";
     heroQuest.completionText = "You have walked the path of the true hero!";
     heroQuest.affectsMorality = true;
-    heroQuest.moralityChange = 0;  // Check morality score instead
+    heroQuest.moralityChange = 0;  
     heroQuest.goldReward = 0;
     heroQuest.experienceReward = 90;
     quests.push_back(heroQuest);
@@ -1346,7 +1370,7 @@ std::vector<Event> loadEvents(const std::string& filename) {
         return createDefaultEvents();
     }
     
-    // Simple file parsing (can be expanded)
+    
     std::string line;
     Event current;
     bool inEvent = false;
@@ -1453,4 +1477,4 @@ std::vector<Quest> loadQuests(const std::string& filename) {
     return quests;
 }
 
-}  // namespace AQE
+}  

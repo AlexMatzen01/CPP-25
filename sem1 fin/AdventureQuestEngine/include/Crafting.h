@@ -197,6 +197,57 @@ public:
     std::string serializeCrafting() const;
     void deserializeCrafting(const std::string& data);
     
+    //==========================================================================
+    // UTILITY METHODS - Status & Checking
+    //==========================================================================
+    
+    /**
+// Check if recipe is known
+     * @param recipeId Recipe ID to check
+     * @return True if discovered
+     */
+    bool isRecipeDiscovered(int recipeId) const;
+    
+    /**
+// Get recipe by ID
+     * @param recipeId Recipe ID to search for
+     * @return Pointer to recipe or nullptr
+     */
+    Recipe* getRecipeById(int recipeId);
+    
+    /**
+// Get crafting skill level
+     * @return Current crafting level
+     */
+    int getCraftingLevel() const;
+    
+    /**
+// Get material count
+     * @param materialId Material to count
+     * @return Quantity of material owned
+     */
+    int getMaterialQuantity(int materialId) const;
+    
+    /**
+// Check if recipe requirements are met
+     * @param recipeId Recipe to check
+     * @return True if can be crafted now
+     */
+    bool canCraftRecipe(int recipeId) const;
+    
+    /**
+// Get total number of discovered recipes
+     * @return Count of known recipes
+     */
+    int getDiscoveredRecipeCount() const;
+    
+    /**
+// Get success rate for recipe
+     * @param recipeId Recipe to check
+     * @return Success percentage (0-100)
+     */
+    float getRecipeSuccessRate(int recipeId) const;
+    
 private:
     Player& playerRef;
     std::map<int, CraftingMaterial> materials;

@@ -1,8 +1,30 @@
 //! Copyright (c) Alexander Matzen. All rights reserved.
 //! Author: Alexander Matzen
 //! Licensed under the MIT license
+//! Edit started 1/2/26
 
-// Achievement system implementation (partially implemented - some features scrapped)
+// Achievement.cpp - Achievement and progress tracking system
+// Tracks player achievements, perks, and progression milestones
+//
+// CLASS: AchievementManager
+// PURPOSE: Manages achievement unlocking and meta-progression perks
+//
+// KEY ATTRIBUTES:
+//   - achievements: Vector of all achievement definitions
+//   - perks: Vector of unlockable permanent perks
+//   - totalPoints: Total achievement points earned
+//   - spentPoints: Points spent on permanent perks
+//   - unlockedPerks: Vector of perks player has purchased
+//
+// KEY METHODS:
+//   - checkAchievements(player, state): Check if new achievements unlocked
+//   - unlockAchievement(achievementId): Mark achievement as unlocked
+//   - updateProgress(achievementId, progress): Update achievement progress
+//   - unlockPerk(perkId): Purchase permanent perk with points
+//   - getPointsToSpend(): Return available unspent achievement points
+//   - displayAchievements(): Show achievement list and progress
+//   - displayPerks(): Show available perks to unlock
+//   - isAchievementUnlocked(achievementId): Check unlock status
 
 #include "../include/Achievement.h"
 #include "../include/Utils.h"
@@ -13,51 +35,57 @@
 
 namespace AQE {
 
-// ---
-// AchievementManager Implementation
-// ---
+
+
+
 
 AchievementManager::AchievementManager() : totalPoints(0), spentPoints(0) {
     initializeAchievements();
     initializePerks();
 }
 
+// Check all achievements and update progress counters
+// Called periodically to detect newly completed achievements
 void AchievementManager::checkAchievements(const Player& player, const GameState& state) {
-    (void)state;  // May use for additional checks
+    (void)state;  // state parameter unused, suppress warnings
     
-    // Check kill achievements
+    // Combat-related achievements (ID 1000 range)
     if (player.totalKills >= 1) {
-        updateProgress(1001, player.totalKills);
+        updateProgress(1001, player.totalKills);  // First Blood: 1+ kills
     }
     if (player.totalKills >= 100) {
-        updateProgress(1002, player.totalKills);
+        updateProgress(1002, player.totalKills);  // Veteran: 100+ kills
     }
     if (player.totalKills >= 1000) {
-        updateProgress(1003, player.totalKills);
+        updateProgress(1003, player.totalKills);  // Legendary: 1000+ kills
     }
     
-    // Check exploration achievements
-    updateProgress(2001, static_cast<int>(player.visitedRooms.size()));
-    updateProgress(2002, player.secretsFound);
+    // Exploration achievements (ID 2000 range)
+    updateProgress(2001, static_cast<int>(player.visitedRooms.size()));  // Explorer achievement
+    updateProgress(2002, player.secretsFound);  // Secret finder achievement
     
-    // Check level achievements
-    updateProgress(3001, player.level);
+    // Progression achievements (ID 3000 range)
+    updateProgress(3001, player.level);  // Level milestones
     
-    // Check gold achievements
-    updateProgress(4001, player.gold);
+    // Wealth achievements (ID 4000 range)
+    updateProgress(4001, player.gold);  // Gold accumulation milestones
     
-    // Check quest achievements
-    updateProgress(5001, static_cast<int>(player.completedQuests.size()));
+    // Quest achievements (ID 5000 range)
+    updateProgress(5001, static_cast<int>(player.completedQuests.size()));  // Quest completion count
 }
 
+// Update progress for specific achievement
+// Automatically unlocks if progress reaches requirement
 void AchievementManager::updateProgress(int achievementId, int progress) {
     Achievement* ach = findAchievement(achievementId);
-    if (ach == nullptr || ach->isUnlocked) return;
+    if (ach == nullptr || ach->isUnlocked) return;  // Already unlocked or not found
     
+    // Update current progress value
     ach->currentProgress = progress;
     
+    // Check if achievement is now complete
     if (ach->currentProgress >= ach->requiredProgress) {
-        unlockAchievement(achievementId);
+        unlockAchievement(achievementId);  // Grant rewards and mark as unlocked
     }
 }
 
@@ -111,7 +139,7 @@ void AchievementManager::displayAchievements() const {
         
         std::cout << "[" << (ach.isUnlocked ? "X" : " ") << "] " << ach.name;
         
-        // Show tier
+        
         std::cout << " (";
         switch (ach.tier) {
             case AchievementTier::BRONZE: std::cout << "Bronze"; break;
@@ -188,7 +216,7 @@ void AchievementManager::claimAchievementReward(int achievementId, Player& playe
         return;
     }
     
-    // Give rewards
+    
     if (ach->goldReward > 0) {
         player.gold += ach->goldReward;
         std::cout << "Received " << ach->goldReward << " gold!\n";
@@ -272,17 +300,17 @@ void AchievementManager::applyPerksToNewRun(Player& player) {
     for (const auto& perk : perks) {
         if (!perk.isUnlocked) continue;
         
-        // Apply starting gold bonus
+        
         if (perk.startingGoldMultiplier > 1.0f) {
             player.gold = static_cast<int>(player.gold * perk.startingGoldMultiplier);
         }
         
-        // Apply starting level bonus
+        
         if (perk.startingLevel > 1) {
             player.level = perk.startingLevel;
         }
         
-        // Apply crit bonus
+        
         if (perk.increasedCritChance) {
             player.stats.critChance += perk.critChanceBonus;
         }
@@ -318,7 +346,7 @@ void AchievementManager::deserializeAchievements(const std::string& data) {
     std::stringstream ss(data);
     std::string segment;
     
-    // First segment: points
+    
     if (std::getline(ss, segment, '|')) {
         size_t semicolon = segment.find(';');
         if (semicolon != std::string::npos) {
@@ -327,7 +355,7 @@ void AchievementManager::deserializeAchievements(const std::string& data) {
         }
     }
     
-    // Second segment: unlocked achievements
+    
     if (std::getline(ss, segment, '|')) {
         std::stringstream achSs(segment);
         std::string achId;
@@ -342,7 +370,7 @@ void AchievementManager::deserializeAchievements(const std::string& data) {
         }
     }
     
-    // Third segment: unlocked perks
+    
     if (std::getline(ss, segment, '|')) {
         std::stringstream perkSs(segment);
         std::string perkId;
@@ -357,7 +385,7 @@ void AchievementManager::deserializeAchievements(const std::string& data) {
 }
 
 void AchievementManager::initializeAchievements() {
-    // Combat Achievements
+    
     Achievement firstBlood;
     firstBlood.id = 1001;
     firstBlood.name = "First Blood";
@@ -392,7 +420,7 @@ void AchievementManager::initializeAchievements() {
     legendaryWarrior.unlockedPerkId = "warrior_bonus";
     achievements.push_back(legendaryWarrior);
     
-    // Exploration Achievements
+    
     Achievement curiousExplorer;
     curiousExplorer.id = 2001;
     curiousExplorer.name = "Curious Explorer";
@@ -415,7 +443,7 @@ void AchievementManager::initializeAchievements() {
     secretSeeker.goldReward = 100;
     achievements.push_back(secretSeeker);
     
-    // Mastery Achievements
+    
     Achievement levelUp;
     levelUp.id = 3001;
     levelUp.name = "Rising Star";
@@ -427,7 +455,7 @@ void AchievementManager::initializeAchievements() {
     levelUp.goldReward = 50;
     achievements.push_back(levelUp);
     
-    // Collection Achievements
+    
     Achievement wealthy;
     wealthy.id = 4001;
     wealthy.name = "Wealthy Adventurer";
@@ -439,7 +467,7 @@ void AchievementManager::initializeAchievements() {
     wealthy.goldReward = 100;
     achievements.push_back(wealthy);
     
-    // Quest Achievements
+    
     Achievement questComplete;
     questComplete.id = 5001;
     questComplete.name = "Quest Master";
@@ -451,7 +479,7 @@ void AchievementManager::initializeAchievements() {
     questComplete.goldReward = 200;
     achievements.push_back(questComplete);
     
-    // Hidden Achievements
+    
     Achievement speedDemon;
     speedDemon.id = 9001;
     speedDemon.name = "Speed Demon";
@@ -566,12 +594,12 @@ PermanentPerk* AchievementManager::findPerk(const std::string& perkId) {
     return nullptr;
 }
 
-// ---
-// StatisticsManager Implementation
-// ---
+
+
+
 
 StatisticsManager::StatisticsManager() {
-    // Stats are initialized to 0 by PlayerStatistics constructor
+    
 }
 
 void StatisticsManager::recordKill() {
@@ -745,11 +773,11 @@ void StatisticsManager::displayProgressStats() const {
 void StatisticsManager::updateLeaderboard(const std::string& playerName, int score) {
     leaderboard.push_back({playerName, score});
     
-    // Sort by score descending
+    
     std::sort(leaderboard.begin(), leaderboard.end(),
         [](const auto& a, const auto& b) { return a.second > b.second; });
     
-    // Keep only top 10
+    
     if (leaderboard.size() > 10) {
         leaderboard.resize(10);
     }
@@ -833,26 +861,26 @@ void StatisticsManager::deserializeStats(const std::string& data) {
 int StatisticsManager::calculateScore(const Player& player, int turns, bool won) const {
     int score = 0;
     
-    // Base score from level
+    
     score += player.level * 100;
     
-    // Score from gold
+    
     score += player.gold;
     
-    // Score from kills
+    
     score += stats.totalKills * 10;
     
-    // Score from exploration
+    
     score += stats.roomsVisited * 5;
     score += stats.secretsFound * 50;
     score += stats.puzzlesSolved * 25;
     
-    // Time bonus (faster = more points)
+    
     if (turns < 200 && won) {
         score += (200 - turns) * 5;
     }
     
-    // Victory bonus
+    
     if (won) {
         score += 500;
     }
@@ -860,4 +888,4 @@ int StatisticsManager::calculateScore(const Player& player, int turns, bool won)
     return score;
 }
 
-}  // namespace AQE
+}  

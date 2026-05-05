@@ -141,6 +141,69 @@ public:
     std::vector<std::string> listSaveFiles() const;
     
     //==========================================================================
+    // UTILITY METHODS
+    //==========================================================================
+    
+    /**
+// Check if a data file exists
+     * @param filename File path
+     * @return True if file exists
+     */
+    bool fileExists(const std::string& filename) const;
+    
+    /**
+// Get total number of items loaded
+     * @return Count of item templates
+     */
+    int getItemCount() const;
+    
+    /**
+// Get total number of enemies loaded
+     * @return Count of enemy templates
+     */
+    int getEnemyCount() const;
+    
+    /**
+// Get total number of rooms loaded
+     * @return Count of room templates
+     */
+    int getRoomCount() const;
+    
+    /**
+// Get item template by ID
+     * @param itemId Item ID to search for
+     * @return Item data or empty Item if not found
+     */
+    Item getItemTemplate(int itemId) const;
+    
+    /**
+// Get enemy template by ID
+     * @param enemyId Enemy ID to search for
+     * @return Enemy data or default Enemy if not found
+     */
+    Enemy getEnemyTemplate(int enemyId) const;
+    
+    /**
+// Get room template by ID
+     * @param roomId Room ID to search for
+     * @return Room data or default Room if not found
+     */
+    Room getRoomTemplate(int roomId) const;
+    
+    /**
+// Validate save file integrity
+     * @param filename Save file to validate
+     * @return True if file is valid
+     */
+    bool validateSaveFile(const std::string& filename) const;
+    
+    /**
+// Get data folder path
+     * @return Current data folder path
+     */
+    std::string getDataFolder() const;
+    
+    //==========================================================================
     // GAME LOG
     //==========================================================================
     
