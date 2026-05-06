@@ -16,8 +16,8 @@ Alex|1145|1|Warrior|Neutral|
 test|1140|2|Warrior|Neutral|
 Alex|1140|2|Warrior|Neutral|
 Alex|1140|2|Warrior|Neutral|
+te|1140|2|Ranger|Neutral|
 Alex|1135|3|Warrior|Neutral|
 Alex|1135|3|Warrior|Neutral|
 TestHero|1120|6|Warrior|Neutral|
 Gage|1090|42|Rogue|Speedrun|
-Test|1075|20|Mage|Neutral|

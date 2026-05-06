@@ -9,6 +9,7 @@
 
 #include "Types.h"
 #include "Combat.h"
+#include "Utils.h"
 #include <string>
 #include <vector>
 #include <map>

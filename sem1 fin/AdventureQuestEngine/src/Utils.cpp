@@ -36,6 +36,7 @@
 #include <thread>
 #include <iomanip>
 #include <ctime>
+#include <string>
 #ifdef _WIN32
 #include <conio.h>
 #else
@@ -176,26 +177,77 @@ std::string wrapText(const std::string& text, int width) {
 
 
 int getValidatedInt(const std::string& prompt, int min, int max) {
-    int value;
+    std::string input;
+    int value = 0;
     bool valid = false;
     
     while (!valid) {
         std::cout << prompt;
         
-        if (std::cin >> value) {
-            if (value >= min && value <= max) {
-                valid = true;
-            } else {
-                std::cout << "Please enter a number between " << min 
-                          << " and " << max << ".\n";
-            }
-        } else {
-            std::cout << "Invalid input. Please enter a number.\n";
+        // Use getline for more robust input handling
+        if (!std::getline(std::cin, input)) {
+            std::cout << "Input error. Please try again.\n";
             std::cin.clear();
-            std::cin.ignore(10000, '\n');
+            continue;
+        }
+        
+        // Trim whitespace
+        input = trim(input);
+        
+        // Check if input is empty
+        if (input.empty()) {
+            std::cout << "Input cannot be empty. Please enter a number between " 
+                      << min << " and " << max << ".\n";
+            continue;
+        }
+        
+        // Check for valid integer format (handle negative numbers)
+        bool isValidNumber = true;
+        size_t startPos = 0;
+        
+        // Allow leading '-' or '+' sign
+        if (input[0] == '-' || input[0] == '+') {
+            startPos = 1;
+        }
+        
+        // Check remaining characters are digits
+        if (startPos >= input.length()) {
+            std::cout << "Invalid input. Please enter a valid number between " 
+                      << min << " and " << max << ".\n";
+            continue;
+        }
+        
+        for (size_t i = startPos; i < input.length(); ++i) {
+            if (!std::isdigit(static_cast<unsigned char>(input[i]))) {
+                isValidNumber = false;
+                break;
+            }
+        }
+        
+        if (!isValidNumber) {
+            std::cout << "Invalid input. Please enter a valid number between " 
+                      << min << " and " << max << ".\n";
+            continue;
+        }
+        
+        // Convert to integer
+        try {
+            value = std::stoi(input);
+        } catch (const std::exception& e) {
+            std::cout << "Invalid input. Please enter a number between " 
+                      << min << " and " << max << ".\n";
+            continue;
+        }
+        
+        // Check range
+        if (value >= min && value <= max) {
+            valid = true;
+        } else {
+            std::cout << "Please enter a number between " << min 
+                      << " and " << max << ".\n";
         }
     }
-    std::cin.ignore(10000, '\n');  
+    
     return value;
 }
 
