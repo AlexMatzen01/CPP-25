@@ -3,12 +3,12 @@
 
 # Compiler settings
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -Wpedantic -finput-charset=UTF-8 -fexec-charset=UTF-8 -Iinclude
+CXXFLAGS = -std=c++17 -Wall -Wextra -Wpedantic -finput-charset=UTF-8 -fexec-charset=UTF-8 -Iinclude -fdiagnostics-color=always
 LDFLAGS = 
 
 # Debug and Release flags
-DEBUG_FLAGS = -g -DDEBUG
-RELEASE_FLAGS = -O3 -DNDEBUG
+DEBUG_FLAGS = -g -DDEBUG -O0
+RELEASE_FLAGS = -O3 -DNDEBUG -march=native
 
 # Directories
 SRC_DIR = src
@@ -51,27 +51,35 @@ fix-timestamps:
 
 
 # Create directories
+.PHONY: directories
 directories:
-	@mkdir -p $(BUILD_DIR)
-	@mkdir -p $(BIN_DIR)
+	@if not exist "$(BUILD_DIR)" mkdir "$(BUILD_DIR)"
+	@if not exist "$(BIN_DIR)" mkdir "$(BIN_DIR)"
 
 # Build executable
 $(TARGET): $(OBJECTS)
 	$(CXX) $(CXXFLAGS) $(OBJECTS) -o $(TARGET) $(LDFLAGS)
 	@echo "Build complete: $(TARGET)"
 
-# Compile source files
+# Compile source files with better output
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	@echo "[CC] $<"
+	@$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/main.o: main.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	@echo "[CC] $<"
+	@$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Fast incremental build (no clean)
+fast: CXXFLAGS += $(DEBUG_FLAGS)
+fast: directories $(TARGET)
+	@echo "✓ Fast build complete: $(TARGET)"
 
 # Debug build
 debug: CXXFLAGS += $(DEBUG_FLAGS)
 debug: clean all
 
-# Release build
+# Release build (optimized)
 release: CXXFLAGS += $(RELEASE_FLAGS)
 release: clean all
 
@@ -98,6 +106,24 @@ install: $(TARGET)
 # Help
 help:
 	@echo "Adventure Quest Engine - Build System"
+	@echo ""
+	@echo "Targets:"
+	@echo "  make all      - Build in debug mode (default)"
+	@echo "  make fast     - Fast incremental build (only recompile changed files)"
+	@echo "  make debug    - Full debug build (clean + rebuild)"
+	@echo "  make release  - Optimized release build with -O3 optimization"
+	@echo "  make clean    - Remove object files and executable"
+	@echo "  make distclean - Remove all build directories"
+	@echo "  make run      - Build and run"
+	@echo ""
+	@echo "Speed Tips:"
+	@echo "  • Use 'make fast' for quick iterative builds (only recompiles changed files)"
+	@echo "  • Use 'make -j4' to parallel-compile (specify your CPU cores)"
+	@echo "  • Use 'make release' for optimized builds (-O3 -march=native)"
+	@echo ""
+	@echo "Examples:"
+	@echo "  make fast -j4       (fastest: incremental + parallel)"
+	@echo "  make release -j4    (optimized + parallel)"
 	@echo ""
 	@echo "Available targets:"
 	@echo "  all        - Build the project (default)"
