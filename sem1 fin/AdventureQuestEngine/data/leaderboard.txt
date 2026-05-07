@@ -1,0 +1,23 @@
+# Adventure Quest Engine Leaderboard
+# Format: name|score|turns|class|ending|date
+
+Test|9182|20|Mage|Death|
+Test|7408|10|Mage|Death|
+Test|7382|14|Mage|Death|
+Test|5584|10|Mage|Death|
+Alex|2420|2|Necromancer|Neutral|
+Test|2316|23|Mage|Death|
+Alex|2270|81|Necromancer|Neutral|
+Alex|2190|55|Warrior|Victory|
+Luke|1475|16|Mage|Speedrun|
+Hays|1379|75|Rogue|Victory|
+Luke|1235|28|Mage|Speedrun|
+Alex|1145|1|Warrior|Neutral|
+test|1140|2|Warrior|Neutral|
+Alex|1140|2|Warrior|Neutral|
+Alex|1140|2|Warrior|Neutral|
+Alex|1135|3|Warrior|Neutral|
+Alex|1135|3|Warrior|Neutral|
+TestHero|1120|6|Warrior|Neutral|
+Gage|1090|42|Rogue|Speedrun|
+Test|1075|20|Mage|Neutral|

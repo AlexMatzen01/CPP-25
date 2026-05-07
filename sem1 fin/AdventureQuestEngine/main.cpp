@@ -1,4 +1,7 @@
-
+//! Copyright (c) Alexander Matzen. All rights reserved.
+//! Author: Alexander Matzen
+//! Licensed under the MIT license
+//! Edit started 1/2/26
 
 // Adventure Quest Engine - Main Entry Point
 // Initializes console encoding and starts the game engine

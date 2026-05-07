@@ -502,10 +502,8 @@ void UIManager::drawDivider(int width, char character) {
 int UIManager::displayMenu(Menu& menu) {
     renderMenu(menu);
     
-    std::cout << "\nChoice: ";
-    int choice;
-    std::cin >> choice;
-    std::cin.ignore();
+    // Use robust input validation
+    int choice = getValidatedInt("\nChoice: ", 1, static_cast<int>(menu.items.size()));
     
     if (choice > 0 && choice <= static_cast<int>(menu.items.size())) {
         menu.selectedIndex = choice - 1;
