@@ -1,6 +1,3 @@
-# Makefile for Adventure Quest Engine
-# C++ Adventure Quest Engine Build Configuration
-
 # Compiler settings
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -Wpedantic -finput-charset=UTF-8 -fexec-charset=UTF-8 -Iinclude
